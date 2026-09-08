@@ -1,0 +1,4280 @@
+{
+ "酒神": {
+  "summons": [
+   {
+    "file": "本能的召唤.md",
+    "redeploy": "25s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[酒神](/w/酒神 \"酒神\")",
+    "taunt": "0",
+    "pos": "近战位"
+   },
+   {
+    "file": "迷狂牢笼.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[酒神](/w/酒神 \"酒神\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "凯尔希": {
+  "summons": [
+   {
+    "file": "Mon3tr(凯尔希的召唤物).md",
+    "redeploy": "35s→30s→25s",
+    "cost": "10",
+    "block": "3",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[凯尔希](/w/凯尔希 \"凯尔希\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "黑": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18→20",
+   "block": "1"
+  }
+ },
+ "12F": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "24",
+   "block": "1"
+  }
+ },
+ "麦哲伦": {
+  "summons": [
+   {
+    "file": "龙腾.F.md",
+    "redeploy": "10s",
+    "cost": "3",
+    "block": "0",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[麦哲伦](/w/麦哲伦 \"麦哲伦\")",
+    "taunt": "0",
+    "pos": "全部位"
+   },
+   {
+    "file": "龙腾.L.md",
+    "redeploy": "10s",
+    "cost": "7",
+    "block": "0",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[麦哲伦](/w/麦哲伦 \"麦哲伦\")",
+    "taunt": "0",
+    "pos": "近战位"
+   },
+   {
+    "file": "龙腾.A.md",
+    "redeploy": "10s",
+    "cost": "8",
+    "block": "0",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[麦哲伦](/w/麦哲伦 \"麦哲伦\")",
+    "taunt": "0",
+    "pos": "远程位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "阿米娅(医疗)": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "U-Official": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "泰拉大陆调查团": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "结城理": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→14→16",
+   "block": "2"
+  }
+ },
+ "埃癸斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "岳羽由加莉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "虎狼丸": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "2"
+  }
+ },
+ "予愿安洁莉娜": {
+  "summons": [
+   {
+    "file": "“一会儿见！”.md",
+    "redeploy": "70s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[予愿安洁莉娜](/w/予愿安洁莉娜 \"予愿安洁莉娜\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "2"
+  }
+ },
+ "珊比": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24→26",
+   "block": "3"
+  }
+ },
+ "嘉辛塔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "时隙": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "机械师": {
+  "summons": [
+   {
+    "file": "结构性原理.md",
+    "redeploy": "40s",
+    "cost": "10",
+    "block": "3",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[机械师](/w/机械师 \"机械师\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "3"
+  }
+ },
+ "谬因": {
+  "summons": [
+   {
+    "file": "中继器.md",
+    "redeploy": "30s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[谬因](/w/谬因 \"谬因\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "佩德洛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "焰狐龙梓兰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18→20",
+   "block": "1"
+  }
+ },
+ "雷狼龙S空爆": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "2"
+  }
+ },
+ "罗德岛隐秘队": {
+  "summons": [
+   {
+    "file": "牙猎犬.md",
+    "redeploy": "60s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[罗德岛隐秘队](/w/罗德岛隐秘队 \"罗德岛隐秘队\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "凯尔希·思衡托": {
+  "summons": [
+   {
+    "file": "战术锚点.md",
+    "redeploy": "70s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[凯尔希·思衡托](/w/凯尔希·思衡托 \"凯尔希·思衡托\")",
+    "taunt": "0",
+    "pos": "远程位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "可露希尔": {
+  "summons": [
+   {
+    "file": "指挥中心.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "2",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[可露希尔](/w/可露希尔 \"可露希尔\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "维伊": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "25→27",
+   "block": "1"
+  }
+ },
+ "裂响": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "GALLUS²": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "怒潮凛冬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "乌啾": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "伯塔尼": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "贝洛内": {
+  "summons": [
+   {
+    "file": "牵绊.md",
+    "redeploy": "70s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[贝洛内](/w/贝洛内 \"贝洛内\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "复奏": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "望": {
+  "summons": [
+   {
+    "file": "棋子.md",
+    "redeploy": "5s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[望](/w/望 \"望\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "赤刃明霄陈": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "风絮": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "矩": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "23→25",
+   "block": "1"
+  }
+ },
+ "缇缇": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "撷英调香师": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "摆渡人": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23→25",
+   "block": "2→2→3"
+  }
+ },
+ "娜斯提": {
+  "summons": [
+   {
+    "file": "“质检专员”.md",
+    "redeploy": "8s",
+    "cost": "4",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[娜斯提](/w/娜斯提 \"娜斯提\")",
+    "taunt": "0",
+    "pos": "全部位"
+   },
+   {
+    "file": "“监工专员”.md",
+    "redeploy": "4s",
+    "cost": "4",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[娜斯提](/w/娜斯提 \"娜斯提\")",
+    "taunt": "0",
+    "pos": "全部位"
+   },
+   {
+    "file": "“应急承重小组”.md",
+    "redeploy": "6s",
+    "cost": "6",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[娜斯提](/w/娜斯提 \"娜斯提\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17→19",
+   "block": "2"
+  }
+ },
+ "响石": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "天空盒": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "凛御银灰": {
+  "summons": [
+   {
+    "file": "风雪之眼.md",
+    "redeploy": "15s",
+    "cost": "16/14/19",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[凛御银灰](/w/凛御银灰 \"凛御银灰\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "圣聆初雪": {
+  "summons": [
+   {
+    "file": "保护目标（冻结状态）.md",
+    "redeploy": "70s",
+    "cost": "0",
+    "block": "3",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[圣聆初雪](/w/圣聆初雪 \"圣聆初雪\")",
+    "taunt": "-1",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "溯光星源": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "雪猎": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17→19",
+   "block": "1"
+  }
+ },
+ "哈蒂娅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "2"
+  }
+ },
+ "协律": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→32",
+   "block": "1"
+  }
+ },
+ "真言": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "折桠": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→33→35",
+   "block": "2→3→3"
+  }
+ },
+ "冬时": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "丰川祥子": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "三角初华": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "5→7",
+   "block": "1"
+  }
+ },
+ "若叶睦": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "2"
+  }
+ },
+ "八幡海铃": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "0"
+  }
+ },
+ "祐天寺若麦": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21",
+   "block": "2"
+  }
+ },
+ "斩业星熊": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24→26",
+   "block": "3"
+  }
+ },
+ "遥": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "吉星": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→31",
+   "block": "1"
+  }
+ },
+ "松桐": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "电弧": {
+  "summons": [
+   {
+    "file": "戴乌.md",
+    "redeploy": "20s",
+    "cost": "18",
+    "block": "3",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[电弧](/w/电弧 \"电弧\")",
+    "taunt": "0",
+    "pos": "近战位"
+   },
+   {
+    "file": "赛柯.md",
+    "redeploy": "10s",
+    "cost": "16",
+    "block": "2",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[电弧](/w/电弧 \"电弧\")",
+    "taunt": "0",
+    "pos": "近战位"
+   },
+   {
+    "file": "桑特拉.md",
+    "redeploy": "10s",
+    "cost": "16",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[电弧](/w/电弧 \"电弧\")",
+    "taunt": "0",
+    "pos": "远程位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "司霆惊蛰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "2→2→3"
+  }
+ },
+ "录武官": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "蒂比": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "2"
+  }
+ },
+ "Miss.Christine": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "新约能天使": {
+  "summons": [
+   {
+    "file": "投递坐标.md",
+    "redeploy": "70s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[新约能天使](/w/新约能天使 \"新约能天使\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "蕾缪安": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "信仰搅拌机": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "聆音": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2"
+  }
+ },
+ "CONFESS-47": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "2"
+  }
+ },
+ "Mon3tr": {
+  "summons": [
+   {
+    "file": "重构体.md",
+    "redeploy": "15s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[Mon3tr](/w/Mon3tr \"Mon3tr\")",
+    "taunt": "-1",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "阿兰娜": {
+  "summons": [
+   {
+    "file": "小螺帽.md",
+    "redeploy": "15s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[阿兰娜](/w/阿兰娜 \"阿兰娜\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "80s",
+   "cost": "14→16→18",
+   "block": "2"
+  }
+ },
+ "骋风": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "2→2→3"
+  }
+ },
+ "死芒": {
+  "summons": [
+   {
+    "file": "悲叹的仆役.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "1",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[死芒](/w/死芒 \"死芒\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "钼铅": {
+  "summons": [
+   {
+    "file": "矿石“杀手”.md",
+    "redeploy": "5s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[钼铅](/w/钼铅 \"钼铅\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "水灯心": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "隐德来希": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→21→23",
+   "block": "1→2→2"
+  }
+ },
+ "诺威尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "余": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24→26",
+   "block": "3"
+  }
+ },
+ "烛煌": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "寻澜": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "行箸": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "11→12→13",
+   "block": "1"
+  }
+ },
+ "引星棘刺": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16→18",
+   "block": "1"
+  }
+ },
+ "特克诺": {
+  "summons": [
+   {
+    "file": "木偶舞者.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "1",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[特克诺](/w/特克诺 \"特克诺\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "瑰盐": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "荒芜拉普兰德": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "忍冬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "弑君者": {
+  "summons": [],
+  "main": {
+   "redeploy": "22s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "裁度": {
+  "summons": [],
+  "main": {
+   "redeploy": "25s",
+   "cost": "6→8",
+   "block": "1"
+  }
+ },
+ "菲莱": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "云迹": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "2"
+  }
+ },
+ "维娜·维多利亚": {
+  "summons": [
+   {
+    "file": "黄金盟誓.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "1",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[维娜·维多利亚](/w/维娜·维多利亚 \"维娜·维多利亚\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "波卜": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "凯瑟琳": {
+  "summons": [
+   {
+    "file": "爬行号·防护单元.md",
+    "redeploy": "15s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[凯瑟琳](/w/凯瑟琳 \"凯瑟琳\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "80s",
+   "cost": "16→18→20",
+   "block": "2"
+  }
+ },
+ "玛露西尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "莱欧斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "齐尔查克": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "森西": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21→23",
+   "block": "2→3→3"
+  }
+ },
+ "佩佩": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "娜仁图亚": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "衡沙": {
+  "summons": [
+   {
+    "file": "发条羽兽.md",
+    "redeploy": "10s",
+    "cost": "8",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[衡沙](/w/衡沙 \"衡沙\")",
+    "taunt": "0",
+    "pos": "远程位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "莎草": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "锡人": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15→17",
+   "block": "1"
+  }
+ },
+ "妮芙": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "渡桥": {
+  "summons": [
+   {
+    "file": "樱桃三号.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[渡桥](/w/渡桥 \"渡桥\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "乌尔比安": {
+  "summons": [
+   {
+    "file": "从不混淆的方向.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[乌尔比安](/w/乌尔比安 \"乌尔比安\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "2"
+  }
+ },
+ "海霓": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "深巡": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22→24",
+   "block": "3"
+  }
+ },
+ "维什戴尔": {
+  "summons": [
+   {
+    "file": "魂灵之影.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[维什戴尔](/w/维什戴尔 \"维什戴尔\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25",
+   "block": "1"
+  }
+ },
+ "逻各斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "魔王": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "历阵锐枪芬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "PhonoR-0": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "阿斯卡纶": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "0"
+  }
+ },
+ "阿罗玛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "奥达": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21",
+   "block": "2"
+  }
+ },
+ "露托": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→32→34",
+   "block": "2→3→3"
+  }
+ },
+ "艾拉": {
+  "summons": [
+   {
+    "file": "雷鸣地雷.md",
+    "redeploy": "5s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[艾拉](/w/艾拉 \"艾拉\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "医生": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "2"
+  }
+ },
+ "双月": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "2"
+  }
+ },
+ "导火索": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23→25",
+   "block": "2→2→3"
+  }
+ },
+ "红隼": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "黍": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2→3→3"
+  }
+ },
+ "左乐": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24→26",
+   "block": "1"
+  }
+ },
+ "小满": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "万顷": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "莱伊": {
+  "summons": [
+   {
+    "file": "沙地兽.md",
+    "redeploy": "30s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[莱伊](/w/莱伊 \"莱伊\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "1"
+  }
+ },
+ "温米": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "锏": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2"
+  }
+ },
+ "烈夏": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "2"
+  }
+ },
+ "哈洛德": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "塑心": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "薇薇安娜": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "止颂": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "深律": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "2→3→3"
+  }
+ },
+ "折光": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "跃跃": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "赫德雷": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "2"
+  }
+ },
+ "刺玫": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "戴菲恩": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "24→26",
+   "block": "1"
+  }
+ },
+ "维荻": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "涤火杰西卡": {
+  "summons": [
+   {
+    "file": "机动盾牌.md",
+    "redeploy": "30s",
+    "cost": "5",
+    "block": "2",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[涤火杰西卡](/w/涤火杰西卡 \"涤火杰西卡\")",
+    "taunt": "1",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "3"
+  }
+ },
+ "杏仁": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "冰酿": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "17→19→21",
+   "block": "1"
+  }
+ },
+ "纯烬艾雅法拉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "琳琅诗怀雅": {
+  "summons": [
+   {
+    "file": "香槟炸弹.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[琳琅诗怀雅](/w/琳琅诗怀雅 \"琳琅诗怀雅\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "25s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "青枳": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "苍苔": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "16→18",
+   "block": "2"
+  }
+ },
+ "凛视": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "提丰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "寒檀": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "圣约送葬人": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→21→23",
+   "block": "1→2→2"
+  }
+ },
+ "空构": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "隐现": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "Friston-3": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "3"
+  }
+ },
+ "缪尔赛思": {
+  "summons": [
+   {
+    "file": "流形.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[缪尔赛思](/w/缪尔赛思 \"缪尔赛思\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "霍尔海雅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "淬羽赫默": {
+  "summons": [
+   {
+    "file": "夜灯.md",
+    "redeploy": "5s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[淬羽赫默](/w/淬羽赫默 \"淬羽赫默\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "80s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "玫拉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17→19",
+   "block": "1"
+  }
+ },
+ "伊内丝": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "洋灰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→30→32",
+   "block": "1"
+  }
+ },
+ "摩根": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "休谟斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→19→21",
+   "block": "1→2→2"
+  }
+ },
+ "麒麟R夜刀": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "火龙S黑角": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "1"
+  }
+ },
+ "仇白": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "铎铃": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2"
+  }
+ },
+ "重岳": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "林": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "火哨": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25→27",
+   "block": "2→3→3"
+  }
+ },
+ "截云": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "26→28→30",
+   "block": "1"
+  }
+ },
+ "焰影苇草": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "和弦": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "谜图": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "缄默德克萨斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "斥罪": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "32→34→36",
+   "block": "2→3→3"
+  }
+ },
+ "伺夜": {
+  "summons": [
+   {
+    "file": "狼群.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[伺夜](/w/伺夜 \"伺夜\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "子月": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "雪绒": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "石英": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2"
+  }
+ },
+ "白铁": {
+  "summons": [
+   {
+    "file": "白铁™多功能平台.md",
+    "redeploy": "10s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[白铁](/w/白铁 \"白铁\")",
+    "taunt": "0",
+    "pos": "全部位"
+   },
+   {
+    "file": "铁钳号·原型机.md",
+    "redeploy": "20s",
+    "cost": "10",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[白铁](/w/白铁 \"白铁\")",
+    "taunt": "-2",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17→19",
+   "block": "2"
+  }
+ },
+ "明椒": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "达格达": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "铅踝": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "海沫": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→20→22",
+   "block": "1→2→2"
+  }
+ },
+ "罗小黑": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "2"
+  }
+ },
+ "玛恩纳": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "2→2→3"
+  }
+ },
+ "但书": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "百炼嘉维尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "2→2→3"
+  }
+ },
+ "鸿雪": {
+  "summons": [
+   {
+    "file": "“打字机”.md",
+    "redeploy": "40s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[鸿雪](/w/鸿雪 \"鸿雪\")",
+    "taunt": "0",
+    "pos": "远程位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18→20",
+   "block": "1"
+  }
+ },
+ "晓歌": {
+  "summons": [],
+  "main": {
+   "redeploy": "35s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "至简": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "多萝西": {
+  "summons": [
+   {
+    "file": "共振装置.md",
+    "redeploy": "5s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[多萝西](/w/多萝西 \"多萝西\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "承曦格雷伊": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "星源": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "黑键": {
+  "summons": [
+   {
+    "file": "旧日残影.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[黑键](/w/黑键 \"黑键\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25",
+   "block": "1"
+  }
+ },
+ "濯尘芙蓉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "车尔尼": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "23→25→27",
+   "block": "3"
+  }
+ },
+ "埃拉托": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "归溟幽灵鲨": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→14→16",
+   "block": "2"
+  }
+ },
+ "艾丽妮": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2"
+  }
+ },
+ "流明": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "掠风": {
+  "summons": [
+   {
+    "file": "可靠电池.md",
+    "redeploy": "15s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[掠风](/w/掠风 \"掠风\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16→18",
+   "block": "2"
+  }
+ },
+ "号角": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "24→26→28",
+   "block": "2→3→3"
+  }
+ },
+ "洛洛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "海蒂": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "褐果": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "菲亚梅塔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "25→27→29",
+   "block": "1"
+  }
+ },
+ "风丸": {
+  "summons": [
+   {
+    "file": "纸偶.md",
+    "redeploy": "20s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[风丸](/w/风丸 \"风丸\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "2"
+  }
+ },
+ "见行者": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "2"
+  }
+ },
+ "澄闪": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "夏栎": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "令": {
+  "summons": [
+   {
+    "file": "“清平”.md",
+    "redeploy": "10s",
+    "cost": "12",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[令](/w/令 \"令\")",
+    "taunt": "0",
+    "pos": "近战位"
+   },
+   {
+    "file": "“逍遥”.md",
+    "redeploy": "10s",
+    "cost": "9",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[令](/w/令 \"令\")",
+    "taunt": "0",
+    "pos": "远程位"
+   },
+   {
+    "file": "“弦惊”.md",
+    "redeploy": "20s",
+    "cost": "23",
+    "block": "2",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[令](/w/令 \"令\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "老鲤": {
+  "summons": [],
+  "main": {
+   "redeploy": "25s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "夜半": {
+  "summons": [
+   {
+    "file": "眠兽.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[夜半](/w/夜半 \"夜半\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "寒芒克洛丝": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "九色鹿": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "暮落": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "灵知": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "极光": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→30→32",
+   "block": "1"
+  }
+ },
+ "耶拉": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "耀骑士临光": {
+  "summons": [
+   {
+    "file": "“耀阳”.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "2",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[耀骑士临光](/w/耀骑士临光 \"耀骑士临光\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "焰尾": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "蚀清": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "野鬃": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "蜜莓": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "布丁": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→31",
+   "block": "1"
+  }
+ },
+ "正义骑士号": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "远牙": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "灰毫": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25→27",
+   "block": "2→3→3"
+  }
+ },
+ "琴柳": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "桑葚": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "罗比菈塔": {
+  "summons": [
+   {
+    "file": "全自动造型仪.md",
+    "redeploy": "15s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[罗比菈塔](/w/罗比菈塔 \"罗比菈塔\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15→17",
+   "block": "2"
+  }
+ },
+ "假日威龙陈": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→32",
+   "block": "1"
+  }
+ },
+ "水月": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "0"
+  }
+ },
+ "羽毛笔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→20→22",
+   "block": "1→2→2"
+  }
+ },
+ "龙舌兰": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "11→13",
+   "block": "2→2→3"
+  }
+ },
+ "帕拉斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "2"
+  }
+ },
+ "卡涅利安": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "绮良": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "0"
+  }
+ },
+ "贝娜": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "15→17",
+   "block": "2"
+  }
+ },
+ "深靛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "浊心斯卡蒂": {
+  "summons": [
+   {
+    "file": "斯卡蒂的海嗣.md",
+    "redeploy": "30s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[浊心斯卡蒂](/w/浊心斯卡蒂 \"浊心斯卡蒂\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "6→8",
+   "block": "1"
+  }
+ },
+ "歌蕾蒂娅": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "14→16",
+   "block": "2"
+  }
+ },
+ "赤冬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "1"
+  }
+ },
+ "异客": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "熔泉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "暴雨": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22→24",
+   "block": "3"
+  }
+ },
+ "灰烬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "霜华": {
+  "summons": [
+   {
+    "file": "迎宾踏垫.md",
+    "redeploy": "5s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[霜华](/w/霜华 \"霜华\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "闪击": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "3"
+  }
+ },
+ "战车": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22→24",
+   "block": "2"
+  }
+ },
+ "夕": {
+  "summons": [
+   {
+    "file": "“小自在”.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "2",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[夕](/w/夕 \"夕\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "嵯峨": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "乌有": {
+  "summons": [],
+  "main": {
+   "redeploy": "25s",
+   "cost": "6→8",
+   "block": "1"
+  }
+ },
+ "炎狱炎熔": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "32→35",
+   "block": "1"
+  }
+ },
+ "图耶": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "空弦": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "爱丽丝": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "豆苗": {
+  "summons": [
+   {
+    "file": "磐蟹护卫队.md",
+    "redeploy": "10s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置(战术点)/默认(召唤物)",
+    "owner": "[豆苗](/w/豆苗 \"豆苗\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "山": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "卡夫卡": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "罗宾": {
+  "summons": [
+   {
+    "file": "“夹子”.md",
+    "redeploy": "5s",
+    "cost": "3",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[罗宾](/w/罗宾 \"罗宾\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "80s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "松果": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "27→30",
+   "block": "1"
+  }
+ },
+ "阿米娅(近卫)": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "迷迭香": {
+  "summons": [
+   {
+    "file": "迷迭香的战术装备.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "2",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[迷迭香](/w/迷迭香 \"迷迭香\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25",
+   "block": "1"
+  }
+ },
+ "泥岩": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "32→34→36",
+   "block": "2→3→3"
+  }
+ },
+ "絮雨": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "杰克": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "瑕光": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2→3→3"
+  }
+ },
+ "奥斯塔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→31",
+   "block": "1"
+  }
+ },
+ "鞭刃": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "16→18",
+   "block": "2"
+  }
+ },
+ "泡泡": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "3"
+  }
+ },
+ "史尔特尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "四月": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "薄绿": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "23→25",
+   "block": "1"
+  }
+ },
+ "芳汀": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "2"
+  }
+ },
+ "森蚺": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→31→33",
+   "block": "1"
+  }
+ },
+ "燧石": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "特米米": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "酸糖": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16→18",
+   "block": "1"
+  }
+ },
+ "棘刺": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "安哲拉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "孑": {
+  "summons": [],
+  "main": {
+   "redeploy": "25s",
+   "cost": "5→7",
+   "block": "1"
+  }
+ },
+ "贾维": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "蜜蜡": {
+  "summons": [
+   {
+    "file": "沙之碑.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "3",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[蜜蜡](/w/蜜蜡 \"蜜蜡\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "稀音": {
+  "summons": [
+   {
+    "file": "移动摄影器.md",
+    "redeploy": "10s",
+    "cost": "5",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[稀音](/w/稀音 \"稀音\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "铃兰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "断崖": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "2"
+  }
+ },
+ "亚叶": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "卡达": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "早露": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24",
+   "block": "1"
+  }
+ },
+ "莱恩哈特": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "苦艾": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "波登可": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "月禾": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "石棉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23→25",
+   "block": "3"
+  }
+ },
+ "W": {
+  "summons": [
+   {
+    "file": "此面向敌.md",
+    "redeploy": "0s",
+    "cost": "0",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[W](/w/W \"W\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "25→27→29",
+   "block": "1"
+  }
+ },
+ "温蒂": {
+  "summons": [
+   {
+    "file": "工程蓄水炮.md",
+    "redeploy": "35s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[温蒂](/w/温蒂 \"温蒂\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "2"
+  }
+ },
+ "极境": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "THRM-EX": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "0"
+  }
+ },
+ "傀影": {
+  "summons": [
+   {
+    "file": "镜中虚影.md",
+    "redeploy": "45s",
+    "cost": "5",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[傀影](/w/傀影 \"傀影\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "18s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "巫恋": {
+  "summons": [
+   {
+    "file": "诅咒娃娃.md",
+    "redeploy": "5s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[巫恋](/w/巫恋 \"巫恋\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "铸铁": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "刻刀": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "2"
+  }
+ },
+ "断罪者": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "风笛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "慑砂": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "24→26→28",
+   "block": "1"
+  }
+ },
+ "柏喙": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2"
+  }
+ },
+ "宴": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "1"
+  }
+ },
+ "清流": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "刻俄柏": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "惊蛰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→32",
+   "block": "1"
+  }
+ },
+ "年": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "3"
+  }
+ },
+ "阿": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "吽": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "2→3→3"
+  }
+ },
+ "雪雉": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "13→15",
+   "block": "2"
+  }
+ },
+ "煌": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "2→2→3"
+  }
+ },
+ "灰喉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "安比尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "布洛卡": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2→2→3"
+  }
+ },
+ "苇草": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "莫斯提马": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "槐琥": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "拜松": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22→24",
+   "block": "3"
+  }
+ },
+ "梅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "微风": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "伊桑": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "0"
+  }
+ },
+ "送葬人": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "28→31",
+   "block": "1"
+  }
+ },
+ "炎客": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "红云": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "坚雷": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "20→22→24",
+   "block": "3"
+  }
+ },
+ "赫拉格": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "22→24→26",
+   "block": "1"
+  }
+ },
+ "星极": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "桃金娘": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "格劳克斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "锡兰": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "20→22",
+   "block": "1"
+  }
+ },
+ "苏苏洛": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "陈": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2"
+  }
+ },
+ "诗怀雅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "2"
+  }
+ },
+ "格雷伊": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→32",
+   "block": "1"
+  }
+ },
+ "斑点": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "2→3"
+  }
+ },
+ "泡普卡": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "2"
+  }
+ },
+ "斯卡蒂": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "格拉尼": {
+  "summons": [],
+  "main": {
+   "redeploy": "80s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "夜魔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "猎蜂": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "月见夜": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "2"
+  }
+ },
+ "空爆": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "21→23",
+   "block": "1"
+  }
+ },
+ "暴行": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2→2→3"
+  }
+ },
+ "银灰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "塞雷娅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2→3→3"
+  }
+ },
+ "星熊": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "3"
+  }
+ },
+ "夜莺": {
+  "summons": [
+   {
+    "file": "幻影.md",
+    "redeploy": "20s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "默认",
+    "owner": "[夜莺](/w/夜莺 \"夜莺\")",
+    "taunt": "1",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "闪灵": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "安洁莉娜": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "艾雅法拉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "伊芙利特": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→34",
+   "block": "1"
+  }
+ },
+ "推进之王": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "2"
+  }
+ },
+ "能天使": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "食铁兽": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "2"
+  }
+ },
+ "狮蝎": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "0"
+  }
+ },
+ "空": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "5→7",
+   "block": "1"
+  }
+ },
+ "真理": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "初雪": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "崖心": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "守林人": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21",
+   "block": "1"
+  }
+ },
+ "普罗旺斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17→19",
+   "block": "1"
+  }
+ },
+ "火神": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "31→33→35",
+   "block": "2→3→3"
+  }
+ },
+ "可颂": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "3"
+  }
+ },
+ "雷蛇": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "3"
+  }
+ },
+ "红": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "7→9",
+   "block": "1"
+  }
+ },
+ "临光": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "2→3→3"
+  }
+ },
+ "华法琳": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "赫默": {
+  "summons": [
+   {
+    "file": "医疗探机.md",
+    "redeploy": "5s",
+    "cost": "5",
+    "block": "0",
+    "slots": "0",
+    "etype": "装置",
+    "owner": "[赫默](/w/赫默 \"赫默\")",
+    "taunt": "0",
+    "pos": "全部位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "梅尔": {
+  "summons": [
+   {
+    "file": "机械水獭.md",
+    "redeploy": "10s",
+    "cost": "5",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[梅尔](/w/梅尔 \"梅尔\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "天火": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "30→33",
+   "block": "1"
+  }
+ },
+ "阿米娅": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "陨星": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "24→26→28",
+   "block": "1"
+  }
+ },
+ "白金": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "蓝毒": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "1"
+  }
+ },
+ "幽灵鲨": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "19→21→23",
+   "block": "2→2→3"
+  }
+ },
+ "拉普兰德": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "2"
+  }
+ },
+ "因陀罗": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "芙兰卡": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "德克萨斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "凛冬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "11→13",
+   "block": "2"
+  }
+ },
+ "白面鸮": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "阿消": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "2"
+  }
+ },
+ "地灵": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12→14",
+   "block": "1"
+  }
+ },
+ "深海色": {
+  "summons": [
+   {
+    "file": "触手.md",
+    "redeploy": "10s",
+    "cost": "5",
+    "block": "1",
+    "slots": "1",
+    "etype": "默认",
+    "owner": "[深海色](/w/深海色 \"深海色\")",
+    "taunt": "0",
+    "pos": "近战位"
+   }
+  ],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "古米": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18→20",
+   "block": "2→3→3"
+  }
+ },
+ "蛇屠箱": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "3"
+  }
+ },
+ "角峰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19→21",
+   "block": "3"
+  }
+ },
+ "调香师": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14→16",
+   "block": "1"
+  }
+ },
+ "嘉维尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "末药": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "暗索": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "2"
+  }
+ },
+ "砾": {
+  "summons": [],
+  "main": {
+   "redeploy": "18s",
+   "cost": "6→8",
+   "block": "1"
+  }
+ },
+ "慕斯": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20",
+   "block": "1"
+  }
+ },
+ "艾丝黛尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "18→20→22",
+   "block": "2→2→3"
+  }
+ },
+ "霜叶": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "2"
+  }
+ },
+ "缠丸": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "杜宾": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "2"
+  }
+ },
+ "红豆": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "清道夫": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "2"
+  }
+ },
+ "讯使": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "2"
+  }
+ },
+ "白雪": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "23→25→27",
+   "block": "1"
+  }
+ },
+ "流星": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "杰西卡": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "远山": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "29→32",
+   "block": "1"
+  }
+ },
+ "夜烟": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "17→19",
+   "block": "1"
+  }
+ },
+ "梓兰": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "10→12",
+   "block": "1"
+  }
+ },
+ "史都华德": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "1"
+  }
+ },
+ "安赛尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "芙蓉": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "15→17",
+   "block": "1"
+  }
+ },
+ "炎熔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "27→30",
+   "block": "1"
+  }
+ },
+ "安德切尔": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "克洛丝": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "1"
+  }
+ },
+ "米格鲁": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "3"
+  }
+ },
+ "卡缇": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "16→18",
+   "block": "3"
+  }
+ },
+ "玫兰莎": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "13→15",
+   "block": "1"
+  }
+ },
+ "翎羽": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "8→10",
+   "block": "1"
+  }
+ },
+ "香草": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "2"
+  }
+ },
+ "芬": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "9→11",
+   "block": "2"
+  }
+ },
+ "杜林": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "12",
+   "block": "1"
+  }
+ },
+ "巡林者": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "7",
+   "block": "1"
+  }
+ },
+ "黑角": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "14",
+   "block": "3"
+  }
+ },
+ "夜刀": {
+  "summons": [],
+  "main": {
+   "redeploy": "70s",
+   "cost": "7",
+   "block": "2"
+  }
+ },
+ "Castle-3": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ },
+ "Lancet-2": {
+  "summons": [],
+  "main": {
+   "redeploy": "200s",
+   "cost": "3",
+   "block": "1"
+  }
+ }
+}
