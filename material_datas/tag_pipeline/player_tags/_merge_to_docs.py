@@ -27,6 +27,8 @@ TAGS = [
     ("08", "阻挡数>=5", "08-阻挡数5.md"),
     ("09", "阵容组合", "09-阵容组合.md"),
     ("10", "初动", "10-初动.md"),
+    ("11", "抗削弱", "11-抗削弱.md"),
+    ("12", "全场光环", "12-全场光环.md"),
 ]
 
 dates = json.load(open(os.path.join(PARTS, "_launch_dates.json"), encoding="utf-8"))
@@ -61,8 +63,8 @@ def date_of(name_cell):
     return dates.get(base, "—")
 
 
-def transform_table(rows):
-    """rows: list[list[str]]；返回处理后的 md 行。"""
+def transform_table(rows, sort=False):
+    """rows: list[list[str]]；返回处理后的 md 行。sort=True 时按实装时间倒序（无日期者置后）。"""
     header = [c.strip() for c in rows[0]]
     ev = [i for i, c in enumerate(header) if c == "依据"]
     if ev:
@@ -72,22 +74,32 @@ def transform_table(rows):
     date_col = header and header[0].strip() == "干员"
     if date_col:
         header = [header[0], "实装时间"] + header[1:]
-    out = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    data = []
     for r in rows[1:]:
         r = [c.strip() for c in r]
         if len(r) > len(header) - (1 if date_col else 0):
             n = len(header) - (1 if date_col else 0)
             r = r[: n - 1] + [" | ".join(r[n - 1:])]
         if date_col:
-            r = [r[0], date_of(r[0])] + r[1:]
+            d = date_of(r[0])
+            r = [r[0], d] + r[1:]
         while len(r) < len(header):
             r.append("—")
-        out.append("| " + " | ".join(r) + " |")
+        data.append((r[1] if date_col else "", r))
+    if sort and date_col:
+        data.sort(key=lambda t: (t[0] == "—", t[0]), reverse=False)
+        # 有日期者按日期倒序在前，无日期者保持原序置后
+        dated = [t for t in data if t[0] != "—"]
+        undated = [t for t in data if t[0] == "—"]
+        dated.sort(key=lambda t: t[0], reverse=True)
+        data = dated + undated
+    out = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    out.extend("| " + " | ".join(r) + " |" for _, r in data)
     return out
 
 
-def process(text):
-    """行级处理：连续表格行成块，转换后输出；其余原样。"""
+def process(text, sort=False):
+    """行级处理：连续表格行成块，转换后输出；其余原样。sort=True 时成员表按实装时间倒序。"""
     lines = text.splitlines()
     out, i = [], 0
     while i < len(lines):
@@ -101,7 +113,7 @@ def process(text):
                 seps = [r for r in raw if is_sep_row(r)]
                 if not seps:
                     body = raw
-                out.extend(transform_table(body))
+                out.extend(transform_table(body, sort=sort))
             else:
                 out.extend(lines[i:j])
             i = j
@@ -128,7 +140,7 @@ def pending(text):
 def count_members(text):
     seg = section(text, "## 成员表", ["## "])
     if not seg:
-        seg = section(text, "## §A", ["## 边界与排除记录"])
+        seg = section(text, "## §A", ["## 交叉引用", "## 边界与排除记录"])
     lines = seg.splitlines()
     n, i = 0, 0
     while i < len(lines):
@@ -151,7 +163,7 @@ def main():
     out.append("# 玩家体感 TAG 干员名单（v1）")
     out.append("")
     out.append("> 编写：2026-09-10。数据基础：`material_datas/PRTS/`（431 名干员，2026-09-08 抓取，含召唤物页）。")
-    out.append("> 本文件是 `docs/player-tags-specify.md`（10 个玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
+    out.append("> 本文件是 `docs/player-tags-specify.md`（12 个玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
     out.append("> 与 `docs/tags.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `material_datas/tag_pipeline/player_tags/` 各分文件。")
     out.append("")
     out.append("## 0. 通用口径")
@@ -212,7 +224,7 @@ def main():
             out.append("")
             out.append("### 成员表（按实装时间倒序）")
             out.append("")
-            out.append(process(tab).strip())
+            out.append(process(tab, sort=True).strip())
             out.append("")
             out.append("### 边界与排除记录")
             out.append("")
@@ -243,6 +255,8 @@ def main():
     out.append("| 大力推拉 | A-推拉位移（失衡位移，33 人）；本 TAG 为其力度 ≥ 大力 的子集 |")
     out.append("| 充电 | E-为他人回复技力（17 人）；本 TAG 另补归溟幽灵鲨、海蒂、异客等 |")
     out.append("| 初动 | 无对应官方 TAG（E-为他人回复技力 不含初始技力）；与「充电」互补：初动＝开局/部署时点，充电＝持续回复速度 |")
+    out.append("| 抗削弱 | 无对应官方 TAG；保机制下限/提机制上限类（攻速下限、费用下限、弹药上限、技力上限等） |")
+    out.append("| 全场光环 | 无对应官方 TAG；以整个战场为范围的持续光环（增伤/伤害/削弱），与 H-全图攻击（打击手段）区分 |")
     out.append("| 阻挡数>=5 | H-阻挡数≥4（官方不设）；遗留第 4 条明确玩家侧以技能/召唤物条件判定 |")
     out.append("| 阵容组合 | D-编队/阵营联动增益（22 人）+ 各阵营实战组合 |")
     out.append("| 保人 | C-庇护/屏障/护盾/闪避/减伤/嘲讽/抵抗、F-元素损伤治疗等 |")
