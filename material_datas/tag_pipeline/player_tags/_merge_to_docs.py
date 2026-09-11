@@ -2,7 +2,7 @@
 """把 player_tags/ 下的 9 个分 TAG 产物合并为 docs/player-tags-members.md（v1）。
 
 - 所有 markdown 表格：去掉「依据」列；「干员」列后插入「实装时间」列（PRTS 上线时间）。
-- 判定口径 / 成员表 / 边界与排除记录：原文收录；待开发者确认统一收进末尾。
+- 评定标准 / 成员表 / 边界与排除记录：原文收录；待开发者确认统一收进末尾。
 - 只有 09 的「数据结构建议」收录（对 results JSON 设计有用）；检索记录不入正文。
 """
 import json
@@ -166,12 +166,12 @@ def main():
     out.append("> 本文件是 `docs/player-tags-specify.md`（12 个玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
     out.append("> 与 `docs/tags.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `material_datas/tag_pipeline/player_tags/` 各分文件。")
     out.append("")
-    out.append("## 0. 通用口径")
+    out.append("## 0. 通用评定标准")
     out.append("")
     out.append("- **条件**＝硬性达成条件（精英化、技能、专精、模组及等级、模式限定、目标限制）；精零 1 级即具备者写「无」。")
     out.append("- **备注**＝信息加工后的内容（数值、持续时间、隐藏机制、特殊用法、战术帮助），不写游戏内一眼可见的内容。")
-    out.append("- **召唤物/装置效果计入持有干员**；**模式限定模组（ISW-α / RA-α / SO-α 等）计入**，但必须在「条件」中写明、备注注明仅该模式可用（开发者 2026-09-10 口径）。")
-    out.append("- 名单按**实装时间倒序**（同实装日按拼音序）；实装时间取自 PRTS `获得方式` 上线时间。打数/倍率等数值取专精 3（Rank Ⅲ）口径。**「阵容组合」的组合内成员与各「边界与排除记录」表按判定逻辑分组排列，不按时间序。**")
+    out.append("- **召唤物/装置效果计入持有干员**；**模式限定模组（ISW-α / RA-α / SO-α 等）计入**，但必须在「条件」中写明、备注注明仅该模式可用（开发者 2026-09-10 评定标准）。")
+    out.append("- 名单按**实装时间倒序**（同实装日按拼音序）；实装时间取自 PRTS `获得方式` 上线时间。打数/倍率等数值取专精 3（Rank Ⅲ）数值。**「阵容组合」的组合内成员与各「边界与排除记录」表按判定逻辑分组排列，不按时间序。**")
     out.append("- 判定均为机制层、时间无关（不收「新神/退环境」等当期强度结论）。")
     out.append("")
     out.append("## 总览")
@@ -187,8 +187,8 @@ def main():
         out.append(f"## {num}｜{name}")
         out.append("")
         if name == "阵容组合":
-            kou = section(text, "## 判定口径", ["## §A"])
-            out.append("### 判定口径")
+            kou = section(text, "## 评定标准", ["## §A"])
+            out.append("### 评定标准")
             out.append("")
             out.append(process(kou).strip())
             out.append("")
@@ -215,10 +215,10 @@ def main():
                 out.append(ds.strip())
                 out.append("")
         else:
-            kou = section(text, "## 判定口径", ["## "])
+            kou = section(text, "## 评定标准", ["## "])
             tab = section(text, "## 成员表", ["## "])
             bian = section(text, "## 边界与排除记录", ["## 待开发者确认", "## 检索记录", "## 数据结构建议"])
-            out.append("### 判定口径")
+            out.append("### 评定标准")
             out.append("")
             out.append(process(kou).strip())
             out.append("")
@@ -265,7 +265,7 @@ def main():
     out.append("## 附录 C：产物与复现")
     out.append("")
     out.append("- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..09-*.md`。")
-    out.append("- 共享作业口径：`material_datas/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。")
+    out.append("- 共享作业评定标准：`material_datas/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。")
     out.append("- 官方类 TAG 数据：`docs/tags.md`、`material_datas/tag_pipeline/{final_lists.tsv,merged.json}`。")
     out.append("")
 

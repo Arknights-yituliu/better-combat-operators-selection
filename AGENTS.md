@@ -18,8 +18,8 @@ docs/operators.txt ──► crawl_prts.py ──► material_datas/PRTS/<干员
                         └─► docs/tags.md
         player TAGs:    docs/player-tags-specify.md（定义）
                         material_datas/tag_pipeline/player_tags/NN-*.md（分 TAG 判定文件，含逐条 文件:行号 证据）
-                        docs/judge-for-player-tags-members.md（开发者裁决，修改 TAG 前必读）
-                        _brief.md（共享作业口径）+ _launch_dates.json + _merge_to_docs.py
+                        docs/judge-for-player-tags-members-1.md / -2.md（开发者评定标准，修改 TAG 前必读）
+                        _brief.md（共享评定标准）+ _launch_dates.json + _merge_to_docs.py
                         └─► docs/player-tags-members.md（自动生成，勿手改：改分文件后重新合并）
 ```
 
@@ -53,8 +53,16 @@ docs/operators.txt ──► crawl_prts.py ──► material_datas/PRTS/<干员
 - Direction matters (to allies vs self vs enemies); one operator may belong to **multiple TAGs**; player TAGs may have **sub-TAGs** (implementation/type/scope distinctions).
 - Mechanism-level, time-independent only: no tier-list / current-meta claims.
 - Member tables sort by release date descending (date from PRTS `## 获得方式`, cached in `player_tags/_launch_dates.json`); boundary/combo tables follow their own grouping.
-- `docs/judge-for-player-tags-members.md` holds the developer's rulings per open question — read it before changing any player TAG.
+- `docs/judge-for-player-tags-members-1.md` / `-2.md` hold the developer's feedback per open question — read them before changing any player TAG.
 - Player-TAG work uses parallel agents: one agent per TAG writes an evidence-bearing part file under `player_tags/`, following `_brief.md`; the merge script consolidates them into `docs/player-tags-members.md` (stripping the 依据 column). Keep evidence in the part files.
+- Adding a new TAG: follow `.claude/skills/add-player-tag/SKILL.md` — make the 评定标准 fully unambiguous with the developer before any member work, unless they explicitly choose the "先创建此TAG，评定标准后续更新" stub option.
+
+### Player-TAG criteria: 评定标准 writing rules
+
+- A TAG's evaluation standard is called **评定标准** — use that term everywhere: the section heading (`## 评定标准`), its sub-headings, and any prose that states, applies or records a standard. Do not use 口径 or 裁决.
+- When adding or revising a standard, **never stamp dates or round labels** (`2026-09-11`, 本轮, 追加…) and never write the edit itself into the text (no "覆盖上一轮…", 收紧, 补充, before/after phrasing).
+- Fold each new standard into the existing structure — the path it belongs to, the member table, the boundary records — then re-read that TAG's whole 评定标准 section and tidy it: merge redundancies, renumber paths, re-word so it reads as one clean spec written in a single pass.
+- Boundary and exclusion records state facts and rationale only; they are not a changelog of how the list evolved.
 
 ## Working notes
 
