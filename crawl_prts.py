@@ -62,7 +62,7 @@ STOP_SECTIONS = {
     "干员模型", "召唤物模型", "注释与链接",
 }
 # Gameplay sections always kept even if they end up text-empty after
-# cleaning (e.g. 攻击范围 is drawn with colored table cells, no text).
+# cleaning (e.g. 攻击范围 is an inline SVG — no text; see crawl_ranges.py).
 # Unknown sections that are empty after cleaning are dropped instead.
 KEEP_EMPTY_SECTIONS = {
     "干员信息", "特性", "获得方式", "属性", "攻击范围", "天赋", "潜能提升",

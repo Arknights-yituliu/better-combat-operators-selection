@@ -12,6 +12,7 @@ The eventual product is a results JSON per operator. TAG definitions, membership
 
 ```
 docs/operators.txt ──► crawl_prts.py ──► material_datas/PRTS/<干员>/<干员>.md (+ <召唤物>.md siblings)
+crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击范围网格：各精英化阶段 / 技能 / 召唤物；PRTS 用内联 SVG 绘制，主爬虫不抓）
                                               │
                                               │
         official TAGs:  material_datas/tag_pipeline/{catalog,merged,deterministic}.json + final_lists.tsv
@@ -39,6 +40,9 @@ docs/operators.txt ──► crawl_prts.py ──► material_datas/PRTS/<干员
 
 # Regenerate the merged player-TAG document after editing part files
 .venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/player_tags/_merge_to_docs.py
+
+# Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
+.venv/Scripts/python.exe -X utf8 crawl_ranges.py            # --only 干员名 / --force
 ```
 
 - `main.py` is an unused PyCharm stub.
