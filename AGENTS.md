@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A **data-production repository** (not an app) for an Arknights operator-filtering system. It crawls the PRTS wiki into local markdown, then classifies every operator under two TAG systems (official-defined + player-perception) and produces per-operator results consumed by a **separate UI project**. There is no build/lint/test tooling; the code is a handful of one-off Python data scripts. Working language is Chinese; all documents/outputs are Chinese.
 
-The eventual product is a results JSON per operator. TAG definitions, membership lists, counts and open questions change frequently — this file describes stable structure and conventions only; treat `docs/` as the source of truth for content.
+The eventual product is a single results JSON (`results/operator-tags.json`; format spec: `docs/output-standard.md`). TAG definitions, membership lists, counts and open questions change frequently — this file describes stable structure and conventions only; treat `docs/` as the source of truth for content.
 
 ## Data flow / architecture
 
@@ -16,18 +16,19 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
                                               │
                                               │
         official TAGs:  material_datas/tag_pipeline/{catalog,merged,deterministic}.json + final_lists.tsv
-                        └─► docs/tags.md
+                        └─► docs/official-tags-members.md
         player TAGs:    docs/player-tags-specify.md（定义）
                         material_datas/tag_pipeline/player_tags/NN-*.md（分 TAG 判定文件，含逐条 文件:行号 证据）
                         docs/judge-for-player-tags-members-1.md / -2.md（开发者评定标准，修改 TAG 前必读）
-                        _brief.md（共享评定标准）+ _launch_dates.json + _merge_to_docs.py
+                        _brief.md（共享评定标准）+ _launch_dates.json + _merge_to_docs.py + _recommend.json（荐，recommend.py 维护）
                         └─► docs/player-tags-members.md（自动生成，勿手改：改分文件后重新合并）
+                        └─► results/operator-tags.json（最终输出，规范见 docs/output-standard.md；尚未生成）
 ```
 
 - `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links).
 - `material_datas/tag_pipeline/` — official-TAG pipeline artifacts (`catalog.json` = TAG dictionary, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons, `final_lists.tsv` = TAG→members) and `player_tags/` for the player-TAG workflow.
 - `information_records/` — pipeline/crawler notes and extraction decisions; `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls; `docs/player-tags.md` — v1 draft of player TAGs from the video corpus (leads only, not authoritative).
-- `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows.
+- `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows; `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐).
 - The UI itself is **out of scope** for this repo.
 
 ## Commands
@@ -40,6 +41,9 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 # Regenerate the merged player-TAG document after editing part files
 .venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/player_tags/_merge_to_docs.py
+
+# Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
+.venv/Scripts/python.exe -X utf8 recommend.py list|add|remove|check   # 例：recommend.py add 充电 白铁
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
 .venv/Scripts/python.exe -X utf8 crawl_ranges.py            # --only 干员名 / --force
