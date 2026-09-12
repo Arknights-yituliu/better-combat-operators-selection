@@ -163,7 +163,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 - **定义**：人工指定的「该 TAG 下推荐用」干员名单，用于 UI 在该 TAG 下优先展示／加推荐角标。一个干员可以只在部分 TAG 下有荐（在 A TAG 有、B TAG 没有）。
 - **位置**：玩家体感 TAG 的 `recommended` 字段（官方类 TAG 暂无此字段）；数组顺序即展示优先级，无荐时为空数组。
 - **约束**：荐必须是该 TAG 的成员；同一 TAG 内不重复（由工具强制校验，避免笔误产生悬空引用）。
-- **维护工具**：`recommend.py`（命令行），源文件 `material_datas/tag_pipeline/player_tags/_recommend.json`。
+- **维护工具**：`recommend.py`（命令行）与 `recommend_gui.py`（本地网页面板），源文件 `material_datas/tag_pipeline/player_tags/_recommend.json`。
 
 ```bash
 python recommend.py                     # 列出 13 个玩家 TAG 及当前荐数量
@@ -171,10 +171,14 @@ python recommend.py list 充电           # 查看「充电」的荐（按优先
 python recommend.py add 充电 白铁       # 添加荐（可一次多个；--first 置顶）
 python recommend.py remove 充电 白铁    # 移除荐
 python recommend.py check               # 校验荐名单（TAG／成员是否仍然有效）
+
+python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键加荐 / 右键取消荐，
+                                        #   并可逐 TAG 编辑该干员的「条件」「备注」（回写分文件）
 ```
 
 - 荐只维护在 `_recommend.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` 字段，重新生成不会丢失。
-- 调整优先级＝`add --first` 置顶，或手改 `_recommend.json` 中数组顺序（数组顺序即优先级）。
+- 调整优先级＝`add --first` 置顶、面板中的 ↑↓／置顶按钮，或手改 `_recommend.json` 中数组顺序（数组顺序即优先级）。
+- 面板回写的「条件」「备注」即 §4.2 的 `condition`／`remark`，只改成员表对应行的这两列，保存后自动重新合并 `docs/player-tags-members.md`。
 
 ## 7. 数据来源、生成与发布
 

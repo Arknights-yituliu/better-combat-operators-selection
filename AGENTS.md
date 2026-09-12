@@ -44,6 +44,8 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
 .venv/Scripts/python.exe -X utf8 recommend.py list|add|remove|check   # 例：recommend.py add 充电 白铁
+# Local web panel for the same file + per-operator 条件/备注 editing (writes back to NN-*.md)
+.venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
 .venv/Scripts/python.exe -X utf8 crawl_ranges.py            # --only 干员名 / --force
