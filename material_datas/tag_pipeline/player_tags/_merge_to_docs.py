@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""把 player_tags/ 下的 9 个分 TAG 产物合并为 docs/player-tags-members.md（v1）。
+"""把 player_tags/ 下的 13 个玩家体感 TAG 分文件合并为 docs/player-tags-members.md。
 
 - 所有 markdown 表格：去掉「依据」列；「干员」列后插入「实装时间」列（PRTS 上线时间）。
 - 评定标准 / 成员表 / 边界与排除记录：原文收录；待开发者确认统一收进末尾。
-- 只有 09 的「数据结构建议」收录（对 results JSON 设计有用）；检索记录不入正文。
+- 「阵容组合」的「数据结构建议」收录（对 results JSON 设计有用）；检索记录不入正文。
 """
 import json
 import os
@@ -22,7 +22,7 @@ TAGS = [
     ("03", "吃拐一轮秒", "03-吃拐一轮秒.md"),
     ("04", "远程消耗", "04-远程消耗.md"),
     ("05", "插拔容错", "05-插拔容错.md"),
-    ("06", "初动", "06-初动.md"),
+    ("06", "初动增加", "06-初动增加.md"),
     ("07", "充电", "07-充电.md"),
     ("08", "拐杖", "08-拐杖.md"),
     ("09", "保人", "09-保人.md"),
@@ -31,6 +31,10 @@ TAGS = [
     ("12", "阻挡数5", "12-阻挡数5.md"),
     ("13", "阵容组合", "13-阵容组合.md"),
 ]
+
+TABLE_TITLES = {
+    "13": "成员表（按组合）",
+}
 
 dates = json.load(open(os.path.join(PARTS, "_launch_dates.json"), encoding="utf-8"))
 
@@ -58,9 +62,12 @@ def is_sep_row(cells):
 
 
 def date_of(name_cell):
-    base = re.split(r"[（(]", name_cell.strip())[0].strip()
-    if "、" in base or "，" in base or " " in base:
+    name = name_cell.strip()
+    if "、" in name or "，" in name or " " in name:
         return "—"
+    if name in dates:
+        return dates[name]
+    base = re.split(r"[（(]", name)[0].strip()
     return dates.get(base, "—")
 
 
@@ -109,11 +116,10 @@ def process(text, sort=False):
             while j < len(lines) and lines[j].strip().startswith("|"):
                 j += 1
             raw = [ln.strip().strip("|").split("|") for ln in lines[i:j]]
-            if len(raw) >= 2:
-                body = [r for k, r in enumerate(raw) if not (k == 1 and is_sep_row(r))]
-                seps = [r for r in raw if is_sep_row(r)]
-                if not seps:
-                    body = raw
+            body = [r for k, r in enumerate(raw) if not (k == 1 and is_sep_row(r))]
+            if not any(is_sep_row(r) for r in raw):
+                body = raw
+            if len(raw) >= 2 and len(body) >= 2 and not is_sep_row(body[0]):
                 out.extend(transform_table(body, sort=sort))
             else:
                 out.extend(lines[i:j])
@@ -163,7 +169,7 @@ def main():
     out = []
     out.append("# 玩家体感 TAG 干员名单（v1）")
     out.append("")
-    out.append("> 编写：2026-09-10。数据基础：`material_datas/PRTS/`（431 名干员，2026-09-08 抓取，含召唤物页）。")
+    out.append("> 编写：2026-09-13。数据基础：`material_datas/PRTS/`（431 名干员，2026-09-08 抓取，含召唤物页）。")
     out.append("> 本文件是 `docs/player-tags-specify.md`（13 个玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
     out.append("> 与 `docs/official-tags-members.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `material_datas/tag_pipeline/player_tags/` 各分文件。")
     out.append("")
@@ -171,7 +177,8 @@ def main():
     out.append("")
     out.append("- **条件**＝硬性达成条件（精英化、技能、专精、模组及等级、模式限定、目标限制）；精零 1 级即具备者写「无」。")
     out.append("- **备注**＝信息加工后的内容（数值、持续时间、隐藏机制、特殊用法、战术帮助），不写游戏内一眼可见的内容。")
-    out.append("- **召唤物/装置效果计入持有干员**；**模式限定模组（ISW-α / RA-α / SO-α 等）计入**，但必须在「条件」中写明、备注注明仅该模式可用（开发者 2026-09-10 评定标准）。")
+    out.append("- **备注中由计算得出的数值以「（待验证）」标注**（PRTS 原文数值不标），供逐条复核。")
+    out.append("- **召唤物/装置效果计入持有干员**；**模式限定模组（ISW-α / RA-α / SO-α 等）、模式限定天赋与模式内成长（集成战略「精通」节点）计入**，但必须在「条件」中写明模式、备注注明仅该模式可用。")
     out.append("- 名单按**实装时间倒序**（同实装日按拼音序）；实装时间取自 PRTS `获得方式` 上线时间。打数/倍率等数值取专精 3（Rank Ⅲ）数值。**「阵容组合」的组合内成员与各「边界与排除记录」表按判定逻辑分组排列，不按时间序。**")
     out.append("- 判定均为机制层、时间无关（不收「新神/退环境」等当期强度结论）。")
     out.append("")
@@ -187,49 +194,26 @@ def main():
         text = parts[name]
         out.append(f"## {num}｜{name}")
         out.append("")
-        if name == "阵容组合":
-            kou = section(text, "## 评定标准", ["## §A"])
-            out.append("### 评定标准")
+        kou = section(text, "## 评定标准", ["## "])
+        tab = section(text, "## 成员表", ["## "])
+        bian = section(text, "## 边界与排除记录", ["## 待开发者确认", "## 检索记录", "## 数据结构建议"])
+        out.append("### 评定标准")
+        out.append("")
+        out.append(process(kou).strip())
+        out.append("")
+        out.append(f"### {TABLE_TITLES.get(num, '成员表（按实装时间倒序）')}")
+        out.append("")
+        out.append(process(tab, sort=num != "13").strip())
+        out.append("")
+        out.append("### 边界与排除记录")
+        out.append("")
+        out.append(process(bian).strip())
+        out.append("")
+        ds = section(text, "## 数据结构建议", [])
+        if ds.strip():
+            out.append("### 数据结构建议（供 results JSON 设计参考）")
             out.append("")
-            out.append(process(kou).strip())
-            out.append("")
-            body = section(text, "## §A", ["## 边界与排除记录"])
-            out.append("### 成员表（按组合）")
-            out.append("")
-            out.append(process(body).strip())
-            out.append("")
-            body2 = section(text, "## §B", ["## 边界与排除记录"])
-            if body2.strip():
-                out.append("### 非阵营型编队联动（官方 D-编队 22 人锚名单补录）")
-                out.append("")
-                out.append(process(body2).strip())
-                out.append("")
-            bian = section(text, "## 边界与排除记录", ["## 待开发者确认", "## 检索记录", "## 数据结构建议"])
-            out.append("### 边界与排除记录")
-            out.append("")
-            out.append(process(bian).strip())
-            out.append("")
-            ds = section(text, "## 数据结构建议", [])
-            if ds.strip():
-                out.append("### 数据结构建议（供 results JSON 设计参考）")
-                out.append("")
-                out.append(ds.strip())
-                out.append("")
-        else:
-            kou = section(text, "## 评定标准", ["## "])
-            tab = section(text, "## 成员表", ["## "])
-            bian = section(text, "## 边界与排除记录", ["## 待开发者确认", "## 检索记录", "## 数据结构建议"])
-            out.append("### 评定标准")
-            out.append("")
-            out.append(process(kou).strip())
-            out.append("")
-            out.append("### 成员表（按实装时间倒序）")
-            out.append("")
-            out.append(process(tab, sort=True).strip())
-            out.append("")
-            out.append("### 边界与排除记录")
-            out.append("")
-            out.append(process(bian).strip())
+            out.append(ds.strip())
             out.append("")
 
     out.append("## 待开发者确认（按 TAG 汇总）")
@@ -252,20 +236,20 @@ def main():
     out.append("")
     out.append("| 玩家体感 TAG | 官方类 TAG / 说明 |")
     out.append("|---|---|")
-    out.append("| 远程消耗 | H-全图/全场攻击（蕾缪安、荒芜拉普兰德、澄闪、安比尔）；本 TAG 另含以「越界/全场」原文为依据者 |")
+    out.append("| 远程消耗 | H-全图/全场攻击（蕾缪安、荒芜拉普兰德、澄闪、安比尔）；本 TAG 另含以「超远距离打击（≥7 格）」与「全场」原文为依据者 |")
     out.append("| 大力推拉 | A-推拉位移（失衡位移，33 人）；本 TAG 为其力度 ≥ 大力 的子集 |")
     out.append("| 充电 | E-为他人回复技力（17 人）；本 TAG 另补归溟幽灵鲨、海蒂、异客等 |")
-    out.append("| 初动 | 无对应官方 TAG（E-为他人回复技力 不含初始技力）；与「充电」互补：初动＝开局/部署时点，充电＝持续回复速度 |")
-    out.append("| 抗削弱 | 无对应官方 TAG；保机制下限/提机制上限类（攻速下限、费用下限、弹药上限、技力上限等） |")
+    out.append("| 初动增加 | 无对应官方 TAG（E-为他人回复技力 不含初始技力）；与「充电」互补：初动增加＝为他人增加初始技力，充电＝持续/触发式回复技力 |")
+    out.append("| 抗削弱 | 无对应官方 TAG；保机制下限/提机制上限类（攻速下限、费用下限、弹药上限等）＋负面状态防护（抵抗/净化） |")
     out.append("| 全场光环 | **已转为官方设定 TAG**（见 docs/official-tags-members.md 类别 I），不再属玩家体感 TAG |")
     out.append("| 次数对策 | 无对应官方 TAG；与 B-施加中毒/灼烧/流血、H-帧级结算、I-全场光环部分重叠（多对多并存） |")
     out.append("| 阻挡数>=5 | H-阻挡数≥4（官方不设）；遗留第 4 条明确玩家侧以技能/召唤物条件判定 |")
     out.append("| 阵容组合 | D-编队/阵营联动增益（22 人）+ 各阵营实战组合 |")
-    out.append("| 保人 | C-庇护/屏障/护盾/闪避/减伤/嘲讽/抵抗、F-元素损伤治疗等 |")
+    out.append("| 保人 | C-庇护/屏障/护盾/闪避/减伤/嘲讽、F-元素损伤治疗等；抵抗/净化归 10-抗削弱 |")
     out.append("")
     out.append("## 附录 C：产物与复现")
     out.append("")
-    out.append("- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..09-*.md`。")
+    out.append("- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..13-*.md`。")
     out.append("- 共享作业评定标准：`material_datas/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。")
     out.append("- 官方类 TAG 数据：`docs/official-tags-members.md`、`material_datas/tag_pipeline/{final_lists.tsv,merged.json}`。")
     out.append("")
