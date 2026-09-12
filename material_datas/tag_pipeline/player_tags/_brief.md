@@ -6,7 +6,7 @@
 ## 0. 项目背景（必读）
 
 - 本项目为明日方舟干员筛选系统生产数据。已有两类 TAG：
-  - **官方定义类 TAG**：`docs/tags.md`（78 个 TAG、961 条关系、覆盖全部干员），管线数据在 `material_datas/tag_pipeline/`（`final_lists.tsv`、`merged.json`、`catalog.json`、`deterministic.json`）。
+  - **官方定义类 TAG**：`docs/official-tags-members.md`（78 个 TAG、961 条关系、覆盖全部干员），管线数据在 `material_datas/tag_pipeline/`（`final_lists.tsv`、`merged.json`、`catalog.json`、`deterministic.json`）。
 - 本次只做这 9 个 TAG：决战歼灭、拐杖、充电、保人、远程消耗、插拔容错、大力推拉、阻挡数>=5、阵容组合。
 
 ## 1. 数据源（判定以 PRTS 原文为准）
@@ -17,15 +17,15 @@
 | `material_datas/PRTS/<干员>/*.md` | 同目录的召唤物文件（如 温蒂/工程蓄水炮.md）。**召唤物效果计入持有干员。** |
 | `material_datas/tag_pipeline/deterministic.json` | 解析好的基础属性（再部署/阻挡/费用）与召唤物数据（block/slots/etype）。 |
 | `material_datas/tag_pipeline/final_lists.tsv` / `merged.json` | 官方 TAG → 成员名单（按实装倒序），用于交叉锚定。 |
-| `docs/tags.md` | 官方 TAG 定义与完整名单（含备注评定标准）。 |
+| `docs/official-tags-members.md` | 官方 TAG 定义与完整名单（含备注评定标准）。 |
 | `docs/mechanism-understanding.md`、`docs/verification-complaints.md` | 机制判别评定标准与历史踩坑记录（避免重蹈覆辙）。 |
 
 ## 2. 判定铁律（项目既有约定，务必遵守）
 
 1. **一切判定以 PRTS 原文（文件:行号）为证据**，不凭模型记忆；拿不准的标 `[待考]` 并写入"待开发者确认"。
 2. **施加方向是第一属性**：区分"对友方/自身/敌人/召唤物"。本批 TAG 全部是**对友方/对团队**的体感能力（除个别如推拉是对敌），不要把"自身获得"误判成"能为友方提供"。
-3. **召唤物/装置效果计入干员**（如酒神3技能生成的迷狂牢笼计入酒神）；**模式限定模组（ISW-α / RA-α 等集成战略/生息演算限定）同样计入**——但必须把模式限定写进「条件」（如"需开启 ISW-α 模组"），并在备注中注明该效果仅在该模式可用。此条为开发者最新评定标准，优先于本项目旧文档（docs/tags.md §6.2 的排除约定仅适用于官方类 TAG 的历史版本）。
-4. **区分同名不同物**：屏障(吸收值)/护盾(按层挡一次)/闪避/抵挡、脆弱(受伤↑)/攻击力加成、灼烧DoT/灼燃损伤、晕眩/停顿/束缚/战栗/麻痹……分类参照 `docs/tags.md` §2 与 `mechanism-understanding.md`。
+3. **召唤物/装置效果计入干员**（如酒神3技能生成的迷狂牢笼计入酒神）；**模式限定模组（ISW-α / RA-α 等集成战略/生息演算限定）同样计入**——但必须把模式限定写进「条件」（如"需开启 ISW-α 模组"），并在备注中注明该效果仅在该模式可用。此条为开发者最新评定标准，优先于本项目旧文档（docs/official-tags-members.md §6.2 的排除约定仅适用于官方类 TAG 的历史版本）。
+4. **区分同名不同物**：屏障(吸收值)/护盾(按层挡一次)/闪避/抵挡、脆弱(受伤↑)/攻击力加成、灼烧DoT/灼燃损伤、晕眩/停顿/束缚/战栗/麻痹……分类参照 `docs/official-tags-members.md` §2 与 `mechanism-understanding.md`。
 5. **不凭当期强度**：只收机制层面成立、跨版本稳定的能力；"新神/退环境/超大杯"类强度结论不收。
 6. 干员用**正式名**（与 PRTS 文件夹名一致，如"史尔特尔"不写"42"、"假日威龙陈"不写"水陈"）；异格/同名分别列（如 阿米娅(医疗)）。
 

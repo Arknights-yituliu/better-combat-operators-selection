@@ -64,13 +64,19 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 - `docs/judge-for-player-tags-members-1.md` / `-2.md` hold the developer's feedback per open question — read them before changing any player TAG.
 - Player-TAG work uses parallel agents: one agent per TAG writes an evidence-bearing part file under `player_tags/`, following `_brief.md`; the merge script consolidates them into `docs/player-tags-members.md` (stripping the 依据 column). Keep evidence in the part files.
 - Adding a new TAG: follow `.claude/skills/add-player-tag/SKILL.md` — make the 评定标准 fully unambiguous with the developer before any member work, unless they explicitly choose the "先创建此TAG，评定标准后续更新" stub option.
+- New operator released (developer gives a PRTS link or description): follow `.claude/skills/add-new-operator/SKILL.md` — crawl into `material_datas/PRTS/`（含攻击范围）, judge every TAG (official + player), ask the developer about notable mechanics no TAG covers, then update the member docs (`docs/official-tags-members.md` + part files → merged doc) only — never generate `results/operator-tags.json`.
 
-### Player-TAG criteria: 评定标准 writing rules
+### TAG criteria: 评定标准 writing rules (official AND player TAGs)
 
-- A TAG's evaluation standard is called **评定标准** — use that term everywhere: the section heading (`## 评定标准`), its sub-headings, and any prose that states, applies or records a standard. Do not use 口径 or 裁决.
-- When adding or revising a standard, **never stamp dates or round labels** (`2026-09-11`, 本轮, 追加…) and never write the edit itself into the text (no "覆盖上一轮…", 收紧, 补充, before/after phrasing).
+- A TAG's evaluation standard is called **评定标准** — use that term everywhere: the section heading (`## 评定标准`), its sub-headings, and any prose that states, applies or records a standard. This applies to **both TAG systems**: the official entries (`docs/official-tags-members.md` §1/§4) and every player-TAG file (`material_datas/tag_pipeline/player_tags/NN-*.md`). Do not use 口径, 裁决 or any other synonym for the standard itself; sub-rules (how a count is computed, rounding, etc.) use plain words — 计数方式 / 计算方式 / 判定 / 门槛 — never 口径.
+- When adding, revising or removing a standard, **never stamp dates or round labels** (`2026-09-11`, 本轮, 追加, 最新, 二次更新…) and never write the edit itself into the text (no "覆盖上一轮…", 已落实, 重新纳入, 移出改为…, 修正后, before/after phrasing). A reader must not be able to tell from the text which round a rule came from.
+- Every TAG's 评定标准 must be **清晰、有序、整洁、风格一致**:
+  - 清晰 — 纳入写「收什么」，排除写「不收什么」，判定阈值与算式给全；
+  - 有序 — 固定顺序：规格原文（如有）→ 纳入 → 排除 → 与其它 TAG 的关系 → 通用约定（数值档位、召唤物/装置、模式限定模组）；有子 TAG 时每个子 TAG 独立成块、用同一套小标题；
+  - 整洁 — 不重复、不夹叙旧账、不引用本文件其它小节编号之外的"第几条"；
+  - 风格一致 — 统一用 `**纳入**：`、`**排除**：`、`**与其它 TAG 的关系**：`、`**约定**：` 等加粗标签起头。
 - Fold each new standard into the existing structure — the path it belongs to, the member table, the boundary records — then re-read that TAG's whole 评定标准 section and tidy it: merge redundancies, renumber paths, re-word so it reads as one clean spec written in a single pass.
-- Boundary and exclusion records state facts and rationale only; they are not a changelog of how the list evolved.
+- Boundary, exclusion and 待开发者确认 records state rules/facts and their rationale only; they are not a changelog of how the list evolved (drop 本轮／日期／已落实-style labels there too). 检索记录 is the one place where dated process entries may remain.
 
 ## Working notes
 
