@@ -362,7 +362,7 @@ h3.sec{font-size:13px;margin:2px 0 8px;color:var(--dim);font-weight:600}
   </section>
   <aside id="editcol">
     <div id="recbox"></div>
-    <div class="guide">条件＝硬性达成条件（精英化／技能／专精／模组与等级／模式限定／目标限制），精零 1 级即具备写「无」；备注＝加工后的信息（数值、持续时间、隐藏机制、用法），不写游戏内一眼可见的内容。单元格须单行、不含竖线 |；保存后并入 <code>docs/player-tags-members.md</code>，即最终 JSON 的 condition / remark。</div>
+    <div class="guide">条件＝硬性达成条件（精英化／技能／专精／模组与等级／模式限定／目标限制），精零 1 级即具备写「无」；备注＝加工后的信息（数值、持续时间、隐藏机制、用法），不写游戏内一眼可见的内容；备注中由计算得出的数值带「（待验证）」（PRTS 原文数值不标）。单元格须单行、不含竖线 |；保存后并入 <code>docs/player-tags-members.md</code>，即最终 JSON 的 condition / remark。</div>
     <div id="editor"></div>
   </aside>
 </main>
