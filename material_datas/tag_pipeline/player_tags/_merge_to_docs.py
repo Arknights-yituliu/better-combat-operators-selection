@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把 player_tags/ 下的 13 个玩家体感 TAG 分文件合并为 docs/player-tags-members.md。
+"""把 player_tags/ 下的 12 个玩家体感 TAG 分文件合并为 docs/player-tags-members.md。
 
 - 所有 markdown 表格：去掉「依据」列；「干员」列后插入「实装时间」列（PRTS 上线时间）。
 - 评定标准 / 成员表 / 边界与排除记录：原文收录；待开发者确认统一收进末尾。
@@ -26,14 +26,13 @@ TAGS = [
     ("07", "充电", "07-充电.md"),
     ("08", "拐杖", "08-拐杖.md"),
     ("09", "保人", "09-保人.md"),
-    ("10", "抗削弱", "10-抗削弱.md"),
-    ("11", "大力推拉", "11-大力推拉.md"),
-    ("12", "阻挡数5", "12-阻挡数5.md"),
-    ("13", "阵容组合", "13-阵容组合.md"),
+    ("10", "大力推拉", "10-大力推拉.md"),
+    ("11", "阻挡数5", "11-阻挡数5.md"),
+    ("12", "阵容组合", "12-阵容组合.md"),
 ]
 
 TABLE_TITLES = {
-    "13": "成员表（按组合）",
+    "12": "成员表（按组合）",
 }
 
 dates = json.load(open(os.path.join(PARTS, "_launch_dates.json"), encoding="utf-8"))
@@ -170,7 +169,7 @@ def main():
     out.append("# 玩家体感 TAG 干员名单（v1）")
     out.append("")
     out.append("> 编写：2026-09-13。数据基础：`material_datas/PRTS/`（431 名干员，2026-09-08 抓取，含召唤物页）。")
-    out.append("> 本文件是 `docs/player-tags-specify.md`（13 个玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
+    out.append("> 本文件是 `docs/player-tags-specify.md`（玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。")
     out.append("> 与 `docs/official-tags-members.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `material_datas/tag_pipeline/player_tags/` 各分文件。")
     out.append("")
     out.append("## 0. 通用评定标准")
@@ -203,7 +202,7 @@ def main():
         out.append("")
         out.append(f"### {TABLE_TITLES.get(num, '成员表（按实装时间倒序）')}")
         out.append("")
-        out.append(process(tab, sort=num != "13").strip())
+        out.append(process(tab, sort=num != "12").strip())
         out.append("")
         out.append("### 边界与排除记录")
         out.append("")
@@ -216,11 +215,12 @@ def main():
             out.append(ds.strip())
             out.append("")
 
-    out.append("## 待开发者确认（按 TAG 汇总）")
-    out.append("")
-    for num, name, fn in TAGS:
-        p = pending(parts[name])
-        if p.strip():
+    pend = [(name, pending(parts[name])) for _, name, _ in TAGS]
+    pend = [(name, p) for name, p in pend if p.strip()]
+    if pend:
+        out.append("## 待开发者确认（按 TAG 汇总）")
+        out.append("")
+        for name, p in pend:
             out.append(f"### {name}")
             out.append("")
             out.append(p.strip())
@@ -240,16 +240,16 @@ def main():
     out.append("| 大力推拉 | A-推拉位移（失衡位移，33 人）；本 TAG 为其力度 ≥ 大力 的子集 |")
     out.append("| 充电 | E-为他人回复技力（17 人）；本 TAG 另补归溟幽灵鲨、海蒂、异客等 |")
     out.append("| 初动增加 | 无对应官方 TAG（E-为他人回复技力 不含初始技力）；与「充电」互补：初动增加＝为他人增加初始技力，充电＝持续/触发式回复技力 |")
-    out.append("| 抗削弱 | 无对应官方 TAG；保机制下限/提机制上限类（攻速下限、费用下限、弹药上限等）＋负面状态防护（抵抗/净化） |")
+    out.append("| 抗削弱 | **已转为官方设定 TAG**（见 docs/official-tags-members.md C 类），不再属玩家体感 TAG |")
     out.append("| 全场光环 | **已转为官方设定 TAG**（见 docs/official-tags-members.md 类别 I），不再属玩家体感 TAG |")
     out.append("| 次数对策 | 无对应官方 TAG；与 B-施加中毒/灼烧/流血、H-帧级结算、I-全场光环部分重叠（多对多并存） |")
-    out.append("| 阻挡数>=5 | H-阻挡数≥4（官方不设）；遗留第 4 条明确玩家侧以技能/召唤物条件判定 |")
+    out.append("| 阻挡数>=5 | H-阻挡数≥4（官方不设）；玩家侧以技能/召唤物条件判定 |")
     out.append("| 阵容组合 | D-编队/阵营联动增益（22 人）+ 各阵营实战组合 |")
-    out.append("| 保人 | C-庇护/屏障/护盾/闪避/减伤/嘲讽、F-元素损伤治疗等；抵抗/净化归 10-抗削弱 |")
+    out.append("| 保人 | C-庇护/屏障/护盾/闪避/减伤/嘲讽、F-元素损伤治疗等；抵抗/净化归官方设定 TAG「抗削弱」 |")
     out.append("")
     out.append("## 附录 C：产物与复现")
     out.append("")
-    out.append("- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..13-*.md`。")
+    out.append("- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..12-*.md`。")
     out.append("- 共享作业评定标准：`material_datas/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。")
     out.append("- 官方类 TAG 数据：`docs/official-tags-members.md`、`material_datas/tag_pipeline/{final_lists.tsv,merged.json}`。")
     out.append("")

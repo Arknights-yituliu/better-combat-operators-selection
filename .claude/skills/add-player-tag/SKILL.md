@@ -34,7 +34,7 @@ If the developer picks it:
 
 ## Once the 评定标准 is clear
 
-1. **Pick the index/name**: `NN-<TAG名>.md` (existing part files are `01-…`–`12-…`).
+1. **Pick the index/name**: `NN-<TAG名>.md` (existing part files are `01-…`–`12-…` — 12 player TAGs in total).
 2. **Register**: `_merge_to_docs.py` TAGS list, `docs/player-tags-specify.md`, `docs/judge-for-player-tags-members-2.md`.
 3. **Write `## 评定标准`** following the 评定标准 writing rules in CLAUDE.md: use the term 评定标准 (never 口径 or 裁决), no dates, no edit traces; numbered paths when there are several; state boundaries and exclusions.
 4. **Member scan**: drive full-corpus searches from the criteria keywords (PRTS pages under `material_datas/PRTS/` + `deterministic.json`); every inclusion and exclusion cites `文件:行号`; summons/devices count as the owner; mode-limited modules (ISW-α/RA-α/SO-α…) count, with the mode written into 条件.

@@ -171,7 +171,7 @@ function renderRec() {
   }
   const t = tagOf(ST.zhen.tag);
   let html = "<h3>「" + esc(t.name) + "」荐（" + t.recommend.length + " 人，按展示优先级）</h3>" +
-    "<div class='note'>荐只能加在玩家体感 TAG（P01–P13）上；官方设定 TAG 无荐字段。</div>";
+    "<div class='note'>荐只能加在玩家体感 TAG（P01–P12）上；官方设定 TAG 无荐字段。</div>";
   if (!t.recommend.length) html += "<div class='empty'>暂无。左键下方任一干员即可加入。</div>";
   else {
     html += "<ol>";
@@ -356,20 +356,26 @@ function renderIndList() {
     if (open) list.appendChild(detailEl(op, recs));
   }
 }
-function briefHtml(name) {
+function briefHtml(name, cid) {
+  // 编号 = charId：只读展示，来自成员行的「编号」列（缺列时由服务端回查 char_ids.json）
+  const idHtml = cid ? "<span class='cid' title='charId（只读；插入新行时按干员名自动填充）'>" + esc(cid) + "</span>" : "";
   const p = (DATA.roster || []).find(x => x.name === name);
-  if (!p) return "<div class='brief'><b>" + esc(name) + "</b><span>（未在全量干员表中找到）</span></div>";
-  return "<div class='brief'><b>" + esc(p.name) + "</b>" +
+  if (!p) return "<div class='brief'><b>" + esc(name) + "</b>" + idHtml + "<span>（未在全量干员表中找到）</span></div>";
+  return "<div class='brief'><b>" + esc(p.name) + "</b>" + idHtml +
     "<span>" + (p.star ? "★".repeat(p.star) : "—") + "</span>" +
     "<span>" + esc([p.cls, p.branch].filter(Boolean).join("·")) + "</span>" +
     "<span>" + esc(p.faction || "—") + "</span>" +
     "<span>" + esc(p.date || "—") + "</span>" +
     "<span><a href='" + esc(p.url) + "' target='_blank' rel='noreferrer'>PRTS↗</a></span></div>";
 }
+function firstCid(recs) {
+  for (const x of recs) if (x.r.cid) return x.r.cid;
+  return "";
+}
 function detailEl(op, recs) {
   const box = document.createElement("div");
   box.className = "detail";
-  box.innerHTML = briefHtml(op);
+  box.innerHTML = briefHtml(op, firstCid(recs));
   for (const x of recs) box.appendChild(recordCard(x));
   return box;
 }
@@ -1273,7 +1279,7 @@ function resSortAll() {
   const total = tagOrder + opOrder + emptyRemark + emptySub + missingRec;
   if (!total) return toast("已经符合规范，无需整理");
   if (!confirm("将调整：TAG 顺序 " + tagOrder + " 处、干员顺序 " + opOrder + " 处、删除空备注 " + emptyRemark +
-      " 处、删除空子 TAG " + emptySub + " 处、补 recommended " + missingRec + " 处。\n（只改内存，保存前不写盘；阵容组合 P13 的成员顺序不动）继续？")) return;
+      " 处、删除空子 TAG " + emptySub + " 处、补 recommended " + missingRec + " 处。\n（只改内存，保存前不写盘；阵容组合 P12 的成员顺序不动）继续？")) return;
   const keepId = resTag() ? resTag().id : null;
   doc.tags = ordered.map(x => x.t);
   doc.operators = opsSorted;

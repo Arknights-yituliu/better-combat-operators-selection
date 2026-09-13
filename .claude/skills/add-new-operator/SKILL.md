@@ -27,12 +27,12 @@ Read the new operator's md in full (summons included), then screen all TAGs. Eff
 
 1. **机制词表粗筛** — list the operator's mechanisms in plain words (控制/位移/召唤/伤害类型/资源回复/生存/部署/攻击行为…), then open only the plausible TAG entries.
 2. **官方设定 TAG** — `docs/official-tags-members.md`: apply §1 判定铁律 (免疫≠持有、名称≠机制、数值减益不设 TAG…) and each §4 entry's definition + 备注. Summons/devices count as the owner; mode-limited modules count (write the mode into the eventual 条件). Collect the TAGs whose 成员 line gains the new operator.
-3. **玩家体感 TAG** — `material_datas/tag_pipeline/player_tags/NN-*.md` (13 files): read each file's `## 评定标准` **and its 边界与排除记录** before deciding. Prepare the member row in the file's format:
+3. **玩家体感 TAG** — `material_datas/tag_pipeline/player_tags/NN-*.md` (12 files): read each file's `## 评定标准` **and its 边界与排除记录** before deciding. Prepare the member row in the file's format:
    - `| 干员 | [子 TAG] | 条件 | 备注 | 依据 |` — 条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; `无` if available at E0·1), 备注 = processed info (numbers, durations, hidden mechanics, tactical use), 依据 = `文件:行号`.
    - Judge the sub-TAGs too: 拐杖 子 TAG 列 / 次数对策 两张子表 / 吃拐一轮秒 聚爆·连射 / 保人 七个分部 / 阵容组合 组合名 等。
    - Near-misses go to the file's 边界与排除记录 with rationale + evidence, not into the member table.
 4. **Multi-TAG** —多数新干员会同时落多个 TAG；TAG 之间不互斥（写明关系的除外，如 吃拐一轮秒 与 决战歼灭 不互斥）。顺手在两端的「多 TAG 并存」记录里互链。
-5. **Batches ≥3 operators**: split the TAG families across parallel read-only agents (official 80 is mechanical/keyword-driven; player 13 is judgment-driven), then verify their findings against PRTS原文 before writing.
+5. **Batches ≥3 operators**: split the TAG families across parallel read-only agents (official 80 is mechanical/keyword-driven; player 12 is judgment-driven), then verify their findings against PRTS原文 before writing.
 
 ## 3. Special mechanics with no TAG → ask the developer
 

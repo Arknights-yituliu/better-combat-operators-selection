@@ -5,6 +5,8 @@
 - §3 总览：各类别 TAG 数与关系数自动重算；正文两处总数（头部校验目标、§3 标题）同步。
 - §5 时间线：按各 TAG 的「首现」日期重建。
 - 其余章节（§1/§2/§6/§7/§8/§9 等）原样保留；成员表按实装时间倒序（同日期保持文件内相对序）。
+- 成员表列＝`干员 | 编号 | 条件 | 备注`（编号＝charId，值由分模块单元格提供；映射文件
+  `material_datas/tag_pipeline/char_ids.json`）；过渡期兼容旧的 3 列（编号留空并 warn）。
 
 用法：.venv/Scripts/python.exe -X utf8 _merge_official_to_docs.py [--check]
 """
@@ -24,7 +26,8 @@ DATES = json.load(open(os.path.join(ROOT, "material_datas", "tag_pipeline",
 FILES = [
     ("A 控制·异常（对敌施加）", ["A-控制异常-1.md", "A-控制异常-2.md", "A-控制异常-3.md"]),
     ("B 伤害类型", ["B-伤害类型.md"]),
-    ("C 生存与增益（自身/友方/召唤物）", ["C-生存与增益-1.md", "C-生存与增益-2.md", "C-生存与增益-3.md"]),
+    ("C 生存与增益（自身/友方/召唤物）", ["C-生存与增益-1.md", "C-生存与增益-2.md", "C-生存与增益-3.md",
+                                          "C-生存与增益-4.md"]),
     ("D 部署与编队", ["D-部署与编队.md"]),
     ("E 技力与技能资源", ["E-技力与技能资源.md"]),
     ("F 治疗与支援", ["F-治疗与支援.md"]),
@@ -49,10 +52,16 @@ def date_of(name):
 
 
 def parse_file(fname):
+    """解析一个分模块文件 → 条目列表；成员行统一为 [干员, 编号, 条件, 备注]。
+
+    过渡期兼容：仍为旧的 3 列（`干员 | 条件 | 备注`）时按原列序解析，编号留空并汇总 warn；
+    数据文件全部加列后可删除该兼容分支。
+    """
     path = os.path.join(HERE, fname)
     lines = open(path, encoding="utf-8").read().splitlines()
     entries = []
     cur = None
+    legacy_rows = 0
     for ln in lines:
         s = ln.strip()
         m = DEF_RE.match(s) or DEF_FALLBACK.match(s)
@@ -67,11 +76,16 @@ def parse_file(fname):
             if SEP_RE.match(s) or s.startswith("| 干员"):
                 continue
             cells = [c.strip() for c in s.strip("|").split("|")]
-            if len(cells) != 3:
-                warnings.append(f"{fname}: 单元格数 {len(cells)} ≠ 3：{s[:60]}")
+            if len(cells) == 3:  # 旧 3 列 → 原顺序不变，仅补一个空编号格
+                cells = [cells[0], "", cells[1], cells[2]]
+                legacy_rows += 1
+            if len(cells) != 4:
+                warnings.append(f"{fname}: 单元格数 {len(cells)} ≠ 4：{s[:60]}")
                 continue
             cur["rows"].append(cells)
         # 其它行（标题/空行/说明）忽略
+    if legacy_rows:
+        warnings.append(f"{fname}: 按旧 3 列格式解析 {legacy_rows} 行（编号留空；过渡期兼容）")
     return entries
 
 
@@ -84,11 +98,11 @@ def build_category(cat, fnames):
     for e in entries:
         rows = e["rows"]
         dated = []
-        for i, (op, cond, rem) in enumerate(rows):
+        for i, (op, cid, cond, rem) in enumerate(rows):
             d = date_of(op)
             if d is None:
                 warnings.append(f"{cat}｜{e['name']}: 成员「{op}」无实装时间（保持原位）")
-            dated.append((d, i, op, cond, rem))
+            dated.append((d, i, op, cid, cond, rem))
         known = [t for t in dated if t[0] is not None]
         unknown = [t for t in dated if t[0] is None]
         known.sort(key=lambda t: t[0], reverse=True)  # 稳定排序：同日保持文件内相对序
@@ -101,10 +115,10 @@ def build_category(cat, fnames):
             out_lines.append(note)
         if e["notes"]:
             out_lines.append("")
-        out_lines.append("| 干员 | 条件 | 备注 |")
-        out_lines.append("|---|---|---|")
-        for _, _, op, cond, rem in ordered:
-            out_lines.append(f"| {op} | {cond} | {rem} |")
+        out_lines.append("| 干员 | 编号 | 条件 | 备注 |")
+        out_lines.append("|---|---|---|---|")
+        for _, _, op, cid, cond, rem in ordered:
+            out_lines.append(f"| {op} | {cid} | {cond} | {rem} |")
         out_lines.append("")
         stat.append((e["name"], n, first))
     return out_lines, stat
@@ -175,7 +189,7 @@ def main():
     for cat, fnames in FILES:
         for fn in fnames:
             for e in parse_file(fn):
-                for op, _, _ in e["rows"]:
+                for op, _, _, _ in e["rows"]:
                     all_names.add(op)
     m = re.search(r"无 TAG 干员（\d+ 名，([^）]*)）：([^\n]+)", joined)
     if m:

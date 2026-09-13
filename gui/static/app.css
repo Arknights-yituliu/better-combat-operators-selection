@@ -307,6 +307,7 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 #recbox .note { color: var(--dim); font-size: 11px; margin-top: 6px; }
 .brief { display: flex; align-items: baseline; gap: var(--ak-space-2); flex-wrap: wrap; font-size: 12px; color: var(--dim); padding: 6px 9px; margin-bottom: var(--ak-space-2); }
 .brief b { font-size: 1rem; color: var(--txt); font-family: var(--ak-font-serif); letter-spacing: var(--ak-type-tight); }
+.brief .cid { font-family: var(--ak-font-mono); font-size: 11px; color: var(--dim); border: var(--ak-line-hairline) solid var(--line); padding: 0 5px; }
 .brief a { color: var(--acc); text-decoration: none; border-bottom: var(--ak-line-hairline) solid color-mix(in srgb, var(--ak-signal-info) 50%, transparent); }
 .brief a:hover { color: var(--ak-color-light-blue); }
 .detail { margin: 2px 4px var(--ak-space-3) 1.6rem; }

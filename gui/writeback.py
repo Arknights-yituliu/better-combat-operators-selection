@@ -6,7 +6,7 @@ from __future__ import annotations
 import pathlib
 import re
 
-from .config import DEF_RE, KNOWN_COLS, MERGE_OFFICIAL, MERGE_PLAYER, OFFICIAL_DIR, OFFICIAL_FILES, rec
+from .config import CHAR_IDS, DEF_RE, KNOWN_COLS, MERGE_OFFICIAL, MERGE_PLAYER, OFFICIAL_DIR, OFFICIAL_FILES, rec
 from .errors import UserError
 from .md import Doc, build_row, check_value, is_sep_row, parse_block_id, row_op, sig_of, split_cells, write_atomic
 from .merges import run_merge_script
@@ -78,6 +78,7 @@ def insert_position(doc: Doc, block: dict, op: str) -> tuple[str, int]:
 
 
 def insert_into(doc: Doc, block: dict, op: str, cells: dict[str, str]) -> dict:
+    """插入一行；「编号」列由干员名自动填充（查无该干员则留空），其余列取 cells。"""
     existing = {r["op"] for r in block["rows"]}
     for uid, text in doc.rows_after(block["line"]):
         cells_now = split_cells(text)
@@ -85,7 +86,10 @@ def insert_into(doc: Doc, block: dict, op: str, cells: dict[str, str]) -> dict:
             existing.add(row_op(cells_now))
     if op in existing:
         return {"skipped": True, "reason": "already-present"}
-    text = build_row(block["header"], op, cells)
+    values = dict(cells)
+    if "编号" in block["header"] and not values.get("编号"):
+        values["编号"] = CHAR_IDS.get(op, "")
+    text = build_row(block["header"], op, values)
     where, uid = insert_position(doc, block, op)
     (doc.insert_before if where == "before" else doc.insert_after)(uid, text)
     return {"skipped": False, "raw": text}
@@ -177,7 +181,7 @@ def apply_ops(payload: dict, dry_run: bool = False) -> dict:
             if sinfo["kind"] == "player":
                 removed.setdefault(sinfo["tag"], set()).add(opname)
             got = insert_into(tdoc, tblock, opname, values)
-            dropped = {c: values[c] for c in ("子 TAG", "依据") if values.get(c) and c not in tblock["header"]}
+            dropped = {c: values[c] for c in ("编号", "子 TAG", "依据") if values.get(c) and c not in tblock["header"]}
             if got.get("skipped"):
                 results.append({"op_id": rid, "kind": "move", "op": opname, "skipped": True,
                                 "reason": f"「{opname}」已在目标子表内，源行未删除"})

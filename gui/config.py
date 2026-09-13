@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import pathlib
 import re
 import sys
@@ -25,7 +26,14 @@ H2_START = rec.START_MARKS
 H2_STOP = rec.STOP_MARKS
 
 # 可写表格的列白名单：其它结构的表不参与写回
-KNOWN_COLS = {"干员", "子 TAG", "条件", "备注", "依据"}
+KNOWN_COLS = {"干员", "编号", "子 TAG", "条件", "备注", "依据"}
+
+# 干员名 → charId：成员表「编号」列的唯一来源（插入新行时按干员名自动填充）
+CHAR_IDS_FILE = ROOT / "material_datas" / "tag_pipeline" / "char_ids.json"
+try:
+    CHAR_IDS: dict[str, str] = json.loads(CHAR_IDS_FILE.read_text(encoding="utf-8"))
+except (OSError, ValueError):
+    CHAR_IDS = {}
 
 # 官方条目头：**名**（N 人 · 首现 日期）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：(?P<rest>.*)$")

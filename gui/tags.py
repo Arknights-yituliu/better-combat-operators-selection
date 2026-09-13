@@ -13,7 +13,8 @@ from .md import is_sep_row, row_op, sig_of, split_cells
 def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
     """玩家分文件 → 区块（一张连续表 = 一个区块）。
 
-    只认「## 成员表 / ## §A」区间内、表头首列为「干员」且列名在白名单内的表。
+    只认「## 成员表 / ## §A」区间内、表头首列为「干员」且列名在白名单内的表；
+    列序与列数不限定（「编号」「子 TAG」有则带出，无则为空串）。
     每块给出 label（最近的 ###/#### 标题）、表头行号、排序方式与逐行条目。
     """
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -50,6 +51,7 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
             continue
         ci, ni = header.index("条件"), header.index("备注")
         sub_col = header.index("子 TAG") if "子 TAG" in header else None
+        cid_col = header.index("编号") if "编号" in header else None
         label = (h4 or h3 or h2).lstrip("#").strip()
         rows = []
         for k, raw in enumerate(table):
@@ -62,6 +64,7 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
                 "line": i + k + 1,
                 "raw": raw,
                 "op": row_op(cells),
+                "cid": cells[cid_col] if cid_col is not None else "",
                 "cond": cells[ci],
                 "note": cells[ni],
                 "src": cells[len(header) - 1] if len(header) > ni else "",
@@ -83,7 +86,11 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
 
 
 def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
-    """官方分文件 → 条目（粗体定义行 + 其后唯一一张 3 列表 = 一个区块）。"""
+    """官方分文件 → 条目（粗体定义行 + 其后唯一一张成员表 = 一个区块）。
+
+    官方成员表列头为「干员｜编号｜条件｜备注」4 列；列数按表头实读，
+    未加「编号」列的 3 列表（干员｜条件｜备注）同样可解析。
+    """
     lines = path.read_text(encoding="utf-8").splitlines()
     entries: list[dict] = []
     i = 0
@@ -112,6 +119,7 @@ def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
             i = k if k > i else i + 1
             continue
         ci, ni = header.index("条件"), header.index("备注")
+        cid_col = header.index("编号") if "编号" in header else None
         rows = []
         for t, raw in enumerate(table[1:], start=1):
             cells = split_cells(raw)
@@ -121,6 +129,7 @@ def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
                 "line": j + t + 1,
                 "raw": raw,
                 "op": row_op(cells),
+                "cid": cells[cid_col] if cid_col is not None else "",
                 "cond": cells[ci],
                 "note": cells[ni],
                 "src": "",
