@@ -1,0 +1,332 @@
+# TAG Maintenance Panel — Developer Guide
+
+A local, single-user web panel for maintaining the operator TAG data of this repository:
+the 荐 lists, the member tables of every TAG (both TAG systems), and the final
+`results/*.json` deliverable. It is a plain Python `http.server` on `127.0.0.1`
+(stdlib only, no build step) serving three screens from `gui/static/`.
+
+> The UI itself is in Chinese. This guide names every control in Chinese with an English gloss.
+
+---
+
+## 1. At a glance
+
+| Tab | Chinese | What you do there | Writes to disk |
+|---|---|---|---|
+| Recommendations | 荐 | Add / remove / reorder the recommended operators (荐) of a player TAG | `material_datas/tag_pipeline/player_tags/_recommend.json` (immediately) |
+| Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
+| Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options | only when you press **保存…** |
+
+Data conventions (what belongs in 条件 vs 备注, TAG criteria, the output schema) live in
+`docs/concept.md`, `docs/output-standard.md`, `docs/player-tags-specify.md` and the per-TAG part
+files — this guide only explains the tool.
+
+---
+
+## 2. Requirements and running
+
+```bash
+# from the repository root
+.venv/Scripts/python.exe -X utf8 recommend_gui.py                 # start + open the browser
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --check         # read-only self-test, no server
+.venv/Scripts/python.exe -X utf8 -m gui                           # identical (implementation lives in gui/)
+```
+
+* Python 3.11+ and the repository's `.venv`. **No** third-party packages.
+* `-X utf8` matters on Windows: without it the console mangles CJK output.
+* The server binds `127.0.0.1` only (never exposed to the network) and picks an ephemeral port if
+  the requested one is busy — the actual URL is printed at startup.
+* Every mutating request carries a per-session token, so a random page in your browser cannot
+  drive the panel.
+* `--check` parses everything (13 player files, 13 official files, 431 roster operators) and asserts
+  the invariants below. Run it after any change to the data files or to the tool itself.
+
+---
+
+## 3. Global chrome
+
+| Control | Meaning |
+|---|---|
+| `荐 / 人工归纳 / 结果 JSON` | Tab strip. Switching away from 结果 JSON asks for confirmation if it has unsaved edits. |
+| `保存后自动重新生成名单文档` (checkbox, on by default) | After a write, run the affected merge script(s) so `docs/*-members.md` matches the part files. Turn it off to batch many edits and press the button yourself at the end. |
+| `重新生成名单文档` | Runs both merge scripts now (player + official). |
+| `刷新数据` | Re-fetches `/api/data`, re-parsing the markdown files and forcing the PRTS basic-info cache to rebuild. |
+| Status text (top right) | One-line result of the last action (`已保存并重新生成名单文档` / failures). |
+| Toasts (bottom right) | Per-action feedback; red-bordered ones are errors and stay longer. |
+
+**Keyboard.** `Enter` / `✓` commits an edit, `Esc` / `×` cancels it, `Ctrl+Enter` commits a
+multi-line field. `Esc` closes the topmost layer (dialog → context menu → open card). In the save
+dialog `Ctrl+Enter` saves from anywhere.
+
+The three controls `保存后自动重新生成名单文档`, `重新生成名单文档`, `刷新数据` are hidden on the
+结果 JSON tab — that screen has its own load/save semantics and never touches the markdown files.
+
+---
+
+## 4. Tab「荐」 — recommended operators
+
+Purpose: mark which operators to feature first under a player TAG. 荐 exists only for the 13 player
+TAGs (P01–P13); official TAGs have no such field.
+
+1. Pick a TAG in the left column (`全部干员` = the union of every member table).
+2. **Left-click** an operator row → appends it to that TAG's 荐 list.
+   **Right-click** → removes it. Both act immediately and are written to `_recommend.json`.
+3. The right column shows the current 荐 list in display-priority order with `↑ ↓ ⤒ ×`
+   (up / down / pin to top / remove).
+4. Rows show a rank badge (the 荐 position) plus a `详情` button; rows that are 荐 are highlighted in
+   amber.
+5. The search box filters by name (substring, same behaviour as the other tabs).
+
+Notes and failure modes:
+
+* Only members of the TAG's main tables can become 荐 (the panel refuses otherwise) — that is what
+  keeps `recommend.py check` clean.
+* If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
+  prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
+* `详情` (Details) on any row jumps to the 人工归纳 tab with the same TAG selected and that operator's
+  card expanded — that is where 条件 / 备注 are edited. The 荐 tab itself cannot edit them.
+* The CLI equivalent is `recommend.py list|add|remove|check`; both write the same `_recommend.json`.
+
+---
+
+## 5. Tab「人工归纳」 — staging and folding
+
+Purpose: pull operators out of one TAG and fold them into another (or add brand-new members to a
+TAG), carrying their 条件 / 备注 where that makes sense.
+
+### 5.1 Layout
+
+```
+┌ TAG tree ──────────┬ operator list ────────────────┬ full-roster picker ─┐
+│ 玩家体感 TAG (13)   │ rows of the selected scope     │ search + 431 people │
+│ 官方设定 TAG (80)   │ click = expand the card        │ left-click = stage   │
+├─────────────────────┴───────────────────────────────┤ (expand mode only)  │
+│ staging area (临时区) — click an item to fold it in │                     │
+└─────────────────────────────────────────────────────┴─────────────────────┘
+```
+
+### 5.2 Selecting targets
+
+* The TAG tree groups **玩家体感 TAG** (P01–P13) and **官方设定 TAG** (A–I, one category per row).
+* A TAG whose member table is split (远程消耗, 保人, 阵容组合, 抗削弱) shows a caret: click the TAG row
+  to browse all of its members, click a **sub-table row** (表 1 / 2A / 2B / …) to select it. The
+  sub-table — not the TAG — is the unit that receives new rows, because each sub-table means
+  something different.
+* Click a sub-table = single selection. `Ctrl`/`Cmd`+click = multi-selection; every staged item is
+  then folded into **all** selected sub-tables (except 移动, which allows exactly one).
+* The selected scope is also what the operator list shows, and what the expanded cards edit.
+  An operator that appears in two sub-tables of one TAG is legal (e.g. 机械师 in 02) — duplication
+  is only rejected **within one sub-table**.
+
+### 5.3 Staging (临时区)
+
+| Action | Result |
+|---|---|
+| Left-click a picker row (right column) | Stages it in **扩展 / extend** mode. Nothing else is possible from the picker. |
+| Right-click an operator row → `扩展` | Same, from the operator list. |
+| `×` on a staged item | Drop it from staging (no file is touched). |
+| `清空` | Empty the staging area (confirmation; no file is touched). |
+
+Staged items are kept in `localStorage`, so a reload does not lose them. If the source row of a
+`移动` item changed meanwhile, the item turns red and asks you to stage it again.
+
+### 5.4 Folding a staged item into the selected sub-table(s)
+
+Click a staged item. What happens depends on its mode:
+
+* **扩展 (extend)** — inserts a new member row with **empty 条件 and 备注** (plus an empty 依据) so you
+  can write them yourself. The staged item stays, so you can fan the same operator out to several
+  sub-tables.
+* **移动 (move)** — inserts a new row carrying the source row's **条件 / 备注 / 子 TAG / 依据**, then
+  deletes the source row. Exactly one target sub-table is allowed. After a successful move the
+  staged item is consumed. Columns the target table does not have are dropped and reported.
+* Nothing is written if every target is skipped (e.g. the operator is already in that sub-table).
+
+New rows are placed by release date (newest first) using `player_tags/_launch_dates.json`;
+阵容组合 always appends to the end of the combo table, because that TAG groups by combo rather than
+by date.
+
+### 5.5 Right-click menu on an operator row
+
+| Item | Meaning |
+|---|---|
+| `扩展（放入临时区）` | stage in extend mode |
+| `移动（带走条件/备注，删除源行）` | stage in move mode, remembering the exact source row |
+| `移除（删除该行）` | delete that row from the source table after a confirmation (the dialog names the file and line; `git` is the undo) |
+
+When the operator has several records in the current scope, each 移动/移除 entry names the
+sub-table it applies to.
+
+### 5.6 Cards — viewing and editing one operator
+
+Click an operator row to expand it. The card shows the operator's basic info from the PRTS crawl
+(rarity, class·branch, faction, release date, PRTS link — read only) followed by one card per
+record **within the currently selected scope**:
+
+* 条件 / 备注 — click to edit. Clearing 备注 deletes the key; an empty 条件 is flagged in amber
+  until you fill it in.
+* `依据` — read-only evidence pointer (player TAGs only).
+* `子 TAG` — add / edit / delete `{group, value, detail}` rows.
+* `prtsUrl` — free text plus four anchor buttons (`无锚点 / #技能 / #天赋 / #模组 / #召唤物信息`) and
+  `按干员名重建`. Choosing the anchor is a human judgement (see `docs/output-standard.md` §5).
+* `↑ 上移` / `↓ 下移` / `删除成员` — reorder or remove the member row.
+
+Editing a cell writes that line only (`条件`/`备注` columns), preserves everything else on the line
+(including CRLF), and optionally re-runs the merge. A cell must not contain a pipe (`|` — it would
+break the table) and must stay on one line: pasted newlines are collapsed to spaces with a warning.
+
+### 5.7 What the tab writes
+
+| File | When |
+|---|---|
+| `material_datas/tag_pipeline/player_tags/NN-*.md` | member inserted / deleted / moved, or a cell edited |
+| `material_datas/tag_pipeline/official_tags/[A-I]-*.md` | same; the entry header `（N 人 · 首现 日期）` is recomputed from the table |
+| `material_datas/tag_pipeline/player_tags/_recommend.json` | a 荐 became invalid because its member row left the TAG |
+| `docs/player-tags-members.md`, `docs/official-tags-members.md` | regenerated by the merge scripts (never edit these by hand) |
+
+Inserting into an official table writes **exactly three cells**; anything else is silently dropped by
+`_merge_official_to_docs.py`, which is why the panel refuses malformed rows outright.
+
+---
+
+## 6. Tab「结果 JSON」 — editing the deliverable
+
+Purpose: edit `results/*.json` (canonically `results/operator-tags.json`, spec:
+`docs/output-standard.md`) by hand. The whole screen is **in-memory**: reading, editing and
+validating never touch the disk. Only **保存…** writes.
+
+### 6.1 Loading
+
+* `加载…` lists the `results/` directory (nothing else can be opened or overwritten).
+  A file that is not valid JSON still opens, in the source view, so you can repair it.
+* `新建骨架` starts an empty document shaped like the spec
+  (`{"version":"v1","updated":<today>,"operators":[],"tags":[]}`).
+* Opening a non-results JSON (e.g. `combat_glossary.json`) puts the screen in read-only summary
+  mode with a warning; nothing can be edited structurally.
+* If a previous session left an unsaved draft in `localStorage`, a banner offers to restore or
+  discard it — it is never restored automatically.
+
+### 6.2 Editing
+
+Two views of one document; switching re-serializes / re-parses, so neither side can silently lose
+the other's edits. If the source text is not valid JSON, switching back to the structured view is
+refused (you stay in the source view, with the error shown).
+
+* **Structured** — `按干员` / `按 TAG` toggles the mode.
+  * TAG mode: left = `tags[]`, middle = its members, right = the TAG panel (`id` and `source` are
+    read-only; `name` editable; `category` dropdown for official TAGs; the 荐 editor with
+    `↑ ↓ ⤒ ×` for player TAGs) plus the selected member's card
+    (condition / remark / subTags / prtsUrl, add & remove members, reorder).
+  * Operator mode: a searchable, paginated `operators[]` list; the card edits all seven fields;
+    `从全量干员表补全` fills them from the crawled PRTS data; renaming cascades through members and
+    荐; `新增干员条目` picks from the full roster; `删除条目` warns when references remain.
+* **Source** — the whole document as JSON text, with `格式化` and the parse error underneath.
+
+### 6.3 Checking and tidying
+
+* `校验` runs the `docs/output-standard.md` rules on the server and reports errors / warnings as a
+  toast. It never edits anything.
+* `按规范整理` applies the mechanical rules after showing a summary of what it will change: sort
+  `tags[]` (official by category A→I, then players by `P01…P13`), sort `operators[]` by release date,
+  drop empty `remark` / `subTags`, add missing `recommended` arrays. It deliberately does **not**
+  reorder the members of 阵容组合 (that TAG is grouped by combo). Undo = reload the file.
+
+### 6.4 Saving
+
+`保存…` opens the save dialog:
+
+* **Target** — `覆盖已有文件` (a dropdown of `results/*.json`, defaulting to the file you loaded) or
+  `新建文件` (a name; duplicate names are flagged). When nothing is loaded yet the dialog preselects
+  **新建**, so you cannot overwrite another artifact by accident. Overwriting a file **other than the
+  one you loaded** additionally requires ticking a confirmation checkbox.
+* **Version** — if the content changed (ignoring `version`/`updated`), the dialog offers to set
+  `updated` to today and bump `version` (`v1` → `v2`, any number of digits; unparsable values are
+  left for you to type). Ticking the box off is allowed and only shows a warning.
+* **Problems** — the same validation list, each entry clickable to jump to the offending card.
+  Warnings and spec errors never block saving; the one hard refusal is text that is not valid JSON
+  (you would be writing a broken deliverable).
+* **`强制覆盖`** — only needed when the file changed on disk since you loaded it (see §7).
+* After a successful save the in-memory document becomes the new baseline, the draft copy is
+  dropped, and the screen's current file switches to the file you wrote.
+
+Files are written as UTF-8 without BOM, `ensure_ascii=False`, two-space indent, CRLF line endings
+(the style of the existing `results/` files); an LF file stays LF.
+
+---
+
+## 7. Why writes are safe (and when they are refused)
+
+Every write path uses optimistic concurrency against the state you actually saw:
+
+| Guard | Message you may see | What to do |
+|---|---|---|
+| Part files: the exact line you edited must still be on disk | `这一行已被外部改动（或行号已偏移），请点「刷新数据」后重试` | press `刷新数据` and redo the edit |
+| Part files: the sub-table's heading + header row must match (a fingerprint) | `目标子表已被外部改动（标题或表头变化）…` | same |
+| Results JSON: the file's content digest must match what you loaded | `文件已被外部改动，请重新载入，或确认后强制覆盖` | reload it, or tick `强制覆盖` if your version is the good one |
+| Filenames | `文件名只能含中文/字母/数字/空格/._-，且必须以 .json 结尾` | only `results/<name>.json`, no separators |
+
+Writes are atomic (temp file + `os.replace` with retries for Windows file locks) and the server
+serialises every request behind one lock, so two browser tabs cannot interleave a read-modify-write.
+Unsaved work is protected three ways: a `beforeunload` prompt, a confirmation when switching tabs or
+loading another file, and a `localStorage` draft of the results document.
+
+---
+
+## 8. Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| `有 N 条荐已不在成员表中，请核对` toast on load | a 荐 whose member row was removed outside the panel. Re-add the row, then the 荐, or edit `_recommend.json`. |
+| A merge script fails after a save | the edit is already written; fix the reported problem and press `重新生成名单文档`. |
+| `服务端异常：…` toast | an unexpected error; the file on disk is unchanged for that request. Check the console you started the server from. |
+| Fonts look like the system default | the panel fetches Noto Sans/Serif SC from Google Fonts after load with a 2.5 s timeout; offline it silently falls back to the local stack. Nothing is broken. |
+| The port is busy | the panel prints the port it actually bound — copy that URL. |
+| Missing `gui/static` | the server refuses to start with the path in the message. |
+
+`git diff` is the source of truth for what changed; every destructive action (移除, overwrite) names
+the file it will touch, and the repository is the undo history.
+
+---
+
+## 9. Maintainer notes
+
+```
+gui/
+  config.py      paths + sys.path bootstrap (imports the sibling recommend.py / merge script)
+  errors.py      UserError(msg, code) — anything raised here is shown to the user as-is
+  md.py          cell helpers, atomic write, and the line-addressed Doc model
+  tags.py        markdown parsers (player blocks, official entries)
+  roster.py      PRTS basic-info parsing + mtime-keyed cache
+  recommends.py  荐 store helpers, apply_recommend, prune_recommend
+  merges.py      subprocess wrappers for the two merge scripts
+  results_json.py  filename whitelist, load/render/validate/check/save for results/*.json
+  writeback.py   doc_registry, block resolution, apply_ops, save_cell
+  model.py       the /api/data model
+  server.py      Handler, routes, token, LOCK, static assets
+  selfcheck.py   --check assertions
+  static/        index.html + app.css + app.js (a plain classic script; RES must stay global)
+```
+
+Dependency direction is one-way: `config/errors/md` → data modules → `writeback/model` → `server`.
+`selfcheck.py` must not import `server.py` (it is meant to run without a port).
+
+Things to keep in sync when you change the UI:
+
+1. **The DOM contract.** `--check` asserts that the ids/classes the acceptance scripts use still
+   exist and that `RES` is a top-level global. Renaming one without updating the scripts breaks the
+   harness silently.
+2. **The skin.** `static/app.css` transcribes ak-ui's `--ak-*` tokens (MIT, © 2019 云游君 — the
+   header comment records provenance). Keep components to one cut corner **or** one signal bar, and
+   use the tokens rather than new hard-coded colours. The density compromise (44 / 36 / 32 px) is
+   documented at the top of the same file.
+3. **Static serving.** Only `index.html`, `app.css`, `app.js` are served, and `index.html` must
+   contain exactly one `__TOKEN__` placeholder (the server substitutes the session token into
+   `<meta name="x-token">`).
+4. **New tab checklist.** Add the `<main id="page-…" hidden>` block, a `.tab[data-tab]` button, a
+   branch in `setTab()`, a `render…()` call and (if it needs data) an endpoint in `server.py` plus a
+   contract entry in `selfcheck.py`.
+
+Run `--check` and click through all three tabs after any change; the end-to-end Playwright scripts
+used during development live outside the repo (in the OS temp directory) and drive the same DOM
+contract.

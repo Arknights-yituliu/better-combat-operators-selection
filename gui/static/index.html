@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>干员 TAG 名单维护</title>
+<meta name="x-token" content="__TOKEN__">
+<meta name="theme-color" content="#111315">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header>
+  <h1>干员 TAG 名单维护</h1>
+  <nav class="tabs">
+    <button class="tab on" data-tab="zhen">荐</button>
+    <button class="tab" data-tab="induce">人工归纳</button>
+    <button class="tab" data-tab="results">结果 JSON</button>
+  </nav>
+  <span class="hint" id="hint"></span>
+  <span class="sp"></span>
+  <label class="hint" id="automergewrap"><input type="checkbox" id="automerge" checked> 保存后自动重新生成名单文档</label>
+  <button id="btmerge">重新生成名单文档</button>
+  <button id="btreload">刷新数据</button>
+  <span id="status"></span>
+</header>
+<main id="page-zhen">
+  <aside id="tagcol"></aside>
+  <section id="opcol">
+    <div class="toolbar"><input id="search" placeholder="搜索干员名…"><span class="cnt" id="cnt"></span></div>
+    <div id="oplist"></div>
+  </section>
+  <aside id="editcol">
+    <div id="recbox"></div>
+    <div class="guide">荐＝人工指定的「该 TAG 下推荐用」干员，只存在于玩家体感 TAG；本页只负责加/删/排序荐。<br>条件与备注请到「人工归纳」页查看与编辑（点干员行的「详情」直接跳过去）。</div>
+  </aside>
+</main>
+<main id="page-induce" hidden>
+  <aside id="itagcol">
+    <div class="toolbar"><input id="tsearch" placeholder="搜索 TAG / 子表…"></div>
+    <div id="tagtree"></div>
+  </aside>
+  <section id="iopcol">
+    <div class="toolbar"><input id="isearch" placeholder="搜索干员名…"><span class="cnt" id="icnt"></span></div>
+    <div id="ioplist"></div>
+  </section>
+  <aside id="stagecol">
+    <div class="hd">
+      <h3>临时区</h3>
+      <span class="tip" id="stagetip"></span>
+      <span class="sp" style="flex:1"></span>
+      <button id="btclear">清空</button>
+    </div>
+    <div id="stagelist"></div>
+  </aside>
+  <aside id="pickcol">
+    <div class="toolbar"><input id="psearch" placeholder="搜索干员名…"><span class="cnt" id="pcnt"></span></div>
+    <div id="picklist"></div>
+    <div class="guide" style="margin:8px">全部干员摘选区：左键 = 以「扩展」方式放入临时区（并入后新行条件/备注为空）。<br>条件＝硬性达成条件（精英化／技能／专精／模组与等级／模式限定／目标限制），精零 1 级即具备写「无」；备注＝加工后的信息（数值、持续时间、隐藏机制、用法）。单元格须单行、不含竖线 |；保存后并入名单文档，即最终 JSON 的 condition / remark。</div>
+  </aside>
+</main>
+<main id="page-json" hidden>
+  <div id="resbar">
+    <span class="dot" id="resdot" title="有未保存的改动"></span>
+    <b id="resfile">未载入</b>
+    <span class="hint" id="resstats"></span>
+    <span class="sp"></span>
+    <span class="hint" id="reshint">编辑只发生在内存中，点「保存…」才会写盘</span>
+    <button id="btmode">按干员</button>
+    <button id="btload">加载…</button>
+    <button id="btnew">新建骨架</button>
+    <button id="btsort">按规范整理</button>
+    <button id="btcheck">校验</button>
+    <button id="btview">源码视图</button>
+    <button id="btsave" class="primary">保存…</button>
+  </div>
+  <div id="resbody">
+    <aside id="rtagcol">
+      <div class="toolbar"><input id="rtsearch" placeholder="搜索 TAG / id…"><span class="cnt" id="rtcnt"></span></div>
+      <div id="rtags"></div>
+    </aside>
+    <section id="rmemcol">
+      <div class="toolbar"><input id="rsearch" placeholder="搜索干员…"><span class="cnt" id="rmcnt"></span></div>
+      <div id="rmembers"></div>
+    </section>
+    <aside id="rpanel"></aside>
+  </div>
+  <div id="resrc" hidden>
+    <div class="srchead"><span>源码视图：直接编辑 JSON 文本，切回结构化视图时生效</span><span class="sp" style="flex:1"></span><button id="btformat">格式化</button><button id="btback">结构化视图</button></div>
+    <textarea id="rstext" spellcheck="false"></textarea>
+    <div id="rserr"></div>
+  </div>
+</main>
+<div id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true"></div></div>
+<div id="toast"></div>
+</body>
+<script src="/static/app.js"></script>
+</html>

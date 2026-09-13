@@ -30,7 +30,8 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 - `material_datas/tag_pipeline/` — official-TAG pipeline artifacts (`catalog.json` = TAG dictionary, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons, `final_lists.tsv` = TAG→members) and `player_tags/` for the player-TAG workflow.
 - `information_records/` — pipeline/crawler notes and extraction decisions; `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls; `docs/player-tags.md` — v1 draft of player TAGs from the video corpus (leads only, not authoritative).
 - `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows; `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐).
-- The UI itself is **out of scope** for this repo.
+- `gui/` — the maintenance panel as a package: `config/errors/md` (leaf) → `tags/roster/recommends/merges/results_json` (data) → `writeback/model` (business) → `server/selfcheck/__main__`; page assets in `gui/static/` (`index.html` + `app.css` + `app.js`, styled with ak-ui dark tokens — see the CSS header for provenance and the density compromise). `recommend_gui.py` at the root is a thin entry point (`python -m gui` is equivalent). Usage guide (English): `gui/README.md`.
+- The UI itself is **out of scope** for this repo (the panel above is a maintainer tool, not the product UI).
 
 ## Commands
 
@@ -54,6 +55,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 #     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
 #     written until 保存, and validation against docs/output-standard.md only warns, never blocks.
 .venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
+.venv/Scripts/python.exe -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
 .venv/Scripts/python.exe -X utf8 crawl_ranges.py            # --only 干员名 / --force
