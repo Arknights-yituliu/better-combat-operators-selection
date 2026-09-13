@@ -160,7 +160,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
         if "prtsUrl" in op and not isinstance(op.get("prtsUrl"), str):
             add("error", "O3", f"operators[{i}].prtsUrl", plc + ["prtsUrl"], str(nm or ""), "prtsUrl 应为字符串")
         for key in op:
-            if key not in ("name", "rarity", "class", "branch", "faction", "releaseDate", "prtsUrl"):
+            if key not in ("name", "charId", "rarity", "class", "branch", "faction", "releaseDate", "prtsUrl"):
                 add("warn", "O6", f"operators[{i}].{key}", plc + [key], str(nm or ""), f"规范之外的字段「{key}」")
     for i in range(1, len(raw_ops)):
         a, b = raw_ops[i - 1], raw_ops[i]
@@ -225,7 +225,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
         if not isinstance(members, list):
             add("error", "G2", f"tags[{ti}].members", plc + ["members"], label, "members 必须是数组")
             members = []
-        seen: dict[str, int] = {}
+        seen: dict[str, set] = {}  # 干员名 → 已占用的末端子 TAG 集合（无子 TAG 者以 ("", "", "") 记）
         for mi, mem in enumerate(members):
             mplc = plc + ["members", mi]
             stats["members"] += 1
@@ -236,15 +236,9 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
             if not isinstance(mname, str) or not mname.strip():
                 add("error", "M2", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label, "缺少 operator")
                 mname = ""
-            else:
-                if mname not in names:
-                    add("error", "M3", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label + " · " + mname,
-                        f"「{mname}」不在 operators[] 中")
-                if mname in seen:
-                    add("error", "M4", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label + " · " + mname,
-                        f"同一 TAG 内重复（首次出现在 members[{seen[mname]}]）")
-                else:
-                    seen[mname] = mi
+            elif mname not in names:
+                add("error", "M3", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label + " · " + mname,
+                    f"「{mname}」不在 operators[] 中")
             cond = mem.get("condition")
             if not isinstance(cond, str) or not cond.strip():
                 add("error", "M5", f"tags[{ti}].members[{mi}].condition", mplc + ["condition"], label + " · " + (mname or ""),
@@ -253,11 +247,13 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                 add("warn", "M6", f"tags[{ti}].members[{mi}].remark", mplc + ["remark"], label + " · " + (mname or ""),
                     "remark 为空时应省略该字段")
             subs = mem.get("subTags")
+            leaves = {("", "", "")}
             if subs is not None:
                 if not isinstance(subs, list):
                     add("error", "M7", f"tags[{ti}].members[{mi}].subTags", mplc + ["subTags"], label + " · " + (mname or ""), "subTags 必须是数组")
                 else:
                     pairs = set()
+                    leaves = set()
                     for si, sub in enumerate(subs):
                         splc = mplc + ["subTags", si]
                         if not isinstance(sub, dict) or not str(sub.get("group", "")).strip() or not str(sub.get("value", "")).strip():
@@ -269,9 +265,17 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                             add("error", "M8", f"tags[{ti}].members[{mi}].subTags[{si}]", splc, label + " · " + (mname or ""),
                                 f"同一组值重复：{sub['group']}／{sub['value']}")
                         pairs.add(pairv)
+                        leaves.add((sub["group"], sub["value"], sub.get("detail", "")))
                         if "detail" in sub and sub["value"] != "触发时":
                             add("warn", "M9", f"tags[{ti}].members[{mi}].subTags[{si}].detail", splc + ["detail"], label + " · " + (mname or ""),
                                 "detail 仅在 value 为「触发时」时使用")
+            # 唯一性以「末端子 TAG」为界：同一干员可在不同子 TAG 下各出现一次（如 次数对策 的多段伤害/间隔伤害）
+            if mname:
+                if mname in seen and (leaves & seen[mname]):
+                    shared = "／".join(sorted({g + "／" + v for g, v, _ in leaves & seen[mname]} - {"／"}))
+                    add("error", "M4", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label + " · " + mname,
+                        f"同一末端子 TAG 内重复（{shared or '无子 TAG'}）")
+                seen.setdefault(mname, set()).update(leaves)
             purl = mem.get("prtsUrl")
             if not isinstance(purl, str) or not purl.strip():
                 add("error", "M10", f"tags[{ti}].members[{mi}].prtsUrl", mplc + ["prtsUrl"], label + " · " + (mname or ""), "prtsUrl 必填")
