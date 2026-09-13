@@ -16,7 +16,8 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
                                               │
                                               │
         official TAGs:  material_datas/tag_pipeline/{catalog,merged,deterministic}.json + final_lists.tsv
-                        └─► docs/official-tags-members.md
+                        material_datas/tag_pipeline/official_tags/[A-I]-*.md（分模块：干员 | 条件 | 备注）
+                        └─► docs/official-tags-members.md（_merge_official_to_docs.py 重生成 §3/§4/§5）
         player TAGs:    docs/player-tags-specify.md（定义）
                         material_datas/tag_pipeline/player_tags/NN-*.md（分 TAG 判定文件，含逐条 文件:行号 证据）
                         docs/judge-for-player-tags-members-1.md / -2.md（开发者评定标准，修改 TAG 前必读）
@@ -44,7 +45,14 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
 .venv/Scripts/python.exe -X utf8 recommend.py list|add|remove|check   # 例：recommend.py add 充电 白铁
-# Local web panel for the same file + per-operator 条件/备注 editing (writes back to NN-*.md)
+# Local web panel, three tabs:
+#   「荐」= 荐 add/remove/reorder;
+#   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
+#     target 子表, and edit 条件/备注 (writes back to player_tags/NN-*.md and official_tags/[A-I]-*.md;
+#     recomputes official 条目头);
+#   「结果 JSON」= load results/*.json into memory (or start from a spec-shaped skeleton), edit with
+#     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
+#     written until 保存, and validation against docs/output-standard.md only warns, never blocks.
 .venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable

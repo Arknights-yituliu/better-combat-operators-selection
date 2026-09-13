@@ -32,7 +32,7 @@ Read the new operator's md in full (summons included), then screen all TAGs. Eff
    - Judge the sub-TAGs too: 拐杖 子 TAG 列 / 次数对策 两张子表 / 吃拐一轮秒 聚爆·连射 / 保人 七个分部 / 阵容组合 组合名 等。
    - Near-misses go to the file's 边界与排除记录 with rationale + evidence, not into the member table.
 4. **Multi-TAG** —多数新干员会同时落多个 TAG；TAG 之间不互斥（写明关系的除外，如 吃拐一轮秒 与 决战歼灭 不互斥）。顺手在两端的「多 TAG 并存」记录里互链。
-5. **Batches ≥3 operators**: split the TAG families across parallel read-only agents (official 79 is mechanical/keyword-driven; player 13 is judgment-driven), then verify their findings against PRTS原文 before writing.
+5. **Batches ≥3 operators**: split the TAG families across parallel read-only agents (official 80 is mechanical/keyword-driven; player 13 is judgment-driven), then verify their findings against PRTS原文 before writing.
 
 ## 3. Special mechanics with no TAG → ask the developer
 
@@ -46,10 +46,9 @@ Never create a TAG from your own judgment; never silently drop a notable mechani
 
 ## 4. Update the member lists (the only output)
 
-1. **官方** — edit `docs/official-tags-members.md`:
-   - append the operator to each qualifying TAG's `> 成员：` line at the 实装时间倒序 position (ties: 拼音序);
-   - update §3 总览 per-category TAG/关系 counts and the §3 heading total (TAG 数不变时只改关系数; 新增/改名 TAG 时才动 TAG 数);
-   - §5 时间线 只在「首现」变化时改（新干员是最新实装，通常不动）;
+1. **官方** — edit the split modules under `material_datas/tag_pipeline/official_tags/`（`official_tags/*.md` 各分模块），然后运行合并脚本重生成文档：
+   - 在每个命中的 TAG 的成员表（`| 干员 | 条件 | 备注 |`）中按**实装时间倒序**插入一行：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注＝游戏内原文引用；
+   - run `.venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/official_tags/_merge_official_to_docs.py` — 脚本自动重算各 TAG「N 人 · 首现」、§3 总览与 §5 时间线，并合入 `docs/official-tags-members.md`；
    - the pipeline artifacts (`material_datas/tag_pipeline/{merged.json,final_lists.tsv,…}`) are **not** maintained entry-by-entry — see `docs/output-standard.md` §7.
 2. **玩家** — edit the part files (`成员表` + 边界/多 TAG 并存 as needed), then run:
    `.venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/player_tags/_merge_to_docs.py`

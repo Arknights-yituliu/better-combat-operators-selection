@@ -50,7 +50,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 ```json
 {
   "name": "白铁",
-  "rarity": 5,
+  "rarity": 6,
   "class": "辅助",
   "branch": "工匠",
   "faction": "维多利亚",
@@ -62,14 +62,14 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | name | string | 干员名（成员表的引用键）。形态名保留原文括号，如 `阿米娅(近卫)`、`阿米娅(医疗)`、`Mon3tr` |
-| rarity | int | 稀有度 1–6 |
+| rarity | int | 稀有度 1–6（PRTS 干员信息里的「稀有度」是 0 基字段，此处取其值 +1，即星级） |
 | class | string | 职业（先锋／近卫／狙击／重装／医疗／辅助／术师／特种） |
 | branch | string | 分支（如 工匠、策士、处决者） |
-| faction | string | 势力：取 PRTS「属性」表「所属势力」；为空时取「隐藏势力」；均无时取 `""` |
+| faction | string | 势力：取 PRTS「属性」表「所属势力」（多个并列时以 `、` 连接，如 `阿戈尔、深海猎人`）；为空时取「隐藏势力」；均无时取 `""` |
 | releaseDate | string | 实装时间 `yyyy-MM-dd`（PRTS「获得方式」表的上线时间） |
 | prtsUrl | string | 干员主页 URL（干员名 percent 编码，不带锚点） |
 
-- 数据来源：`material_datas/PRTS/<干员>/<干员>.md`（稀有度·职业＝干员信息；分支＝特性表；势力＝属性表；实装时间＝获得方式表；实装时间缓存见 `material_datas/tag_pipeline/player_tags/_launch_dates.json`）。
+- 数据来源：`material_datas/PRTS/<干员>/<干员>.md`（稀有度·职业＝干员信息，稀有度取原始字段 +1；分支＝特性表；势力＝属性表；实装时间＝获得方式表；实装时间缓存见 `material_datas/tag_pipeline/player_tags/_launch_dates.json`）。
 - 数组顺序按实装时间倒序；UI 不应依赖该顺序。
 
 ## 4. TAG 与成员
@@ -79,7 +79,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 ```json
 {
   "id": "D_zone",
-  "name": "待部署区支援（策士）",
+  "name": "待部署区支援",
   "source": "official",
   "category": "D 部署与编队",
   "members": []
@@ -89,7 +89,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | id | string | 是 | 稳定标识。官方类＝TAG 字典 id（`A_stun`、`D_zone`…）；玩家类＝`P01`–`P13`（与 `material_datas/tag_pipeline/player_tags/NN-*.md` 编号一致）。**一经发布不得复用或更改**；TAG 改名时保留原 id |
-| name | string | 是 | TAG 名称（与名单文档一致，如 `阻挡数5`、`待部署区支援（策士）`） |
+| name | string | 是 | TAG 名称（与名单文档一致，如 `阻挡数5`、`待部署区支援`） |
 | source | string | 是 | `"official"`（官方设定类）或 `"player"`（玩家体感类）；UI 可分源筛选、可互相引用 |
 | category | string | 官方类必填 | 类别名：`A 控制·异常`、`B 伤害类型`、`C 生存与增益`、`D 部署与编队`、`E 技力与技能资源`、`F 治疗与支援`、`G 召唤物`、`H 攻击行为特征`、`I 全场光环`（取自 `docs/official-tags-members.md` §3 总览，省略括号补充） |
 | recommended | array | 仅玩家类 | **荐**名单（§6）：元素为干员名，数组顺序即展示优先级；无荐时为空数组 `[]`。官方类省略该字段 |
@@ -121,7 +121,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | prtsUrl | string | 是 | 该 TAG 下点击卡片的 PRTS 跳转地址，见 §5 |
 
 - 同一干员可属多个 TAG（多对多，属其他 TAG 不构成排除理由）；**同一 TAG 内 `operator` 不重复**。
-- 条件／备注的写法沿用 `docs/player-tags-members.md` §0「通用评定标准」：条件写硬性要求，备注写加工后的信息，不写游戏内一眼可见的内容；备注中由计算得出的数值带「（待验证）」标注（PRTS 原文数值不标）。
+- 条件／备注的写法沿用 `docs/player-tags-members.md` §0「通用评定标准」（玩家类）：条件写硬性要求，备注写加工后的信息，不写游戏内一眼可见的内容；备注中由计算得出的数值带「（待验证）」标注（PRTS 原文数值不标）。**官方类**另按 `docs/official-tags-members.md`：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注以游戏内原文引用为证据。
 - 成员顺序＝名单文档顺序（实装时间倒序；同实装日按拼音序），UI 默认按此顺序展示；**UI 提供实装时间正序／倒序切换**——排序键取该干员的 `operators[].releaseDate`（§3），同日成员保持文档内相对次序、不随切换倒转。
 - 「阵容组合」先按组合分组、组合内成员再按实装时间排序（切换同理）；其成员为**提供者**（组合内受益者、成队人数、计数池等为展示性信息，见 §8 待定）。
 
@@ -164,7 +164,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | 仅天赋（模组只做强化时仍算天赋） | `#天赋` | 陈·充电（天赋「呵斥」，X 模组仅强化） |
 | 仅模组（能力本身由模组追加） | `#模组` | 归溟幽灵鲨·充电（技力回复由 Y 模组 2 级追加） |
 | 仅召唤物／装置（常驻，不随技能） | `#召唤物信息` | 官方「拥有召唤物」类 TAG → 干员页「召唤物信息」段 |
-| 跨两类及以上，或无法确定唯一来源 | 无锚点（干员主页） | 凛御银灰·官方「待部署区支援（策士）」：天赋与技能均可支援待部署区 → `https://prts.wiki/w/%E5%87%9B%E5%BE%A1%E9%93%B6%E7%81%B0` |
+| 跨两类及以上，或无法确定唯一来源 | 无锚点（干员主页） | 凛御银灰·官方「待部署区支援」：天赋与技能均可支援待部署区 → `https://prts.wiki/w/%E5%87%9B%E5%BE%A1%E9%93%B6%E7%81%B0` |
 
 - 锚点用 PRTS 章节名原文（如 `#技能`），浏览器会自动编码，与 `#%E6%8A%80%E8%83%BD` 等价。
 - 锚点按「能力来源」判定，来源以该关系的「条件／备注」文本为准；判定不确定时一律用干员主页（宁可不锚定，不可跳错）。
@@ -184,31 +184,32 @@ python recommend.py add 充电 白铁       # 添加荐（可一次多个；--fi
 python recommend.py remove 充电 白铁    # 移除荐
 python recommend.py check               # 校验荐名单（TAG／成员是否仍然有效）
 
-python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键加荐 / 右键取消荐，
-                                        #   并可逐 TAG 编辑该干员的「条件」「备注」（回写分文件）
+python recommend_gui.py                 # 网页面板两个页签：「荐」页按 TAG 筛选，左键加荐 / 右键取消荐；
+                                        #   「人工归纳」页摘取干员并入 TAG（扩展/移动/移除）并编辑「条件」「备注」
 ```
 
 - 荐只维护在 `_recommend.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` 字段，重新生成不会丢失。
 - 调整优先级＝`add --first` 置顶、面板中的 ↑↓／置顶按钮，或手改 `_recommend.json` 中数组顺序（数组顺序即优先级）。
-- 面板回写的「条件」「备注」即 §4.2 的 `condition`／`remark`，只改成员表对应行的这两列，保存后自动重新合并 `docs/player-tags-members.md`。
+- 面板中「荐」页只负责增删与排序荐；「条件」「备注」在「人工归纳」页维护（回写分文件对应行，保存后自动重新合并名单文档）。「人工归纳」页还可增删成员行：扩展＝新行条件/备注留空，移动＝把源行的条件/备注/依据带到新行并删除源行，移除＝直接删除该行；改动官方分文件时同步重算条目头「（N 人 · 首现 日期）」。
 
 ## 7. 数据来源、生成与发布
 
 | JSON 部分 | 来源 |
 |---|---|
 | `operators` | `material_datas/PRTS/<干员>/<干员>.md`（含 `_launch_dates.json` 的实装时间） |
-| 官方类 `tags` | `docs/official-tags-members.md`（80 个 TAG 名单）＋ TAG 字典 `material_datas/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}` |
+| 官方类 `tags` | `docs/official-tags-members.md`（80 个 TAG 成员表：干员／条件／备注）＋ TAG 字典 `material_datas/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`material_datas/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
 | 玩家类 `tags` | `docs/player-tags-members.md`（由其分文件 `material_datas/tag_pipeline/player_tags/NN-*.md` 合并生成） |
 | `recommended` | `material_datas/tag_pipeline/player_tags/_recommend.json`（`recommend.py` 维护） |
 | `prtsUrl` | 按 §5 规则生成（干员名编码＋锚点） |
 
 **发布前置工作**（首次生成 v1 前需完成）：
 
-1. **官方类逐条「条件／备注」尚未产出**——`docs/official-tags-members.md` 目前只有名单；需按该文件 §9 的流程（以 `material_datas/PRTS/` 原文为证据）为 1000 条官方 TAG×干员关系补录 `condition`／`remark`。
-2. **官方 TAG 字典需与 80 个 TAG 对齐**——`catalog.json` 已含补录的 `B_percent`（造成百分比伤害），但仍缺 `A_mortalwound`（施加死亡宣告）、`D_zone`（待部署区支援）、`H_liftoff`（起飞/空中作战）等 id，且无「全场光环」条目；`merged.json` 尚未并入全场光环（961 条关系，缺 I 类 22 条）。生成前先补全 id 并统一三份文件。
-3. 生成脚本尚未编写（本规范为其接口契约）。
+1. **官方 TAG 字典需与 80 个 TAG 对齐**——`catalog.json` 已含补录的 `B_percent`（造成百分比伤害），但仍缺 `A_mortalwound`（施加死亡宣告）、`D_zone`（待部署区支援）、`H_liftoff`（起飞/空中作战）等 id，且无「全场光环」条目；`merged.json` 尚未并入全场光环（961 条关系）。生成前先补全 id 并统一三份文件。
+2. 生成脚本尚未编写（本规范为其接口契约）。
 
 发布流程：生成 `results/operator-tags.json` → 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
+
+**手工编辑**：`recommend_gui.py` 的「结果 JSON」页可把 `results/` 下的 json 载入内存编辑（结构化卡片 + 源码视图共用一份数据，编辑期间不写盘），再由「保存…」选择覆盖已有文件或新建自定义文件名；保存前按本规范列出问题（可定位，但不阻断保存，仅内容不是合法 JSON 时拒绝写盘），内容有变化时按 §1 更新 `version`／`updated`。该页只编辑、不生成初版。
 
 ## 8. 待定与扩展
 
@@ -226,7 +227,7 @@ python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键
   "operators": [
     {
       "name": "凛御银灰",
-      "rarity": 5,
+      "rarity": 6,
       "class": "先锋",
       "branch": "策士",
       "faction": "谢拉格",
@@ -235,7 +236,7 @@ python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键
     },
     {
       "name": "松桐",
-      "rarity": 4,
+      "rarity": 5,
       "class": "先锋",
       "branch": "策士",
       "faction": "东",
@@ -244,7 +245,7 @@ python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键
     },
     {
       "name": "白铁",
-      "rarity": 5,
+      "rarity": 6,
       "class": "辅助",
       "branch": "工匠",
       "faction": "维多利亚",
@@ -253,10 +254,10 @@ python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键
     },
     {
       "name": "归溟幽灵鲨",
-      "rarity": 5,
+      "rarity": 6,
       "class": "特种",
       "branch": "傀儡师",
-      "faction": "阿戈尔",
+      "faction": "阿戈尔、深海猎人",
       "releaseDate": "2022-05-01",
       "prtsUrl": "https://prts.wiki/w/%E5%BD%92%E6%BA%9F%E5%B9%BD%E7%81%B5%E9%B2%A8"
     }
@@ -264,7 +265,7 @@ python recommend_gui.py                 # 网页面板：按 TAG 筛选，左键
   "tags": [
     {
       "id": "D_zone",
-      "name": "待部署区支援（策士）",
+      "name": "待部署区支援",
       "source": "official",
       "category": "D 部署与编队",
       "members": [

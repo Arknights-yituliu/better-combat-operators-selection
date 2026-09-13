@@ -6,7 +6,7 @@
 ## 0. 项目背景（必读）
 
 - 本项目为明日方舟干员筛选系统生产数据。已有两类 TAG：
-  - **官方定义类 TAG**：`docs/official-tags-members.md`（78 个 TAG、961 条关系、覆盖全部干员），管线数据在 `material_datas/tag_pipeline/`（`final_lists.tsv`、`merged.json`、`catalog.json`、`deterministic.json`）。
+  - **官方定义类 TAG**：`docs/official-tags-members.md`（80 个 TAG、1171 条关系、覆盖全部干员），管线数据在 `material_datas/tag_pipeline/`（`final_lists.tsv`、`merged.json`、`catalog.json`、`deterministic.json`；维护层 `official_tags/`）。
 - 本次只做这 9 个 TAG：决战歼灭、拐杖、充电、保人、远程消耗、插拔容错、大力推拉、阻挡数>=5、阵容组合。
 
 ## 1. 数据源（判定以 PRTS 原文为准）
