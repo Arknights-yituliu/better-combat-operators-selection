@@ -175,7 +175,7 @@ def run_check() -> int:
         if "fonts.googleapis.com" not in js or "AbortController" not in js:
             problems.append("app.js 缺少带超时的字体加载（Noto Sans/Serif SC）")
         # DOM 契约：三个既有验收脚本依赖的 id/class/全局名（并集出现在 index.html ∪ app.js）
-        contract = ("picklist pcnt oplist cnt tagtree stagelist stagetip ioplist icnt status search isearch "
+        contract = ("picklist pcnt oplist cnt opcard tagtree stagelist stagetip ioplist icnt status search isearch "
                     "psearch tsearch menu modal toast resdot resfile resstats rtcnt rtags rmembers rpanel resbody "
                     "resrc rstext rserr btnew btload btmode btsort btcheck btview btback btformat btsave btmerge "
                     "btreload btclear automerge automergewrap mok mforce mnew mver mupd mbump mprob modal-card "

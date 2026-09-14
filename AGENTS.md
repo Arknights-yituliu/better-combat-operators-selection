@@ -52,7 +52,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
 .venv/Scripts/python.exe -X utf8 recommend.py list|add|remove|check   # 例：recommend.py add 充电 白铁
 # Local web panel, three tabs:
-#   「荐」= 荐 add/remove/reorder;
+#   「荐」= 荐 add/remove (详情 = the operator's info card in the right column);
 #   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
 #     target 子表, and edit 条件/备注 (writes back to player_tags/NN-*.md and official_tags/[A-I]-*.md;
 #     recomputes official 条目头);

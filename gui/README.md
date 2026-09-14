@@ -13,7 +13,7 @@ the 荐 lists, the member tables of every TAG (both TAG systems), and the final
 
 | Tab | Chinese | What you do there | Writes to disk |
 |---|---|---|---|
-| Recommendations | 荐 | Add / remove / reorder the recommended operators (荐) of a player TAG | `material_datas/tag_pipeline/player_tags/_recommend.json` (immediately) |
+| Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `material_datas/tag_pipeline/player_tags/_recommend.json` (immediately) |
 | Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
 | Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options | only when you press **保存…** |
 
@@ -66,16 +66,18 @@ The three controls `保存后自动重新生成名单文档`, `重新生成名�
 
 ## 4. Tab「荐」 — recommended operators
 
-Purpose: mark which operators to feature first under a player TAG. 荐 exists only for the 12 player
-TAGs (P01–P12); official TAGs have no such field.
+Purpose: mark which operators are recommended under a player TAG. 荐 exists only for the 12 player
+TAGs (P01–P12); official TAGs have no such field. 荐 carries **no display priority** — the array
+order in `_recommend.json` has no meaning.
 
 1. Pick a TAG in the left column (`全部干员` = the union of every member table).
-2. **Left-click** an operator row → appends it to that TAG's 荐 list.
+2. **Left-click** an operator row → adds it to that TAG's 荐 list.
    **Right-click** → removes it. Both act immediately and are written to `_recommend.json`.
-3. The right column shows the current 荐 list in display-priority order with `↑ ↓ ⤒ ×`
-   (up / down / pin to top / remove).
-4. Rows show a rank badge (the 荐 position) plus a `详情` button; rows that are 荐 are highlighted in
-   amber.
+3. The list shows two groups — 荐（N 人） first, then 其余成员（N 人） — each sorted by release date
+   descending (same-day entries by pinyin). 荐 rows carry a 荐 badge and the amber highlight.
+4. Every row has a `详情` (Details) button: it renders that operator's info card (name / charId /
+   rarity / class·branch / faction / release date / PRTS link) in the right column. The right
+   column shows a hint until you click a 详情.
 5. The search box filters by name (substring, same behaviour as the other tabs).
 
 Notes and failure modes:
@@ -84,8 +86,7 @@ Notes and failure modes:
   keeps `recommend.py check` clean.
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
   prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
-* `详情` (Details) on any row jumps to the 人工归纳 tab with the same TAG selected and that operator's
-  card expanded — that is where 条件 / 备注 are edited. The 荐 tab itself cannot edit them.
+* 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
 * The CLI equivalent is `recommend.py list|add|remove|check`; both write the same `_recommend.json`.
 
 ---

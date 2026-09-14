@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """玩家体感 TAG「荐」维护工具。
 
-「荐」＝人工指定的、某 TAG 下推荐优先展示/使用的干员。一个干员可以在 A TAG
+「荐」＝人工指定的、某 TAG 下推荐使用的干员。一个干员可以在 A TAG
 有荐、在 B TAG 没有。荐只维护在本工具的数据文件里，不写进名单文档：
 
     material_datas/tag_pipeline/player_tags/_recommend.json
         { "充电": ["白铁", "娜斯提"], "保人": ["夜莺"] }
-    （键＝TAG 名；值为干员名数组，数组顺序即展示优先级）
+    （键＝TAG 名；值为干员名数组，顺序不含展示优先级语义）
 
 生成最终结果 JSON（见 docs/output-standard.md §6）时按 TAG 名合并进
 `recommended` 字段；重新生成不会丢失荐。
 
 用法：
     python recommend.py                     # 列出 13 个 TAG 及当前荐
-    python recommend.py list 充电           # 查看某 TAG 的荐（按优先级）
-    python recommend.py add 充电 白铁 [干员...]      # --first 插到名单最前
+    python recommend.py list 充电           # 查看某 TAG 的荐
+    python recommend.py add 充电 白铁 [干员...]
     python recommend.py remove 充电 白铁 [干员...]
     python recommend.py check               # 校验全部荐（TAG / 成员是否有效）
 
@@ -114,9 +114,9 @@ def cmd_list(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], a
         name = resolve_tag(args.tag, [t for t, _ in tags])
         ops = data.get(name, [])
         print(f"「{name}」荐（{len(ops)} 人）：")
-        for i, op in enumerate(ops, 1):
+        for op in ops:
             mark = "" if op in main_table_members(dict(tags)[name]) else "  <- 已不在该 TAG 成员表，请用 check 复核"
-            print(f"  {i}. {op}{mark}")
+            print(f"  {op}{mark}")
         return 0
     print("玩家体感 TAG 荐一览：")
     for name, path in tags:
@@ -141,12 +141,9 @@ def cmd_add(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], ar
             print(f"  跳过：{op} 已是「{name}」的荐")
         else:
             new_ops.append(op)
-            print(f"  添加：{op} -> 「{name}」" + ("（置顶）" if args.first else ""))
+            print(f"  添加：{op} -> 「{name}」")
     if new_ops:
-        if args.first:
-            ops[:0] = new_ops
-        else:
-            ops.extend(new_ops)
+        ops.extend(new_ops)
         save_recommend(data, [t for t, _ in tags])
         print(f"「{name}」当前荐：{'、'.join(ops)}")
     return 0
@@ -211,7 +208,6 @@ def main() -> int:
     p_add = sub.add_parser("add", help="添加荐")
     p_add.add_argument("tag", help="TAG 名")
     p_add.add_argument("operators", nargs="+", help="干员名（可多个）")
-    p_add.add_argument("--first", action="store_true", help="插到名单最前（优先级最高）")
     p_rm = sub.add_parser("remove", help="移除荐")
     p_rm.add_argument("tag", help="TAG 名")
     p_rm.add_argument("operators", nargs="+", help="干员名（可多个）")

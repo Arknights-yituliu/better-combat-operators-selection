@@ -121,7 +121,7 @@ body {
 ::-webkit-scrollbar-corner { background: transparent; }
 
 /* ---- 3. 排版 ------------------------------------------------------------- */
-h1, h4, .modal-card h3, #recbox h3, #stagecol .hd h3 { font-family: var(--ak-font-serif); letter-spacing: var(--ak-type-tight); }
+h1, h4, .modal-card h3, #stagecol .hd h3 { font-family: var(--ak-font-serif); letter-spacing: var(--ak-type-tight); }
 .mono, .dotid, .pth, .n, .num, .rank, .loc, .srchead, .kv .ro, .rsec { font-family: var(--ak-font-mono); }
 
 /* ---- 4. 顶栏与页签 -------------------------------------------------------- */
@@ -288,7 +288,7 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 .stage-item.mv .badge { background: var(--ak-color-secondary); }
 
 /* ---- 11. 面板 / 卡片 ------------------------------------------------------ */
-.row, .pgroup, #recbox, .brief, .mprobs, .stage-item, .menu, .modal-card, .guide, .warnbar {
+.row, .pgroup, .brief, .mprobs, .stage-item, .menu, .modal-card, .guide, .warnbar {
   border: var(--ak-line-hairline) solid var(--line); border-radius: 0; background: var(--ak-surface-inverse);
 }
 .row { padding: var(--ak-space-2) var(--ak-space-3); margin-bottom: var(--ak-space-2); box-shadow: var(--ak-shadow-panel); clip-path: var(--cut-md); border-left: var(--ak-line-strong) solid var(--ak-signal-info); }
@@ -298,13 +298,7 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 .row .src { font-size: 11px; color: var(--dim); margin-top: 6px; word-break: break-all; font-family: var(--ak-font-mono); }
 .pgroup { padding: var(--ak-space-2) var(--ak-space-3); margin-bottom: var(--ak-space-3); box-shadow: var(--ak-shadow-panel); clip-path: var(--cut-md); }
 .pgroup h4 { margin: 0 0 6px; font-size: 1rem; font-weight: 900; }
-#recbox { padding: var(--ak-space-2) var(--ak-space-3); margin-bottom: var(--ak-space-3); border-top: var(--ak-line-strong) solid var(--rec); }
-#recbox h3 { margin: 0 0 6px; font-size: 1rem; font-weight: 900; }
-#recbox ol { margin: 0; padding-left: 1.4rem; }
-#recbox li { margin: 2px 0; display: flex; align-items: center; gap: var(--ak-space-1); }
-#recbox li span.op { flex: 1; }
-#recbox .empty, #stagelist .empty { color: var(--dim); font-size: 12px; }
-#recbox .note { color: var(--dim); font-size: 11px; margin-top: 6px; }
+#stagelist .empty { color: var(--dim); font-size: 12px; }
 .brief { display: flex; align-items: baseline; gap: var(--ak-space-2); flex-wrap: wrap; font-size: 12px; color: var(--dim); padding: 6px 9px; margin-bottom: var(--ak-space-2); }
 .brief b { font-size: 1rem; color: var(--txt); font-family: var(--ak-font-serif); letter-spacing: var(--ak-type-tight); }
 .brief .cid { font-family: var(--ak-font-mono); font-size: 11px; color: var(--dim); border: var(--ak-line-hairline) solid var(--line); padding: 0 5px; }

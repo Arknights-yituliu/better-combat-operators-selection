@@ -21,7 +21,7 @@ let DATA = null;
 const IDX = {byId:new Map(), tagBlocks:new Map(), tree:[]};
 const ST = {
   tab: "zhen",
-  zhen: {tag: "__all__", q: ""},
+  zhen: {tag: "__all__", q: "", openOp: null},
   ind: {targets: [], browse: null, browseOpen: {}, openOp: null, q: "", pq: "", tq: "",
         collapsed: {}, stage: [], busy: false},
 };
@@ -107,12 +107,16 @@ function viewOps() {
   if (ST.zhen.tag === "__all__") {
     const names = [...new Set(DATA.player_tags.flatMap(t => t.blocks.flatMap(b => b.rows.map(r => r.op))))];
     names.sort((a, b) => a.localeCompare(b, "zh"));
-    return names.map(op => ({op, rec: -1, rows: allRowsOf(op)}));
+    return names.map(op => ({op, rec: false, rows: allRowsOf(op)}));
   }
   const t = tagOf(ST.zhen.tag);
-  const recs = t.recommend.map((op, i) => ({op, rec: i, rows: allRowsOf(op)}));
-  const members = [...new Set(t.blocks.flatMap(b => b.rows.map(r => r.op)))].filter(op => !t.recommend.includes(op));
-  return recs.concat(members.map(op => ({op, rec: -1, rows: allRowsOf(op)})));
+  // 有荐/无荐两组，各自按实装时间倒序（同日按拼音序）；无日期者排组尾
+  const dates = new Map((DATA.roster || []).map(p => [p.name, p.date || ""]));
+  const byLaunch = (a, b) => (dates.get(b) || "").localeCompare(dates.get(a) || "") || a.localeCompare(b, "zh");
+  const recs = [...t.recommend].sort(byLaunch).map(op => ({op, rec: true, rows: allRowsOf(op)}));
+  const members = [...new Set(t.blocks.flatMap(b => b.rows.map(r => r.op)))]
+    .filter(op => !t.recommend.includes(op)).sort(byLaunch).map(op => ({op, rec: false, rows: allRowsOf(op)}));
+  return recs.concat(members);
 }
 function allRowsOf(op) {
   const out = [];
@@ -144,58 +148,35 @@ function renderOps() {
   const all = viewOps();
   const items = all.filter(it => matches(it.op, ST.zhen.q));
   document.getElementById("cnt").textContent = items.length + " / " + all.length + " 人";
-  let recDone = false;
+  const nRec = items.filter(x => x.rec).length;
+  const split = text => {
+    const d = document.createElement("div");
+    d.className = "split";
+    d.textContent = text;
+    list.appendChild(d);
+  };
+  let headDone = false, restDone = false;
   for (const it of items) {
-    if (ST.zhen.tag !== "__all__" && it.rec < 0 && !recDone && items.some(x => x.rec >= 0)) {
-      recDone = true;
-      const d = document.createElement("div");
-      d.className = "split";
-      d.textContent = "其余成员（成员表顺序）";
-      list.appendChild(d);
-    }
+    if (ST.zhen.tag !== "__all__" && nRec && it.rec && !headDone) { headDone = true; split("荐（" + nRec + " 人）"); }
+    if (ST.zhen.tag !== "__all__" && nRec && !it.rec && !restDone) { restDone = true; split("其余成员（" + (items.length - nRec) + " 人）"); }
     const el = opRow(it, {
-      rank: it.rec >= 0 ? it.rec + 1 : "",
+      cls: it.rec ? "rec" : "",
+      rank: it.rec ? "荐" : "",
       chips: [],
-      buttons: [{label: "详情", title: "到「人工归纳」页查看条件与备注", fn: () => gotoInduce(it.op, ST.zhen.tag)}],
+      buttons: [{label: "详情", title: "在右侧查看干员信息", fn: () => { ST.zhen.openOp = it.op; renderDetail(); }}],
       onClick: () => addRec(it.op),
       onContext: () => removeRec(it.op),
     });
     list.appendChild(el);
   }
 }
-function renderRec() {
-  const box = document.getElementById("recbox");
-  if (ST.zhen.tag === "__all__") {
-    box.innerHTML = "<h3>荐</h3><div class='empty'>在左侧选中一个 TAG 后，左键 / 右键干员即可增删荐。</div>";
+function renderDetail() {
+  const box = document.getElementById("opcard");
+  if (!ST.zhen.openOp) {
+    box.innerHTML = "<div class='guide'>点任一干员行的「详情」，在此查看其信息卡片。<br>条件与备注请到「人工归纳」页查看与编辑。</div>";
     return;
   }
-  const t = tagOf(ST.zhen.tag);
-  let html = "<h3>「" + esc(t.name) + "」荐（" + t.recommend.length + " 人，按展示优先级）</h3>" +
-    "<div class='note'>荐只能加在玩家体感 TAG（P01–P12）上；官方设定 TAG 无荐字段。</div>";
-  if (!t.recommend.length) html += "<div class='empty'>暂无。左键下方任一干员即可加入。</div>";
-  else {
-    html += "<ol>";
-    t.recommend.forEach(op => {
-      html += "<li><span class='op'>" + esc(op) + "</span>" +
-        "<button class='mini' data-act='up' data-op='" + esc(op) + "' title='上移'>↑</button>" +
-        "<button class='mini' data-act='down' data-op='" + esc(op) + "' title='下移'>↓</button>" +
-        "<button class='mini' data-act='first' data-op='" + esc(op) + "' title='置顶'>⤒</button>" +
-        "<button class='mini' data-act='remove' data-op='" + esc(op) + "' title='取消荐'>×</button></li>";
-    });
-    html += "</ol>";
-  }
-  box.innerHTML = html;
-  box.querySelectorAll("button[data-act]").forEach(b => {
-    b.onclick = async () => {
-      const act = b.dataset.act, op = b.dataset.op;
-      try {
-        if (act === "up" || act === "down") await api("/api/recommend", {tag: ST.zhen.tag, action: "move", op, delta: act === "up" ? -1 : 1});
-        else if (act === "first") await api("/api/recommend", {tag: ST.zhen.tag, action: "first", op});
-        else await api("/api/recommend", {tag: ST.zhen.tag, action: "remove", op});
-        await load();
-      } catch (e) { toast(e.message, true); }
-    };
-  });
+  box.innerHTML = briefHtml(ST.zhen.openOp, firstCid(allRowsOf(ST.zhen.openOp)));
 }
 async function addRec(op) {
   if (ST.zhen.tag === "__all__") { toast("请先在左侧选择一个 TAG，再加荐"); return; }
@@ -204,7 +185,7 @@ async function addRec(op) {
     DATA.recommend = j.recommend;
     tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
     toast(j.noop ? ("「" + ST.zhen.tag + "」已是荐：" + op) : ("已设荐：" + op + " →「" + ST.zhen.tag + "」"));
-    renderTags(); renderOps(); renderRec();
+    renderTags(); renderOps(); renderDetail();
   } catch (e) { toast(e.message, true); }
 }
 async function removeRec(op) {
@@ -214,7 +195,7 @@ async function removeRec(op) {
     DATA.recommend = j.recommend;
     tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
     toast(j.noop ? ("「" + ST.zhen.tag + "」本就没有荐：" + op) : ("已取消荐：" + op));
-    renderTags(); renderOps(); renderRec();
+    renderTags(); renderOps(); renderDetail();
   } catch (e) { toast(e.message, true); }
 }
 
@@ -1024,18 +1005,15 @@ function renderResPanel() {
   if (t.source === "player") {
     const g2 = document.createElement("div");
     g2.className = "pgroup";
-    g2.innerHTML = "<h4>荐（按展示优先级）</h4>";
+    g2.innerHTML = "<h4>荐</h4>";
     const rec = Array.isArray(t.recommended) ? t.recommended : null;
     if (!rec) g2.innerHTML += "<div class='hint'>缺 recommended 字段（点「按规范整理」可补空数组）。</div>";
     else if (!rec.length) g2.innerHTML += "<div class='hint'>暂无。</div>";
     else rec.forEach((name, k) => {
       const row = document.createElement("div");
       row.className = "subrow";
-      const s = document.createElement("span"); s.style.flex = "1"; s.textContent = (k + 1) + ". " + name;
+      const s = document.createElement("span"); s.style.flex = "1"; s.textContent = name;
       row.appendChild(s);
-      row.appendChild(miniBtn("↑", "上移", () => { rec.splice(k - 1, 0, rec.splice(k, 1)[0]); resMark(); renderResults(); }, k === 0));
-      row.appendChild(miniBtn("↓", "下移", () => { rec.splice(k + 1, 0, rec.splice(k, 1)[0]); resMark(); renderResults(); }, k === rec.length - 1));
-      row.appendChild(miniBtn("⤒", "置顶", () => { rec.splice(0, 0, rec.splice(k, 1)[0]); resMark(); renderResults(); }, k === 0));
       row.appendChild(miniBtn("×", "取消荐", () => { rec.splice(k, 1); resMark(); renderResults(); }));
       g2.appendChild(row);
     });
@@ -1493,7 +1471,7 @@ function closeModal() {
 // ---------------------------------------------------------------- 页签 / 跳转
 
 function renderAll() {
-  renderTags(); renderOps(); renderRec();
+  renderTags(); renderOps(); renderDetail();
   renderInd(); renderIndList(); renderPicker();
 }
 function setTab(t) {
@@ -1507,27 +1485,12 @@ function setTab(t) {
     if (el) el.hidden = t === "results";  // 这三个是前两页的控件
   }
   document.getElementById("hint").textContent = t === "zhen"
-    ? "左键 = 加荐 · 右键 = 取消荐"
+    ? "左键 = 加荐 · 右键 = 取消荐 · 「详情」= 右侧查看干员信息"
     : t === "induce"
       ? "选中目标子表后点临时区干员并入 · 干员行右键 = 扩展 / 移动 / 移除 · 卡片里点击条件或备注即可编辑"
       : "编辑只在内存中，点「保存…」才写盘（可覆盖已有文件，也可另存新名字）";
   if (t === "results") renderResults();
 }
-function gotoInduce(op, tagName) {
-  if (tagName && tagName !== "__all__") {
-    const t = tagOf(tagName);
-    if (t) {
-      ST.ind.browse = "p:" + t.name;
-      ST.ind.browseOpen["p:" + t.name] = true;
-      ST.ind.targets = [];
-    }
-  }
-  ST.ind.openOp = op;
-  setTab("induce");
-  renderInd(); renderIndList();
-  location.hash = "tab=induce&op=" + encodeURIComponent(op);
-}
-
 // ---------------------------------------------------------------- 启动
 
 document.querySelectorAll(".tab").forEach(b => {

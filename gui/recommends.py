@@ -36,29 +36,17 @@ def apply_recommend(payload: dict) -> dict:
     ops = data.setdefault(tag, [])
     op = payload.get("op", "")
 
-    if action in ("add", "first", "remove", "move"):
-        members = rec.main_table_members(dict(tags)[tag])
-        if action != "remove" and op not in members:
+    if action in ("add", "remove"):
+        if action == "add" and op not in rec.main_table_members(dict(tags)[tag]):
             raise UserError(f"「{op}」不是「{tag}」成员表内的干员，不能设为荐")
         if action == "add":
             if op in ops:
                 return {"ok": True, "noop": "已是荐", "recommend": data}
             ops.append(op)
-        elif action == "first":
-            if op in ops:
-                ops.remove(op)
-            ops.insert(0, op)
         elif action == "remove":
             if op not in ops:
                 return {"ok": True, "noop": "本就不是荐", "recommend": data}
             ops.remove(op)
-        elif action == "move":
-            if op not in ops:
-                raise UserError(f"「{op}」不在「{tag}」的荐名单中")
-            k = ops.index(op)
-            nk = min(max(k + int(payload.get("delta", 0)), 0), len(ops) - 1)
-            ops.pop(k)
-            ops.insert(nk, op)
     elif action == "clear":
         ops.clear()
     else:
