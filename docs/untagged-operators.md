@@ -1,16 +1,15 @@
 # 未归入任何 TAG 的干员
 
 > 本文件自动生成，勿手改：由 `generate_results.py` 在生成 `results/operator-tags.json` 时同步写出（命令见 `docs/output-standard.md` §7）。
-> 口径：全量干员（`docs/operators.txt`，431 名）− 结果 JSON `operators[]`（395 名）＝ **36 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
+> 口径：全量干员（`docs/operators.txt`，431 名）− 结果 JSON `operators[]`（398 名）＝ **33 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
 > 官方设定 TAG 的「无 TAG 干员」名单（`docs/official-tags-members.md` §3）中已有部分被玩家体感 TAG 收录，故本表与其不完全重合；某干员一旦进入任一成员表，重新生成时自动移出本表。
-> 构成（按职业）：狙击 11、术师 8、医疗 6、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
+> 构成（按职业）：狙击 9、术师 8、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
 
 | 干员 | 编号 | 星级 | 职业·分支 | 实装时间 |
 |---|---|---|---|---|
 | [复奏](https://prts.wiki/w/%E5%A4%8D%E5%A5%8F) | char_4031_liesel | 5 | 术师·扩散术师 | 2026-03-10 |
 | [协律](https://prts.wiki/w/%E5%8D%8F%E5%BE%8B) | char_4051_akkord | 4 | 术师·轰击术师 | 2025-11-01 |
 | [录武官](https://prts.wiki/w/%E5%BD%95%E6%AD%A6%E5%AE%98) | char_4196_reckpr | 5 | 医疗·医师 | 2025-07-08 |
-| [瑰盐](https://prts.wiki/w/%E7%91%B0%E7%9B%90) | char_4163_rosesa | 5 | 医疗·群愈师 | 2024-12-05 |
 | [跃跃](https://prts.wiki/w/%E8%B7%83%E8%B7%83) | char_4100_caper | 4 | 狙击·回环射手 | 2023-11-01 |
 | [戴菲恩](https://prts.wiki/w/%E6%88%B4%E8%8F%B2%E6%81%A9) | char_4110_delphn | 5 | 术师·秘术师 | 2023-10-08 |
 | [玫拉](https://prts.wiki/w/%E7%8E%AB%E6%8B%89) | char_4006_melnte | 5 | 狙击·重射手 | 2023-05-01 |
@@ -18,7 +17,6 @@
 | [至简](https://prts.wiki/w/%E8%87%B3%E7%AE%80) | char_4054_malist | 5 | 术师·驭械术师 | 2022-08-11 |
 | [灰毫](https://prts.wiki/w/%E7%81%B0%E6%AF%AB) | char_431_ashlok | 5 | 重装·要塞 | 2021-10-15 |
 | [芳汀](https://prts.wiki/w/%E8%8A%B3%E6%B1%80) | char_271_spikes | 4 | 近卫·领主 | 2020-09-24 |
-| [酸糖](https://prts.wiki/w/%E9%85%B8%E7%B3%96) | char_366_acdrop | 4 | 狙击·重射手 | 2020-08-25 |
 | [莱恩哈特](https://prts.wiki/w/%E8%8E%B1%E6%81%A9%E5%93%88%E7%89%B9) | char_373_lionhd | 5 | 术师·扩散术师 | 2020-06-18 |
 | [红云](https://prts.wiki/w/%E7%BA%A2%E4%BA%91) | char_190_clour | 4 | 狙击·速射手 | 2019-10-15 |
 | [坚雷](https://prts.wiki/w/%E5%9D%9A%E9%9B%B7) | char_260_durnar | 4 | 重装·驭法铁卫 | 2019-10-01 |
@@ -35,7 +33,6 @@
 | [流星](https://prts.wiki/w/%E6%B5%81%E6%98%9F) | char_126_shotst | 4 | 狙击·速射手 | 2019-04-30 |
 | [末药](https://prts.wiki/w/%E6%9C%AB%E8%8D%AF) | char_117_myrrh | 4 | 医疗·医师 | 2019-04-30 |
 | [暴行](https://prts.wiki/w/%E6%9A%B4%E8%A1%8C) | char_230_savage | 5 | 近卫·强攻手 | 2019-04-30 |
-| [普罗旺斯](https://prts.wiki/w/%E6%99%AE%E7%BD%97%E6%97%BA%E6%96%AF) | char_145_prove | 5 | 狙击·重射手 | 2019-04-30 |
 | [巡林者](https://prts.wiki/w/%E5%B7%A1%E6%9E%97%E8%80%85) | char_503_rang | 2 | 狙击·速射手 | 2019-04-30 |
 | [安赛尔](https://prts.wiki/w/%E5%AE%89%E8%B5%9B%E5%B0%94) | char_212_ansel | 3 | 医疗·医师 | 2019-04-30 |
 | [安德切尔](https://prts.wiki/w/%E5%AE%89%E5%BE%B7%E5%88%87%E5%B0%94) | char_211_adnach | 3 | 狙击·速射手 | 2019-04-30 |

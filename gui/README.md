@@ -76,8 +76,9 @@ order in `_recommend.json` has no meaning.
 3. The list shows two groups — 荐（N 人） first, then 其余成员（N 人） — each sorted by release date
    descending (same-day entries by pinyin). 荐 rows carry a 荐 badge and the amber highlight.
 4. Every row has a `详情` (Details) button: it renders that operator's info card (name / charId /
-   rarity / class·branch / faction / release date / PRTS link) in the right column. The right
-   column shows a hint until you click a 详情.
+   rarity / class·branch / faction / release date / PRTS link) plus read-only 条件 / 备注 record
+   cards — the selected TAG's records, or every player TAG's records under `全部干员` — in the
+   right column. The right column shows a hint until you click a 详情.
 5. The search box filters by name (substring, same behaviour as the other tabs).
 
 Notes and failure modes:
@@ -220,9 +221,12 @@ refused (you stay in the source view, with the error shown).
 
 * **Structured** — `按干员` / `按 TAG` toggles the mode.
   * TAG mode: left = `tags[]`, middle = its members, right = the TAG panel (`id` and `source` are
-    read-only; `name` editable; `category` dropdown for official TAGs; the 荐 editor with
-    `↑ ↓ ⤒ ×` for player TAGs) plus the selected member's card
+    read-only; `name` editable; `category` dropdown for official TAGs; the 荐 editor — `× 取消荐` /
+    `＋ 加荐` — for player TAGs) plus the selected member's card
     (condition / remark / subTags / prtsUrl, add & remove members, reorder).
+  * 阵容组合 (P12) members are **combo entries**: the card edits `combo` / `condition` / `remark` /
+    `beneficiaries` and the nested provider rows (`operator` / `condition` / `remark` / `prtsUrl`);
+    buttons: `＋ 加组合`, `＋ 提供者`, `删除组合` (format: `docs/output-standard.md` §4.2).
   * Operator mode: a searchable, paginated `operators[]` list; the card edits all seven fields;
     `从全量干员表补全` fills them from the crawled PRTS data; renaming cascades through members and
     荐; `新增干员条目` picks from the full roster; `删除条目` warns when references remain.

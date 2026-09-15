@@ -78,7 +78,7 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
             "label": label,
             "header": header,
             "line": i + 1,
-            "sort": "none" if path.name.startswith("13-") else "date",
+            "sort": "none" if path.name.startswith("12-") else "date",
             "rows": rows,
         })
         i = j

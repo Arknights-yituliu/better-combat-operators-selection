@@ -209,11 +209,15 @@ def run_check() -> int:
              "releaseDate": "2023-01-01", "prtsUrl": "https://prts.wiki/w/%E4%B9%99"}],
         "tags": [{"id": "P01", "name": "决战歼灭", "source": "player", "recommended": ["乙"], "members": [
             {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"},
-            {"operator": "甲", "condition": "", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"}]}],
+            {"operator": "甲", "condition": "", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"}]},
+            {"id": "P12", "name": "阵容组合", "source": "player", "recommended": [], "members": [
+                {"combo": "组合甲", "condition": "", "beneficiaries": ["甲"], "providers": [
+                    {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"},
+                    {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"}]}]}],
     }
     got, _stats = validate_results(sample)
     codes = {p["code"] for p in got}
-    for want in ("M4", "M5", "R1"):
+    for want in ("M4", "M5", "R1", "C2", "C4"):
         if want not in codes:
             problems.append(f"校验器自检：样例应报出 {want}，实际只报出 {sorted(codes)}")
     text = render_results({"白铁": "OK"}, "crlf")

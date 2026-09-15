@@ -120,7 +120,8 @@ function viewOps() {
 }
 function allRowsOf(op) {
   const out = [];
-  for (const t of DATA.player_tags) for (const b of t.blocks) for (const r of b.rows) if (r.op === op) out.push({b, r});
+  // 用 IDX.byId 里的增强块（带 source/tagKey/tagName），与人工归纳页的 scopeRows 同构
+  for (const t of DATA.player_tags) for (const b of t.blocks) for (const r of b.rows) if (r.op === op) out.push({b: IDX.byId.get(b.id) || b, r});
   return out;
 }
 function renderTags() {
@@ -173,10 +174,15 @@ function renderOps() {
 function renderDetail() {
   const box = document.getElementById("opcard");
   if (!ST.zhen.openOp) {
-    box.innerHTML = "<div class='guide'>点任一干员行的「详情」，在此查看其信息卡片。<br>条件与备注请到「人工归纳」页查看与编辑。</div>";
+    box.innerHTML = "<div class='guide'>点任一干员行的「详情」，在此查看其信息卡片与条件/备注（只读）。<br>编辑条件与备注请到「人工归纳」页。</div>";
     return;
   }
-  box.innerHTML = briefHtml(ST.zhen.openOp, firstCid(allRowsOf(ST.zhen.openOp)));
+  const op = ST.zhen.openOp;
+  const all = allRowsOf(op);
+  const recs = ST.zhen.tag === "__all__" ? all : all.filter(x => x.b.tagName === ST.zhen.tag);
+  box.innerHTML = briefHtml(op, firstCid(all));
+  for (const x of recs) box.appendChild(recordCard(x, true));
+  if (!recs.length) box.insertAdjacentHTML("beforeend", "<div class='guide'>该干员在当前 TAG 下没有成员记录。</div>");
 }
 async function addRec(op) {
   if (ST.zhen.tag === "__all__") { toast("请先在左侧选择一个 TAG，再加荐"); return; }
@@ -360,10 +366,10 @@ function detailEl(op, recs) {
   for (const x of recs) box.appendChild(recordCard(x));
   return box;
 }
-function recordCard(x) {
+function recordCard(x, readonly) {
   const b = x.b, r = x.r;
   const el = document.createElement("div");
-  el.className = "row";
+  el.className = "row" + (readonly ? " ro" : "");
   const badge = b.source === "player" ? "<span class='badge p'>玩家</span>" : "<span class='badge o'>官方</span>";
   el.innerHTML = "<div class='head'>" + badge + "<b>" + esc(b.tagName) + "</b>" +
     (blkLabel(b) ? "<span class='chip'>" + esc(b.label) + "</span>" : "") +
@@ -371,7 +377,7 @@ function recordCard(x) {
     "<div class='vlabel'>条件</div><div class='val" + (r.cond ? "" : " empty") + "' data-k='cond'>" + esc(r.cond || "（待填）") + "</div>" +
     "<div class='vlabel'>备注</div><div class='val" + (r.note ? "" : " empty") + "' data-k='note'>" + esc(r.note || "（待填）") + "</div>" +
     (b.source === "player" ? "<div class='src'>依据：" + esc(r.src || "—") + "</div>" : "");
-  el.querySelectorAll(".val").forEach(v => { v.onclick = () => startEdit(v, x); });
+  if (!readonly) el.querySelectorAll(".val").forEach(v => { v.onclick = () => startEdit(v, x); });
   return el;
 }
 function startEdit(el, x) {
@@ -879,9 +885,12 @@ function renderResMem() {
   const t = resTag();
   if (!t) { box.innerHTML = "<div class='split'>左侧选一个 TAG。</div>"; document.getElementById("rmcnt").textContent = ""; return; }
   const q = RES.q.m;
+  const isCombo = t.id === "P12";
   const members = t.members || [];
-  const items = members.map((m, j) => ({m, j})).filter(x => matches(String(x.m.operator || ""), q));
-  document.getElementById("rmcnt").textContent = items.length + " / " + members.length + " 人";
+  const items = members.map((m, j) => ({m, j})).filter(x => matches(isCombo
+    ? [String(x.m.combo || ""), ...(x.m.providers || []).map(p => String(p.operator || ""))].join(" ")
+    : String(x.m.operator || ""), q));
+  document.getElementById("rmcnt").textContent = items.length + " / " + members.length + (isCombo ? " 组" : " 人");
   const head = document.createElement("div");
   head.className = "split";
   head.innerHTML = esc(t.name || "") + " · <span class='dotid'>" + esc(t.id || "") + "</span>";
@@ -889,15 +898,16 @@ function renderResMem() {
   for (const x of items) {
     const el = document.createElement("div");
     el.className = "card" + (RES.sel.mi === x.j ? " open" : "");
-    el.innerHTML = '<span class="rank"></span><span class="name">' + esc(x.m.operator || "（缺 operator）") + "</span>" +
+    el.innerHTML = '<span class="rank"></span><span class="name">' + esc(isCombo ? (x.m.combo || "（缺 combo）") : (x.m.operator || "（缺 operator）")) + "</span>" +
       '<span class="chips">' + (x.m.condition ? '<span class="chip">' + esc(String(x.m.condition).slice(0, 40)) + "</span>" : '<span class="chip todo">条件待填</span>') +
-      ((x.m.subTags || []).length ? '<span class="chip">' + (x.m.subTags || []).length + " 个子 TAG</span>" : "") + "</span>";
+      (isCombo ? '<span class="chip">' + (x.m.providers || []).length + " 名提供者</span>"
+               : ((x.m.subTags || []).length ? '<span class="chip">' + (x.m.subTags || []).length + " 个子 TAG</span>" : "")) + "</span>";
     el.onclick = () => { RES.sel.mi = RES.sel.mi === x.j ? -1 : x.j; renderResMem(); renderResPanel(); };
     box.appendChild(el);
   }
   const add = document.createElement("div");
   add.style.cssText = "padding:8px 2px";
-  add.innerHTML = "<button id='btaddmem'>＋ 加成员</button>";
+  add.innerHTML = "<button id='btaddmem'>" + (isCombo ? "＋ 加组合" : "＋ 加成员") + "</button>";
   box.appendChild(add);
   const btn = document.getElementById("btaddmem");
   if (btn) btn.onclick = () => addMemberDialog(RES.sel.tag);
@@ -912,12 +922,15 @@ function renderResRefs(box) {
   box.appendChild(head);
   let n = 0;
   RES.doc.tags.forEach((t, i) => (t.members || []).forEach((m, j) => {
-    if (m.operator !== o.name) return;
+    const direct = m.operator === o.name;
+    const provHit = Array.isArray(m.providers) && m.providers.some(p => p && p.operator === o.name);
+    if (!direct && !provHit) return;
     n++;
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = '<span class="rank"></span><span class="name">' + esc(t.name || "") + "</span>" +
-      '<span class="chips"><span class="chip">' + esc(t.id || "") + '</span><span class="chip">members[' + j + "]</span></span>";
+      '<span class="chips"><span class="chip">' + esc(t.id || "") + '</span><span class="chip">members[' + j + "]</span>" +
+      (provHit && !direct ? '<span class="chip">提供者</span>' : "") + "</span>";
     el.onclick = () => { RES.mode = "tag"; RES.sel.tag = i; RES.sel.mi = j; renderResults(); };
     box.appendChild(el);
   }));
@@ -1036,6 +1049,7 @@ function renderResPanel() {
 }
 
 function memberCard(t, m) {
+  if (t && t.id === "P12") return comboCard(t, m);
   const g = document.createElement("div");
   g.className = "pgroup";
   g.innerHTML = "<h4>成员：" + esc(String(m.operator || "（缺 operator）")) + "</h4>";
@@ -1112,6 +1126,95 @@ function memberCard(t, m) {
   return g;
 }
 
+function comboCard(t, m) {
+  // 阵容组合（P12）：成员＝组合条目——组合级字段 + 提供者子行
+  const g = document.createElement("div");
+  g.className = "pgroup";
+  g.innerHTML = "<h4>组合：" + esc(String(m.combo || "（缺 combo）")) + "</h4>";
+  const nameEl = document.createElement("span");
+  field(nameEl, () => m.combo, v => { m.combo = v; }, {empty: "（组合名待填）"});
+  g.appendChild(kv("combo", nameEl));
+  const condEl = document.createElement("span");
+  field(condEl, () => m.condition, v => { m.condition = v; }, {multi: true, empty: "（待填）"});
+  g.appendChild(kv("条件", condEl));
+  const noteEl = document.createElement("span");
+  field(noteEl, () => m.remark, v => { if (v.trim()) m.remark = v; else delete m.remark; }, {multi: true, empty: "（空，保存时省略该字段）"});
+  g.appendChild(kv("备注", noteEl));
+  const benEl = document.createElement("span");
+  field(benEl, () => (m.beneficiaries || []).join("、"), v => {
+    const list = v.split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+    if (list.length) m.beneficiaries = list; else delete m.beneficiaries;
+  }, {multi: true, empty: "（空，保存时省略该字段）"});
+  g.appendChild(kv("受益者（顿号分隔）", benEl));
+
+  const pg = document.createElement("div");
+  pg.style.marginTop = "8px";
+  const ph = document.createElement("div");
+  ph.innerHTML = "<b style='font-size:12px'>提供者</b>";
+  pg.appendChild(ph);
+  const provs = m.providers = Array.isArray(m.providers) ? m.providers : [];
+  provs.forEach((p, k) => {
+    const wrap = document.createElement("div");
+    wrap.className = "row";
+    const head = document.createElement("div");
+    head.className = "head";
+    const nm = document.createElement("span");
+    field(nm, () => p.operator, v => { p.operator = v; }, {empty: "（干员名）"});
+    head.appendChild(nm);
+    wrap.appendChild(head);
+    const pc = document.createElement("span");
+    field(pc, () => p.condition, v => { p.condition = v; }, {multi: true, empty: "（待填）"});
+    wrap.appendChild(kv("条件", pc));
+    const pn = document.createElement("span");
+    field(pn, () => p.remark, v => { if (v.trim()) p.remark = v; else delete p.remark; }, {multi: true, empty: "（空，省略）"});
+    wrap.appendChild(kv("备注", pn));
+    const pu = document.createElement("span");
+    field(pu, () => p.prtsUrl, v => { p.prtsUrl = v; }, {});
+    wrap.appendChild(kv("prtsUrl", pu));
+    const line = document.createElement("div");
+    line.className = "subrow";
+    line.appendChild(miniBtn("按干员名重建 prtsUrl", "", () => { p.prtsUrl = rootUrl(String(p.operator || "")); resMark(); renderResults(); }));
+    line.appendChild(miniBtn("× 删除该提供者", "", () => { provs.splice(k, 1); resMark(); renderResults(); }));
+    wrap.appendChild(line);
+    pg.appendChild(wrap);
+  });
+  pg.appendChild(miniBtn("＋ 提供者", "从 operators[] 选一名干员", () => addProviderDialog(t, m)));
+  g.appendChild(pg);
+
+  const acts = document.createElement("div");
+  acts.className = "subrow";
+  acts.style.marginTop = "8px";
+  const move = (label, d, dis) => miniBtn(label, "", () => {
+    const arr = t.members;
+    const j = RES.sel.mi;
+    const nk = Math.min(Math.max(j + d, 0), arr.length - 1);
+    if (nk === j) return;
+    arr.splice(nk, 0, arr.splice(j, 1)[0]);
+    RES.sel.mi = nk;
+    resMark(); renderResults();
+  }, dis);
+  acts.append(move("↑ 上移", -1, RES.sel.mi <= 0), move("↓ 下移", 1, RES.sel.mi >= (t.members || []).length - 1));
+  acts.appendChild(miniBtn("删除组合", "", () => {
+    if (!confirm("删除组合「" + String(m.combo || "") + "」（含 " + provs.length + " 名提供者）？\n（只改内存，保存前不会写盘）")) return;
+    t.members.splice(RES.sel.mi, 1);
+    RES.sel.mi = -1;
+    resMark(); renderResults();
+  }));
+  g.appendChild(acts);
+  return g;
+}
+
+function addProviderDialog(t, m) {
+  const names = RES.doc.operators.map(o => String(o.name || "")).filter(Boolean);
+  if (!names.length) return toast("operators[] 还是空的：先到「按干员」视图新增干员条目", true);
+  pickDialog("给组合「" + String(m.combo || "") + "」加提供者", names, name => {
+    m.providers = Array.isArray(m.providers) ? m.providers : [];
+    m.providers.push({operator: name, condition: "", prtsUrl: rootUrl(name)});
+    resMark(); renderResults();
+    toast("已加提供者（条件留空，保存前请补上）");
+  });
+}
+
 function renderOpCard(box) {
   const i = RES.sel.op;
   const o = RES.doc.operators[i];
@@ -1168,6 +1271,14 @@ function pickDialog(title, names, onPick) {
 }
 function addMemberDialog(ti) {
   const t = RES.doc.tags[ti];
+  if (t.id === "P12") {  // 阵容组合：加的是组合条目
+    t.members = Array.isArray(t.members) ? t.members : [];
+    t.members.push({combo: "（新组合）", condition: "", providers: []});
+    RES.sel.mi = t.members.length - 1;
+    resMark(); renderResults();
+    toast("已加组合（改好组合名/条件后，用「＋ 提供者」补成员）");
+    return;
+  }
   const names = RES.doc.operators.map(o => String(o.name || "")).filter(Boolean);
   if (!names.length) return toast("operators[] 还是空的：先到「按干员」视图新增干员条目", true);
   pickDialog("给「" + String(t.name || "") + "」加成员", names, name => {
@@ -1181,7 +1292,9 @@ function addMemberDialog(ti) {
 function recAddDialog(ti) {
   const t = RES.doc.tags[ti];
   const rec = Array.isArray(t.recommended) ? t.recommended : [];
-  const names = (t.members || []).map(m => String(m.operator || "")).filter(n => n && !rec.includes(n));
+  const names = (t.members || []).flatMap(m => t.id === "P12"
+    ? (m.providers || []).map(p => String(p.operator || ""))
+    : [String(m.operator || "")]).filter(n => n && !rec.includes(n));
   pickDialog("给「" + String(t.name || "") + "」加荐", names, name => {
     t.recommended = Array.isArray(t.recommended) ? t.recommended : [];
     t.recommended.push(name);
@@ -1215,7 +1328,10 @@ function opFill(i) {
 function opDel(i) {
   const o = RES.doc.operators[i];
   let refs = 0;
-  RES.doc.tags.forEach(t => (t.members || []).forEach(m => { if (m.operator === o.name) refs++; }));
+  RES.doc.tags.forEach(t => (t.members || []).forEach(m => {
+    if (m.operator === o.name) refs++;
+    (m.providers || []).forEach(p => { if (p.operator === o.name) refs++; });
+  }));
   if (!confirm("删除干员条目「" + String(o.name || "") + "」？" + (refs ? "仍有 " + refs + " 处成员引用，删除会产生悬空引用（校验会报错）。" : "（当前无引用）"))) return;
   RES.doc.operators.splice(i, 1);
   RES.sel.op = Math.min(i, RES.doc.operators.length - 1);
@@ -1228,7 +1344,10 @@ function renameOperator(i, value) {
   if (!next || next === old) return;
   let n = 0;
   RES.doc.tags.forEach(t => {
-    (t.members || []).forEach(m => { if (m.operator === old) { m.operator = next; n++; } });
+    (t.members || []).forEach(m => {
+      if (m.operator === old) { m.operator = next; n++; }
+      (m.providers || []).forEach(p => { if (p.operator === old) { p.operator = next; n++; } });
+    });
     if (Array.isArray(t.recommended)) t.recommended = t.recommended.map(x => (x === old ? next : x));
   });
   o.name = next;

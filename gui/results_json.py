@@ -90,6 +90,75 @@ def render_results(doc, eol: str = "crlf") -> str:
     return text.replace("\n", "\r\n") if eol == "crlf" else text
 
 
+def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict, seen: dict,
+                 combo_names: dict, add) -> None:
+    """阵容组合（P12）：成员＝组合条目（combo/condition/remark/beneficiaries/providers），
+    提供者按干员成员的同套规则逐项校验；唯一性以组合为界（组合内提供者不重复、跨组合可重复）。"""
+    mplc = plc + ["members", mi]
+    base = f"tags[{ti}].members[{mi}]"
+    cname = mem.get("combo")
+    if not isinstance(cname, str) or not cname.strip():
+        add("error", "C1", f"{base}.combo", mplc + ["combo"], label, "缺少 combo（组合名）")
+        cname = ""
+    elif cname in combo_names:
+        add("error", "C4", f"{base}.combo", mplc + ["combo"], label + " · " + cname,
+            f"组合名重复（首次出现在 members[{combo_names[cname]}]）")
+    else:
+        combo_names[cname] = mi
+    clabel = label + " · " + cname if cname else label
+    cond = mem.get("condition")
+    if not isinstance(cond, str) or not cond.strip():
+        add("error", "C2", f"{base}.condition", mplc + ["condition"], clabel, "组合 condition 必填（来自「触发条件」bullet）")
+    if "remark" in mem and (not isinstance(mem.get("remark"), str) or not mem.get("remark").strip()):
+        add("warn", "C6", f"{base}.remark", mplc + ["remark"], clabel, "组合 remark 为空时应省略该字段")
+    bens = mem.get("beneficiaries")
+    if bens is not None and not (isinstance(bens, list) and all(isinstance(x, str) and x.strip() for x in bens)):
+        add("error", "C3", f"{base}.beneficiaries", mplc + ["beneficiaries"], clabel, "beneficiaries 应为字符串数组")
+    provs = mem.get("providers")
+    if not isinstance(provs, list) or not provs:
+        add("error", "C1", f"{base}.providers", mplc + ["providers"], clabel, "providers 必填且至少一名提供者")
+        provs = []
+    pseen: set[str] = set()
+    for pi, prov in enumerate(provs):
+        pplc = mplc + ["providers", pi]
+        pbase = f"{base}.providers[{pi}]"
+        if not isinstance(prov, dict):
+            add("error", "C1", pbase, pplc, clabel, "提供者必须是对象")
+            continue
+        pname = prov.get("operator")
+        plabel = clabel + " · " + (pname if isinstance(pname, str) else "")
+        if not isinstance(pname, str) or not pname.strip():
+            add("error", "C1", f"{pbase}.operator", pplc + ["operator"], clabel, "缺少提供者 operator")
+            pname = ""
+        elif pname not in names:
+            add("error", "M3", f"{pbase}.operator", pplc + ["operator"], plabel, f"「{pname}」不在 operators[] 中")
+        elif pname in pseen:
+            add("error", "C4", f"{pbase}.operator", pplc + ["operator"], plabel, f"同一组合内提供者重复：{pname}")
+        if pname:
+            pseen.add(pname)
+            seen.setdefault(pname, set()).add(("组合", cname, ""))
+        pcond = prov.get("condition")
+        if not isinstance(pcond, str) or not pcond.strip():
+            add("error", "M5", f"{pbase}.condition", pplc + ["condition"], plabel, "condition 必填（精英 0·1 级即具备写「无」）")
+        if "remark" in prov and (not isinstance(prov.get("remark"), str) or not prov.get("remark").strip()):
+            add("warn", "M6", f"{pbase}.remark", pplc + ["remark"], plabel, "remark 为空时应省略该字段")
+        purl = prov.get("prtsUrl")
+        if not isinstance(purl, str) or not purl.strip():
+            add("error", "M10", f"{pbase}.prtsUrl", pplc + ["prtsUrl"], plabel, "prtsUrl 必填")
+        else:
+            head = purl.split("#", 1)[0]
+            if not head.startswith("https://prts.wiki/w/"):
+                add("warn", "M11", f"{pbase}.prtsUrl", pplc + ["prtsUrl"], plabel, "prtsUrl 应以 https://prts.wiki/w/ 开头")
+            elif pname and urllib.parse.unquote(head[len("https://prts.wiki/w/"):]) != pname:
+                add("warn", "M11", f"{pbase}.prtsUrl", pplc + ["prtsUrl"], plabel, "prtsUrl 的干员名与 operator 不一致（注意 percent 编码）")
+        for key in prov:
+            if key not in ("operator", "condition", "remark", "prtsUrl"):
+                add("warn", "M12", f"{pbase}.{key}", pplc + [key], plabel, f"规范之外的字段「{key}」")
+    for key in mem:
+        if key not in ("combo", "condition", "remark", "beneficiaries", "providers"):
+            add("warn", "M12", f"{base}.{key}", mplc + [key], clabel, f"规范之外的字段「{key}」")
+
+
 def validate_results(doc) -> tuple[list[dict], dict | None]:
     """按 docs/output-standard.md 校验结果 JSON；只列问题，不做阻断。"""
     problems: list[dict] = []
@@ -226,11 +295,15 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
             add("error", "G2", f"tags[{ti}].members", plc + ["members"], label, "members 必须是数组")
             members = []
         seen: dict[str, set] = {}  # 干员名 → 已占用的末端子 TAG 集合（无子 TAG 者以 ("", "", "") 记）
+        combo_names: dict[str, int] = {}  # 阵容组合（P12）：组合名 → 首次出现的成员序号
         for mi, mem in enumerate(members):
             mplc = plc + ["members", mi]
             stats["members"] += 1
             if not isinstance(mem, dict):
                 add("error", "M1", f"tags[{ti}].members[{mi}]", mplc, label, "成员必须是对象")
+                continue
+            if tid == "P12":  # 阵容组合：成员＝组合条目
+                _check_combo(label, ti, mi, mem, plc, names, seen, combo_names, add)
                 continue
             mname = mem.get("operator")
             if not isinstance(mname, str) or not mname.strip():
@@ -320,8 +393,14 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
     for tag in raw_tags:
         if isinstance(tag, dict) and isinstance(tag.get("members"), list):
             for mem in tag["members"]:
-                if isinstance(mem, dict) and isinstance(mem.get("operator"), str):
+                if not isinstance(mem, dict):
+                    continue
+                if isinstance(mem.get("operator"), str):
                     used.add(mem["operator"])
+                if isinstance(mem.get("providers"), list):  # 阵容组合：组合内提供者
+                    for prov in mem["providers"]:
+                        if isinstance(prov, dict) and isinstance(prov.get("operator"), str):
+                            used.add(prov["operator"])
     for nm, i in names.items():
         if nm not in used:
             add("warn", "O8", f"operators[{i}]", ["operators", i], nm, f"「{nm}」未被任何 TAG 引用")

@@ -328,6 +328,8 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
   transition: background-color var(--ak-motion-fast) var(--ak-ease-standard), border-color var(--ak-motion-fast) var(--ak-ease-standard);
 }
 .val:hover { border-color: var(--line); background: rgba(243, 244, 239, .04); }
+.row.ro .val { cursor: default; }
+.row.ro .val:hover { border-color: transparent; background: none; }
 .val.empty { color: var(--ak-signal-accent); background: color-mix(in srgb, var(--ak-signal-accent) 12%, transparent); }
 .editline { display: flex; gap: var(--ak-space-1); align-items: flex-start; margin-top: 2px; }
 .editline input, .editline textarea { flex: 1; min-width: 0; font-size: 13px; }

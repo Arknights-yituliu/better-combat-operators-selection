@@ -67,6 +67,8 @@ def clean_cell(text: str) -> str:
     text = re.sub(r"_brief\.md( ?§[\d.]+)?", "", text)
     text = re.sub(r"[，,]?(逐格)?见\s*[\w一-鿿]+/攻击范围\.md", "", text)
     text = re.sub(r"（按\s+", "（", text)
+    text = re.sub(r"（\s+", "（", text)
+    text = re.sub(r"\s+）", "）", text)
     text = text.replace("（）", "").replace("()", "")
     text = re.sub(r"[（(]\s*[；，]\s*([^）)])", r"（\1", text)
     return re.sub(r"[ \t]{2,}", " ", text).strip()
@@ -74,6 +76,52 @@ def clean_cell(text: str) -> str:
 
 def url_of(name: str, anchor: str = "") -> str:
     return "https://prts.wiki/w/" + urllib.parse.quote(name) + anchor
+
+
+# ---------------------------------------------------------------- 阵容组合（P12）组合级元数据
+
+COMBO_NAME_RE = re.compile(r"A\d+\.\s*(.+)")
+COMBO_BULLET_RE = re.compile(r"^- \*\*(触发条件|组合整体机制|可用受益干员)\*\*：(.*)$")
+
+
+def parse_names(text: str) -> list[str]:
+    """「可用受益干员」bullet → 名单数组；不可枚举（带说明文字/路径/超长词）时返回空。"""
+    head = re.split(r"[（(。]", text, maxsplit=1)[0]
+    names = [x.strip() for x in head.split("、") if x.strip()]
+    if len(names) < 2 or any(len(n) > 10 or re.search(r"[\s`／/]", n) for n in names):
+        return []
+    return names
+
+
+def read_combo_meta(path: pathlib.Path) -> dict[str, dict]:
+    """阵容组合：`### A<N>. 组合名` 段里固定三条 bullet → 组合级 condition/remark/beneficiaries。"""
+    out: dict[str, dict] = {}
+    cur = ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("### "):
+            m = COMBO_NAME_RE.match(line[4:].strip())
+            cur = m.group(1).strip() if m else ""
+            if cur:
+                out.setdefault(cur, {})
+            continue
+        if line.startswith("## "):
+            cur = ""
+            continue
+        if not cur:
+            continue
+        m = COMBO_BULLET_RE.match(line.strip())
+        if not m:
+            continue
+        label, text = m.group(1), m.group(2).strip()
+        if label == "触发条件":
+            out[cur]["condition"] = text
+        elif label == "组合整体机制":
+            out[cur]["remark"] = text
+        else:
+            names = parse_names(text)
+            if names:
+                out[cur]["beneficiaries"] = names
+    return out
 
 
 def read_tables(path: pathlib.Path):
@@ -368,10 +416,6 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
         m = re.match(r"[一二三四五六七八九十]+、([^（(]+)", h3)
         if m:
             add("子 TAG", m.group(1).strip())
-    elif tag_no == "12":
-        m = re.match(r"A\d+\.\s*(.+)", h3)
-        if m:
-            add("子 TAG", m.group(1).strip())
     return remark, subs or []
 
 
@@ -380,9 +424,11 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
     rec_file = PIPE / "player_tags" / "_recommend.json"
     if rec_file.exists():
         recommend = json.loads(rec_file.read_text(encoding="utf-8"))
+    combo_meta = read_combo_meta(PLAYER_DOC)
     tags, seen_ops = [], []
     tag_no = last_h2 = ""
     per_tag: dict[str, list[dict]] = {}
+    combos: dict[str, dict] = {}  # 阵容组合：组合名 → {combo, providers}
     tags_order: list[dict] = []
     for h2, h3, h4, header, rows, _ln in read_tables(PLAYER_DOC):
         m = PLAYER_H2_RE.match(f"## {h2}")
@@ -398,6 +444,17 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
             clean = [clean_cell(c) for c in cells]
             op = clean[0]
             cond, remark = clean[ci], clean[ni]
+            if tag_no == "12":  # 阵容组合：成员行 = 组合的提供者（组合名取自子表标题）
+                cm = COMBO_NAME_RE.match(h3.strip())
+                combo = cm.group(1).strip() if cm else ""
+                entry = combos.setdefault(combo, {"combo": combo, "providers": []})
+                prov = {"operator": op, "condition": cond}
+                if remark:
+                    prov["remark"] = remark
+                prov["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
+                entry["providers"].append(prov)
+                seen_ops.append(op)
+                continue
             remark, subs = player_subtags(tag_no, h3, h4, header, clean, cond, remark)
             member = {"operator": op, "condition": cond}
             if remark:
@@ -408,8 +465,19 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
             per_tag[tag_no].append(member)  # 一行成员表 = 一条成员；同一末端子 TAG 不重复即可重名
             seen_ops.append(op)
     for t in tags_order:
-        members = per_tag[t["no"]]
-        if t["no"] != "12":  # 阵容组合按组合分组；其余 TAG 合并子表后按实装时间倒序（稳定排序）
+        if t["no"] == "12":  # 阵容组合：members = 组合条目（组合名/条件/备注/受益者/提供者明细）
+            members = []
+            for combo, entry in combos.items():
+                meta = combo_meta.get(combo, {})
+                item = {"combo": combo,
+                        "condition": clean_cell(meta.get("condition", "")),
+                        "remark": clean_cell(meta.get("remark", ""))}
+                if meta.get("beneficiaries"):
+                    item["beneficiaries"] = meta["beneficiaries"]
+                item["providers"] = entry["providers"]
+                members.append(item)
+        else:
+            members = per_tag[t["no"]]
             members.sort(key=lambda m: launch_date(m["operator"]) or "", reverse=True)
         tags.append({"id": f"P{t['no']}", "name": t["name"], "source": "player",
                      "recommended": [x for x in recommend.get(t["name"], [])],

@@ -52,7 +52,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
 .venv/Scripts/python.exe -X utf8 recommend.py list|add|remove|check   # 例：recommend.py add 充电 白铁
 # Local web panel, three tabs:
-#   「荐」= 荐 add/remove (详情 = the operator's info card in the right column);
+#   「荐」= 荐 add/remove (详情 = info card + read-only 条件/备注 in the right column);
 #   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
 #     target 子表, and edit 条件/备注 (writes back to player_tags/NN-*.md and official_tags/[A-I]-*.md;
 #     recomputes official 条目头);
@@ -74,6 +74,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 - **Evidence-based**: every judgment cites `文件:行号` under `material_datas/PRTS/`; never classify from model memory. Uncertain items are marked `[待考]` and routed to 待开发者确认.
 - **条件 vs 备注**: 条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; "无" if available at E0L1). 备注 = processed info — numbers, durations, hidden mechanics, tactical use; do not restate what the in-game text already shows plainly.
+- **No dropped capabilities**: an operator's entry lists **every** capability meeting that TAG's 评定标准 — multiple qualifying features are all written (条件 covers each hard requirement, 备注 itemizes them); never omit one because it overlaps, is smaller, or a stronger one is already written.
 - **Summons/devices count as the owner's capability.** **Mode-limited modules (ISW-α/RA-α etc.) count** for player TAGs — state the mode restriction in 条件 and note it in 备注.
 - Direction matters (to allies vs self vs enemies); one operator may belong to **multiple TAGs**; player TAGs may have **sub-TAGs** (implementation/type/scope distinctions).
 - Mechanism-level, time-independent only: no tier-list / current-meta claims.
