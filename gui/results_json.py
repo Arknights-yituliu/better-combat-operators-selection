@@ -105,6 +105,7 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
             f"组合名重复（首次出现在 members[{combo_names[cname]}]）")
     else:
         combo_names[cname] = mi
+        seen.setdefault(cname, set()).add(("组合名", cname, ""))  # R1：组合名本身也是合法荐（与组员荐独立）
     clabel = label + " · " + cname if cname else label
     cond = mem.get("condition")
     if not isinstance(cond, str) or not cond.strip():

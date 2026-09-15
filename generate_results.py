@@ -85,8 +85,11 @@ COMBO_BULLET_RE = re.compile(r"^- \*\*(触发条件|组合整体机制|可用受
 
 
 def parse_names(text: str) -> list[str]:
-    """「可用受益干员」bullet → 名单数组；不可枚举（带说明文字/路径/超长词）时返回空。"""
-    head = re.split(r"[（(。]", text, maxsplit=1)[0]
+    """「可用受益干员」bullet → 名单数组；不可枚举（带说明文字/路径/超长词）时返回空。
+
+    只认全角「（」与「。」作尾注分隔——干员名里的括号是半角（如 阿米娅(医疗)），不可当分隔符。
+    """
+    head = re.split(r"[（。]", text, maxsplit=1)[0]
     names = [x.strip() for x in head.split("、") if x.strip()]
     if len(names) < 2 or any(len(n) > 10 or re.search(r"[\s`／/]", n) for n in names):
         return []

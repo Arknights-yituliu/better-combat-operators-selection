@@ -146,6 +146,8 @@ function renderTags() {
 function renderOps() {
   const list = document.getElementById("oplist");
   list.innerHTML = "";
+  const t12 = ST.zhen.tag === "__all__" ? null : tagOf(ST.zhen.tag);
+  if (t12 && t12.num === "12") return renderCombos(t12, list);
   const all = viewOps();
   const items = all.filter(it => matches(it.op, ST.zhen.q));
   document.getElementById("cnt").textContent = items.length + " / " + all.length + " 人";
@@ -170,6 +172,66 @@ function renderOps() {
     });
     list.appendChild(el);
   }
+}
+function comboNameOf(b) {
+  const m = /A\d+\.\s*(.+)/.exec(String((b && b.label) || ""));
+  return m ? m[1].trim() : String((b && b.label) || "");
+}
+function renderCombos(t, list) {
+  // 阵容组合：按组合分组——组头＝组合级荐（左键加/右键取消），组内行＝单干员荐；两者独立、可混排
+  const rec = t.recommend || [];
+  const q = ST.zhen.q;
+  const dates = new Map((DATA.roster || []).map(p => [p.name, p.date || ""]));
+  const byLaunch = (a, b) => (dates.get(b) || "").localeCompare(dates.get(a) || "") || a.localeCompare(b, "zh");
+  let groups = 0;
+  for (const b of t.blocks) {
+    const combo = comboNameOf(b);
+    const ops = [...new Set(b.rows.map(r => r.op))];
+    const nameHit = matches(combo, q);
+    const shown = (nameHit ? ops : ops.filter(op => matches(op, q))).sort(byLaunch);
+    if (!nameHit && !shown.length) continue;
+    groups += 1;
+    const comboRec = rec.includes(combo);
+    const head = document.createElement("div");
+    head.className = "card combohead" + (comboRec ? " rec" : "");
+    head.innerHTML = '<span class="rank">' + (comboRec ? "荐" : "") + '</span><span class="name">' + esc(combo) + "</span>" +
+      '<span class="chips"><span class="chip">' + ops.length + " 名提供者</span></span>";
+    head.title = comboRec ? "左键 = 组合已是荐 · 右键 = 移除组合荐" : "左键 = 将组合加入荐 · 右键 = 移除组合荐（组荐与组员荐互相独立）";
+    head.onclick = () => addComboRec(combo);
+    head.oncontextmenu = e => { e.preventDefault(); removeComboRec(combo); };
+    list.appendChild(head);
+    for (const op of shown) {
+      const isRec = rec.includes(op);
+      const el = opRow({op, rec: isRec}, {
+        cls: isRec ? "rec" : "",
+        rank: isRec ? "荐" : "",
+        chips: [],
+        buttons: [{label: "详情", title: "在右侧查看干员信息", fn: () => { ST.zhen.openOp = op; renderDetail(); }}],
+        onClick: () => addRec(op),
+        onContext: () => removeRec(op),
+      });
+      list.appendChild(el);
+    }
+  }
+  document.getElementById("cnt").textContent = groups + " / " + t.blocks.length + " 组";
+}
+async function addComboRec(combo) {
+  try {
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "add", op: combo});
+    DATA.recommend = j.recommend;
+    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
+    toast(j.noop ? ("「" + combo + "」组合已是荐") : ("已设荐：组合「" + combo + "」"));
+    renderTags(); renderOps();
+  } catch (e) { toast(e.message, true); }
+}
+async function removeComboRec(combo) {
+  try {
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "remove", op: combo});
+    DATA.recommend = j.recommend;
+    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
+    toast(j.noop ? ("「" + combo + "」组合本就没有荐") : ("已取消荐：组合「" + combo + "」"));
+    renderTags(); renderOps();
+  } catch (e) { toast(e.message, true); }
 }
 function renderDetail() {
   const box = document.getElementById("opcard");
@@ -1022,14 +1084,18 @@ function renderResPanel() {
     const rec = Array.isArray(t.recommended) ? t.recommended : null;
     if (!rec) g2.innerHTML += "<div class='hint'>缺 recommended 字段（点「按规范整理」可补空数组）。</div>";
     else if (!rec.length) g2.innerHTML += "<div class='hint'>暂无。</div>";
-    else rec.forEach((name, k) => {
-      const row = document.createElement("div");
-      row.className = "subrow";
-      const s = document.createElement("span"); s.style.flex = "1"; s.textContent = name;
-      row.appendChild(s);
-      row.appendChild(miniBtn("×", "取消荐", () => { rec.splice(k, 1); resMark(); renderResults(); }));
-      g2.appendChild(row);
-    });
+    else {
+      const comboSet = new Set((t.members || []).filter(m => m && m.combo).map(m => String(m.combo)));
+      rec.forEach((name, k) => {
+        const row = document.createElement("div");
+        row.className = "subrow";
+        const s = document.createElement("span"); s.style.flex = "1";
+        s.innerHTML = esc(name) + (comboSet.has(String(name)) ? " <span class='chip'>组合</span>" : "");
+        row.appendChild(s);
+        row.appendChild(miniBtn("×", "取消荐", () => { rec.splice(k, 1); resMark(); renderResults(); }));
+        g2.appendChild(row);
+      });
+    }
     const add = document.createElement("div");
     add.style.marginTop = "6px";
     add.appendChild(miniBtn("＋ 加荐", "只能从本 TAG 的成员里选", () => recAddDialog(RES.sel.tag)));
@@ -1194,6 +1260,16 @@ function comboCard(t, m) {
     resMark(); renderResults();
   }, dis);
   acts.append(move("↑ 上移", -1, RES.sel.mi <= 0), move("↓ 下移", 1, RES.sel.mi >= (t.members || []).length - 1));
+  const recArr = Array.isArray(t.recommended) ? t.recommended : null;
+  const comboName = String(m.combo || "");
+  const inRec = recArr ? recArr.includes(comboName) : false;
+  acts.appendChild(miniBtn(inRec ? "移出荐" : "加入荐", "组合名与干员名混排、互相独立（规范 §6）", () => {
+    if (!recArr) return toast("本 TAG 缺 recommended 数组（可用「按规范整理」补空数组）");
+    if (!comboName) return toast("组合名为空，先填 combo", true);
+    const i = recArr.indexOf(comboName);
+    if (i >= 0) recArr.splice(i, 1); else recArr.push(comboName);
+    resMark(); renderResults();
+  }));
   acts.appendChild(miniBtn("删除组合", "", () => {
     if (!confirm("删除组合「" + String(m.combo || "") + "」（含 " + provs.length + " 名提供者）？\n（只改内存，保存前不会写盘）")) return;
     t.members.splice(RES.sel.mi, 1);
@@ -1256,9 +1332,13 @@ function pickDialog(title, names, onPick) {
       const inp = card.querySelector("#mkq");
       const draw = () => {
         const q = inp.value.trim().toLowerCase();
-        const hit = names.filter(n => matches(n, q)).slice(0, 200);
-        list.innerHTML = hit.map(n => '<div class="mprob" data-n="' + esc(n) + '">' + esc(n) + "</div>").join("") ||
-          '<div class="mprob"><span class="hint">无匹配</span></div>';
+        // names 元素可为字符串，或 {label, value}（如阵容组合的「组合：…」选项，value＝组合名）
+        const hit = names.filter(n => matches(typeof n === "string" ? n : String(n.label || ""), q)).slice(0, 200);
+        list.innerHTML = hit.map(n => {
+          const label = typeof n === "string" ? n : String(n.label || n.value || "");
+          const val = typeof n === "string" ? n : String(n.value || "");
+          return '<div class="mprob" data-n="' + esc(val) + '">' + esc(label) + "</div>";
+        }).join("") || '<div class="mprob"><span class="hint">无匹配</span></div>';
         list.querySelectorAll(".mprob[data-n]").forEach(el => {
           el.onclick = () => { closeModal(); onPick(el.dataset.n); };
         });
@@ -1292,9 +1372,16 @@ function addMemberDialog(ti) {
 function recAddDialog(ti) {
   const t = RES.doc.tags[ti];
   const rec = Array.isArray(t.recommended) ? t.recommended : [];
-  const names = (t.members || []).flatMap(m => t.id === "P12"
-    ? (m.providers || []).map(p => String(p.operator || ""))
-    : [String(m.operator || "")]).filter(n => n && !rec.includes(n));
+  let names;
+  if (t.id === "P12") {  // 阵容组合：组合名与单个提供者都可设荐（两者独立、可混排）
+    const combos = (t.members || []).filter(m => m && m.combo && !rec.includes(String(m.combo)))
+      .map(m => ({label: "组合：" + m.combo + "（" + ((m.providers || []).length) + " 名提供者）", value: String(m.combo)}));
+    const provs = [...new Set((t.members || []).flatMap(m => (m.providers || []).map(p => String(p.operator || ""))))]
+      .filter(n => n && !rec.includes(n));
+    names = combos.concat(provs);
+  } else {
+    names = (t.members || []).map(m => String(m.operator || "")).filter(n => n && !rec.includes(n));
+  }
   pickDialog("给「" + String(t.name || "") + "」加荐", names, name => {
     t.recommended = Array.isArray(t.recommended) ? t.recommended : [];
     t.recommended.push(name);

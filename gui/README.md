@@ -87,6 +87,7 @@ Notes and failure modes:
   keeps `recommend.py check` clean.
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
   prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
+* 阵容组合 (P12) is edited **per combo**: the 荐 tab groups the rows by combo — the group header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Combos are listed in file order (A1…A14); providers within a combo by release date.
 * 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
 * The CLI equivalent is `recommend.py list|add|remove|check`; both write the same `_recommend.json`.
 
@@ -227,6 +228,8 @@ refused (you stay in the source view, with the error shown).
   * 阵容组合 (P12) members are **combo entries**: the card edits `combo` / `condition` / `remark` /
     `beneficiaries` and the nested provider rows (`operator` / `condition` / `remark` / `prtsUrl`);
     buttons: `＋ 加组合`, `＋ 提供者`, `删除组合` (format: `docs/output-standard.md` §4.2).
+    The 荐 editor's `＋ 加荐` dialog offers combo entries (value＝combo name) plus individual
+    providers, and each combo card has an `加入荐 / 移出荐` quick toggle.
   * Operator mode: a searchable, paginated `operators[]` list; the card edits all seven fields;
     `从全量干员表补全` fills them from the crawled PRTS data; renaming cascades through members and
     荐; `新增干员条目` picks from the full roster; `删除条目` warns when references remain.

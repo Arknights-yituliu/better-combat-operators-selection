@@ -28,14 +28,14 @@ Every time the criteria are not yet clear, offer this as an explicit choice:
 If the developer picks it:
 
 - Create `material_datas/tag_pipeline/player_tags/NN-<TAG名>.md` (NN = next free index) with the raw definition under `## 评定标准`, marked `[待考]`, an empty 成员表, and a `## 待开发者确认` item listing precisely what is still unclear.
-- Register the TAG: add it to the `TAGS` list in `player_tags/_merge_to_docs.py` and add a section to `docs/judge-for-player-tags-members-2.md`.
+- Register the TAG: add it to the `TAGS` list in `player_tags/_merge_to_docs.py` and add its 评定标准 section to the new part file.
 - `docs/player-tags-specify.md` is hand-edited by the developer — ask them to add the definition sentence rather than editing it yourself.
 - Run the merge script so the stub appears in `docs/player-tags-members.md`.
 
 ## Once the 评定标准 is clear
 
 1. **Pick the index/name**: `NN-<TAG名>.md` (existing part files are `01-…`–`12-…` — 12 player TAGs in total).
-2. **Register**: `_merge_to_docs.py` TAGS list, `docs/player-tags-specify.md`, `docs/judge-for-player-tags-members-2.md`.
+2. **Register**: `_merge_to_docs.py` TAGS list and the new part file's `## 评定标准`; `docs/player-tags-specify.md` is updated by the developer.
 3. **Write `## 评定标准`** following the 评定标准 writing rules in CLAUDE.md: use the term 评定标准 (never 口径 or 裁决), no dates, no edit traces; numbered paths when there are several; state boundaries and exclusions.
 4. **Member scan**: drive full-corpus searches from the criteria keywords (PRTS pages under `material_datas/PRTS/` + `deterministic.json`); every inclusion and exclusion cites `文件:行号`; summons/devices count as the owner; mode-limited modules (ISW-α/RA-α/SO-α…) count, with the mode written into 条件.
 5. **Boundary records**: 纳入存疑 / 明确排除 with rationale + evidence; unresolved items go to `## 待开发者确认`.

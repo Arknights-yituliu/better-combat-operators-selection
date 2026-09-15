@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+
 from .config import CHAR_IDS, rec
 from .roster import load_roster
 from .tags import load_official_entries, parse_player_blocks
@@ -34,10 +36,17 @@ def build_model(fresh: bool = False) -> dict:
         e["id"] = f"o:{e['file']}#e{n}"
         fill_cid(e["blocks"])
     known = {t["name"] for t in player_tags}
-    members_of = {
-        t["name"]: {r["op"] for b in t["blocks"] for r in b["rows"]}
-        for t in player_tags
-    }
+
+    def member_set(t: dict) -> set:
+        ops = {r["op"] for b in t["blocks"] for r in b["rows"]}
+        if t["num"] == "12":  # 阵容组合：荐可为组合名（组荐与组员荐独立，见 docs/output-standard.md §6）
+            for b in t["blocks"]:
+                m = re.match(r"A\d+\.\s*(.+)", str(b.get("label", "")))
+                if m:
+                    ops.add(m.group(1).strip())
+        return ops
+
+    members_of = {t["name"]: member_set(t) for t in player_tags}
     stale = [
         {"tag": tag, "op": op}
         for tag, ops in recommend.items() if tag in known

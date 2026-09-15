@@ -210,7 +210,7 @@ def run_check() -> int:
         "tags": [{"id": "P01", "name": "决战歼灭", "source": "player", "recommended": ["乙"], "members": [
             {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"},
             {"operator": "甲", "condition": "", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"}]},
-            {"id": "P12", "name": "阵容组合", "source": "player", "recommended": [], "members": [
+            {"id": "P12", "name": "阵容组合", "source": "player", "recommended": ["组合甲"], "members": [
                 {"combo": "组合甲", "condition": "", "beneficiaries": ["甲"], "providers": [
                     {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"},
                     {"operator": "甲", "condition": "无", "prtsUrl": "https://prts.wiki/w/%E7%94%B2"}]}]}],
@@ -220,6 +220,8 @@ def run_check() -> int:
     for want in ("M4", "M5", "R1", "C2", "C4"):
         if want not in codes:
             problems.append(f"校验器自检：样例应报出 {want}，实际只报出 {sorted(codes)}")
+    if any(p["code"] == "R1" and "组合甲" in (str(p.get("label", "")) + str(p.get("message", ""))) for p in got):
+        problems.append("校验器自检：R1 误报阵容组合的合法组合名「组合甲」")
     text = render_results({"白铁": "OK"}, "crlf")
     if text.count("\r\n") != text.count("\n") or not text.endswith("\r\n") or "﻿" in text:
         problems.append("render_results 的 CRLF / BOM 处理有误")

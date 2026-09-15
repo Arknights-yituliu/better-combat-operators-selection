@@ -20,7 +20,6 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
                         └─► docs/official-tags-members.md（_merge_official_to_docs.py 重生成 §3/§4/§5）
         player TAGs:    docs/player-tags-specify.md（定义）
                         material_datas/tag_pipeline/player_tags/NN-*.md（分 TAG 判定文件，含逐条 文件:行号 证据）
-                        docs/judge-for-player-tags-members-1.md / -2.md（开发者评定标准，修改 TAG 前必读）
                         _brief.md（共享评定标准）+ _launch_dates.json + _merge_to_docs.py + _recommend.json（荐，recommend.py 维护）
                         └─► docs/player-tags-members.md（自动生成，勿手改：改分文件后重新合并）
                         └─► results/operator-tags.json（最终输出，generate_results.py 生成，规范见 docs/output-standard.md）
@@ -75,14 +74,16 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 - **Evidence-based**: every judgment cites `文件:行号` under `material_datas/PRTS/`; never classify from model memory. Uncertain items are marked `[待考]` and routed to 待开发者确认.
 - **条件 vs 备注**: 条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; "无" if available at E0L1). 备注 = processed info — numbers, durations, hidden mechanics, tactical use; do not restate what the in-game text already shows plainly.
 - **No dropped capabilities**: an operator's entry lists **every** capability meeting that TAG's 评定标准 — multiple qualifying features are all written (条件 covers each hard requirement, 备注 itemizes them); never omit one because it overlaps, is smaller, or a stronger one is already written.
+- **Module tiers (模组档位)**: when a module enhances the capability a TAG judges, 条件 names the module + level (e.g. `Y模组3级`) and 备注 uses that tier's values; with multiple modules pick the one that strengthens **this TAG's** capability — different TAG rows may cite different modules. No vague "X模组更佳/可选" phrasing; modules irrelevant to the TAG are not mentioned.
 - **Summons/devices count as the owner's capability.** **Mode-limited modules (ISW-α/RA-α etc.) count** for player TAGs — state the mode restriction in 条件 and note it in 备注.
 - Direction matters (to allies vs self vs enemies); one operator may belong to **multiple TAGs**; player TAGs may have **sub-TAGs** (implementation/type/scope distinctions).
 - Mechanism-level, time-independent only: no tier-list / current-meta claims.
 - Member tables sort by release date descending (date from PRTS `## 获得方式`, cached in `player_tags/_launch_dates.json`); boundary/combo tables follow their own grouping.
-- `docs/judge-for-player-tags-members-1.md` / `-2.md` hold the developer's feedback per open question — read them before changing any player TAG.
+- 开发者的裁定与开放问题落在各分文件自身的 `## 待开发者确认` 与评定标准/边界与排除记录里 — read the target file's 评定标准 and 边界与排除记录 before changing any player TAG.
 - Player-TAG work uses parallel agents: one agent per TAG writes an evidence-bearing part file under `player_tags/`, following `_brief.md`; the merge script consolidates them into `docs/player-tags-members.md` (stripping the 依据 column). Keep evidence in the part files.
 - Adding a new TAG: follow `.claude/skills/add-player-tag/SKILL.md` — make the 评定标准 fully unambiguous with the developer before any member work, unless they explicitly choose the "先创建此TAG，评定标准后续更新" stub option.
 - New operator released (developer gives a PRTS link or description): follow `.claude/skills/add-new-operator/SKILL.md` — crawl into `material_datas/PRTS/`（含攻击范围）, judge every TAG (official + player), ask the developer about notable mechanics no TAG covers, then update the member docs (`docs/official-tags-members.md` + part files → merged doc) only — never generate `results/operator-tags.json`.
+- Version update (new operator **plus** new modules on existing operators, incremental): follow `.claude/skills/update-version/SKILL.md` — refresh only the changed operators, fold new modules into the affected rows (模组档位), and run the cross-operator impact checklist (新阵营成员/使能者/对外挂点…); never a full-table rescan.
 
 ### TAG criteria: 评定标准 writing rules (official AND player TAGs)
 

@@ -78,6 +78,31 @@ def main_table_members(path: pathlib.Path) -> list[str]:
     return names
 
 
+def combo_names(path: pathlib.Path) -> list[str]:
+    """阵容组合（12）：成员表区间内 `### A<N>. 组合名` 标题去序号前缀。"""
+    names: list[str] = []
+    inside = False
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if line.startswith("## "):
+            inside = line.startswith(START_MARKS) and not line.startswith(STOP_MARKS)
+            continue
+        if not inside:
+            continue
+        m = re.fullmatch(r"### A\d+\.\s*(.+)", line)
+        if m and m.group(1).strip() not in names:
+            names.append(m.group(1).strip())
+    return names
+
+
+def recommendable_members(path: pathlib.Path) -> list[str]:
+    """可设为荐的名字：默认＝主表成员；阵容组合另含组合名（荐可为组合或单个提供者，两者独立）。"""
+    members = main_table_members(path)
+    if path.name.startswith("12-"):
+        return members + [n for n in combo_names(path) if n not in members]
+    return members
+
+
 def close_matches(word: str, pool: list[str], n: int = 3) -> str:
     hits = difflib.get_close_matches(word, pool, n=n, cutoff=0.4)
     return f"（相近：{'、'.join(hits)}）" if hits else ""
@@ -115,7 +140,7 @@ def cmd_list(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], a
         ops = data.get(name, [])
         print(f"「{name}」荐（{len(ops)} 人）：")
         for op in ops:
-            mark = "" if op in main_table_members(dict(tags)[name]) else "  <- 已不在该 TAG 成员表，请用 check 复核"
+            mark = "" if op in recommendable_members(dict(tags)[name]) else "  <- 已不在该 TAG 成员表／组合名中，请用 check 复核"
             print(f"  {op}{mark}")
         return 0
     print("玩家体感 TAG 荐一览：")
@@ -127,15 +152,15 @@ def cmd_list(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], a
 
 def cmd_add(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], args) -> int:
     name = resolve_tag(args.tag, [t for t, _ in tags])
-    members = main_table_members(dict(tags)[name])
+    members = recommendable_members(dict(tags)[name])
     ops = data.setdefault(name, [])
     new_ops: list[str] = []
     for op in args.operators:
         if op not in members:
             raise SystemExit(
-                f"「{op}」不是「{name}」的成员，不能设为荐。"
+                f"「{op}」不是「{name}」的成员（或组合名），不能设为荐。"
                 f"{close_matches(op, members)}\n"
-                "（边界与排除记录中的干员不在主表内；如名单有误请先修改分文件）"
+                "（边界与排除记录中的干员不在主表内；阵容组合的「组合名」同样可设为荐；如名单有误请先修改分文件）"
             )
         if op in ops or op in new_ops:
             print(f"  跳过：{op} 已是「{name}」的荐")
@@ -173,11 +198,11 @@ def cmd_check(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], 
         if name not in tag_names:
             problems.append(f"未知 TAG：{name}")
             continue
-        members = main_table_members(dict(tags)[name])
+        members = recommendable_members(dict(tags)[name])
         dup = {op for op in ops if ops.count(op) > 1}
         for op in ops:
             if op not in members:
-                problems.append(f"「{name}」的荐 {op} 不在该 TAG 成员表中{close_matches(op, members)}")
+                problems.append(f"「{name}」的荐 {op} 不在该 TAG 成员表／组合名中{close_matches(op, members)}")
         for op in sorted(dup):
             problems.append(f"「{name}」的荐 {op} 重复出现")
 
