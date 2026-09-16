@@ -101,3 +101,4 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 - Git branch `master`; `docs/player-tags-specify.md` is periodically hand-edited by the developer. Do not commit unless asked.
 - The mechanics docs (`mechanism-understanding.md`, `verification-complaints.md`) exist because the same misjudgments recur (e.g. 灼烧 DoT ≠ 灼燃损伤; 屏障 vs 护盾 vs 闪避; "每帧检测" implementation notes vs real frame mechanics) — consult them before asserting a mechanism.
+- Game-term definitions live in `docs/glossary.md` — check it before judging anything phrased as a term (e.g. 过载 = 技能进行到一半时触发额外效果、覆盖后半程；魔力、吟唱 同此).
