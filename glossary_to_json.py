@@ -1,4 +1,4 @@
-"""docs/glossary.md -> results/glossary.json
+"""docs/glossary.md -> results/combat_glossary.json
 
 术语文件的格式约定（块与块之间以空行分隔，块内每行代表一个术语）：
 
@@ -23,10 +23,11 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "docs" / "glossary.md"
-DST = ROOT / "results" / "glossary.json"
+DST = ROOT / "results" / "combat_glossary.json"
 
 TITLE = "战斗术语"
-SECTIONS = ["状态", "技能相关", "元素相关", "干员分类", "杂项机制"]
+SECTIONS = ["状态", "技能相关", "元素相关", "干员分类", "杂项机制",
+            "基础机制", "额外术语", "战场效果", "伤害机制", "复用机制", "特殊计算"]
 NOTE_MARK = "※"
 
 
@@ -92,7 +93,7 @@ def main() -> None:
     if found != SECTIONS:
         raise SystemExit(f"章节与预期不符：{found}")
 
-    data = {"title": TITLE, "source": "docs/glossary.md", "sections": sections}
+    data = {"title": TITLE, "sections": sections}
     DST.parent.mkdir(parents=True, exist_ok=True)
     DST.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

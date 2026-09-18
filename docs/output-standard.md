@@ -98,7 +98,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | members | array | 是 | 成员（TAG×干员关系），见 4.2 |
 
 - 排序：`tags` 数组顺序＝UI 展示顺序——官方类按 `docs/official-tags-members.md` §4 顺序（A→I），玩家类按 P01→P12（决战歼灭、次数对策、吃拐一轮秒、远程消耗、插拔容错、初动增加、充电、拐杖、保人、大力推拉、阻挡数5、阵容组合）。
-- 官方类 id 以 TAG 字典（`material_datas/tag_pipeline/catalog.json`）为准；字典已与 81 个 TAG 完全对齐，三份文件（`catalog.json`／`merged.json`／`final_lists.tsv`）同源，逐 TAG 的计数、首现、名单与 §4 一致。
+- 官方类 id 以 TAG 字典（`material_datas/tag_pipeline/catalog.json`）为准；`merged.json`／`final_lists.tsv` 由 `_merge_official_to_docs.py --sync-dicts` 从分模块同步（维护方式见 §7 末），逐 TAG 的计数、首现、名单一律以 `docs/official-tags-members.md` §4 为准。
 
 ### 4.2 成员（TAG×干员关系）
 
@@ -135,7 +135,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 - 组合条目不带 `subTags`；唯一性以组合为界——**组合名在同一 TAG 内唯一、组合内提供者不重复；同一提供者可出现在多个组合**。
 - 同一干员可属多个 TAG（多对多，属其他 TAG 不构成排除理由）；**唯一性以末端子 TAG 为界——同一干员可在同一 TAG 的不同末端子 TAG 下各出现一条（如 次数对策 的机械师同时命中「多段伤害」「间隔伤害」），同一末端子 TAG 内不得重复**；无子 TAG 的 TAG 视为只有一个末端（即 TAG 自身）。
 - 名单文档（`docs/official-tags-members.md`、`docs/player-tags-members.md`）的成员表含「编号」列（charId，文档展示用）；本文件的成员仍按 `operator` 名引用 `operators[].name`，编号只在 `operators[]` 存一份。
-- 条件／备注的写法沿用 `docs/player-tags-members.md` §0「通用评定标准」（玩家类）：条件写硬性要求，备注写加工后的信息，不写游戏内一眼可见的内容；备注中仅攻速／攻击间隔换算与倍率相乘、叠乘两类推算值带「（待验证）」标注（原文数值的加减与单步换算、单步倍数放大、原文时长÷原文结算间隔的段数、攻击范围格数等不标）。**官方类**另按 `docs/official-tags-members.md`：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注以游戏内原文引用为证据。
+- 条件／备注的写法与「（待验证）」标注范围沿用 `docs/concept.md`「结果展示」；**官方类**另按 `docs/official-tags-members.md` §1：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注以游戏内原文引用为证据。
 - 成员顺序＝名单文档顺序（实装时间倒序；同实装日按拼音序），UI 默认按此顺序展示；**UI 提供实装时间正序／倒序切换**——排序键取该干员的 `operators[].releaseDate`（§3），同日成员保持文档内相对次序、不随切换倒转。成员表分多张子表的 TAG（次数对策、远程消耗、保人）合并为单一成员列表后按实装时间倒序重排（稳定排序，子 TAG 分组信息保留在 `subTags`）；「阵容组合」除外——其成员即组合条目（上表），按分文件的组合顺序排列，不按实装时间重排，正序／倒序切换不影响其顺序。
 
 ### 4.3 子 TAG（subTags）
@@ -163,7 +163,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 - **嵌套**：`subTags` 的元素是「父节点 → 子节点」的一条边。子 TAG 之下再分组时（`docs/player-tags-specify.md`：两级嵌套），把上一级的 `value` 用作下一级的 `group` 续写——如 远程消耗「表 2」下再分 2A/2B：`{"group": "子 TAG", "value": "远程部署型召唤物与装置"}` ＋ `{"group": "远程部署型召唤物与装置", "value": "陷阱师"}`。末端＝链上没有下级的那个值。
 - **筛选语义**：末端子 TAG 即可筛选项——选中某末端子 TAG，只展示该子 TAG 下的成员条目（每条成员自带其该子 TAG 下的条件／备注）。
 - 备注中的结构性前缀在写入 `subTags` 后不再保留：官方类「子 TAG：…。」、玩家类 插拔容错 的「救急路径：…」与 充电 的「子 TAG：补弹」；其余备注原文保留（含官方「抗削弱」的作用范围注记，如 `作用范围/仅自身`，属备注内容、不作 `detail`）。
-- 官方类的子 TAG 同样写入本字段，单层分组用 `{"group": "子 TAG", "value": "…"}`（组名与取值以该 TAG 分模块备注实况为准）；例：全场光环 的 `伤害光环`／`削弱光环`／`增益光环`／`治疗光环`／`增伤光环`，闪避 的 `物理闪避`／`法术闪避`／`全伤害闪避`（组名「闪避类型」），抗削弱 的 `下限保护`／`上限提高`（行内另注作用范围）。
+- 官方类的子 TAG 同样写入本字段，单层分组用 `{"group": "子 TAG", "value": "…"}`（组名与取值以该 TAG 分模块备注实况为准）；例：全场光环 的 `伤害光环`／`削弱光环`／`增益光环`／`治疗光环`／`增伤光环`，闪避 的 `物理闪避`／`法术闪避`／`全伤害闪避`（组名「闪避类型」），抗削弱 的 `下限保护`／`上限提高`（行内另注作用范围），帧级结算 的 `帧级判定`／`帧伤`。
 
 ## 5. PRTS 跳转地址
 
@@ -212,13 +212,13 @@ python recommend_gui.py                 # 网页面板两个页签：「荐」�
 | JSON 部分 | 来源 |
 |---|---|
 | `operators` | `material_datas/PRTS/<干员>/<干员>.md`（含 `_launch_dates.json` 的实装时间）＋ `material_datas/tag_pipeline/char_ids.json`（charId 映射） |
-| 官方类 `tags` | `docs/official-tags-members.md`（81 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `material_datas/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`material_datas/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
+| 官方类 `tags` | `docs/official-tags-members.md`（79 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `material_datas/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`material_datas/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
 | 玩家类 `tags` | `docs/player-tags-members.md`（由其分文件 `material_datas/tag_pipeline/player_tags/NN-*.md` 合并生成） |
 | `recommended` | `material_datas/tag_pipeline/player_tags/_recommend.json`（`recommend.py` 维护） |
-| `subTags` | 玩家类＝各分文件成员表的分组（「子 TAG」列／子表标题／「救急路径：」等行内标记）；官方类＝备注开头的「子 TAG：…。」（闪避、全场光环、抗削弱） |
+| `subTags` | 玩家类＝各分文件成员表的分组（「子 TAG」列／子表标题／「救急路径：」等行内标记）；官方类＝备注开头的「子 TAG：…。」（闪避、全场光环、抗削弱、帧级结算） |
 | `prtsUrl` | 按 §5 规则生成（干员名编码＋锚点） |
 
-**发布前置工作**（首次生成 v1 前需完成）：官方 TAG 字典已与 81 个 TAG 对齐——`catalog.json`（version 3，81 条）、`merged.json`（431 名干员，无 TAG 者 44 名为空数组）、`final_lists.tsv`（81 行）三份文件同源，与本文档 §4 的逐 TAG 计数、首现、名单一致，无需再补录。
+**机读字典与一致性**：`catalog.json` 是脚本唯一读取的 TAG 字典（手写维护，name 必须与分模块条目标题逐字一致）；`merged.json`（干员→TAG id，id 按 catalog 顺序）与 `final_lists.tsv`（TAG→成员）由 `material_datas/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts` 从分模块重建，改 TAG 结构后需重跑；`deterministic.json` 为基础属性快照，不随 TAG 变化。各处的 TAG 数／关系数一律以 `docs/official-tags-members.md` §3 为准，其它文档不另行记数。
 
 1. 生成脚本：`generate_results.py`（根目录）。读两份名单文档＋字典／charId 映射／实装时间／荐文件，按本规范合成 `results/operator-tags.json`（CRLF、2 空格缩进、`ensure_ascii=False`）；`--check` 只生成到内存并跑规范校验，`--report` 另打印逐 TAG 计数。同一次运行另写出**辅助名单** `docs/untagged-operators.md`（`docs/operators.txt` 全量 − `operators[]`，即未进任何成员表的干员）。
 2. 生成时顺带做文本规范化（不改变含义）：去 markdown 强调标记与 `文件:行号` 证据；生产文档路径引用改写为产品表述（`08-拐杖.md` → `「拐杖」TAG`、`_brief.md` §x → 删除、PRTS 素材路径 → 删除）；备注开头的结构性前缀（「子 TAG：…。」「救急路径：…」）折入 `subTags` 后不再保留。

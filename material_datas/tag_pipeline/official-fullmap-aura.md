@@ -1,6 +1,6 @@
 # 全场光环（官方设定 TAG 转制稿 · 类别 I）
 
-> 来源：由玩家体感 TAG 判定文件 `material_datas/tag_pipeline/player_tags/12-全场光环.md` 转制——「全场光环」按评定标准由玩家体感 TAG 转为官方设定 TAG（并入 `docs/official-tags-members.md` 体系），其证据与边界记录并入本文件。
+> 来源：由玩家体感 TAG 判定文件 `material_datas/tag_pipeline/player_tags/12-全场光环.md`（历史文件，现该目录序号 12 为「阵容组合」）转制——「全场光环」按评定标准由玩家体感 TAG 转为官方设定 TAG（并入 `docs/official-tags-members.md` 体系），其证据与边界记录并入本文件。
 > 证据：全部为 `material_datas/PRTS/**/*.md` 原文（`文件:行号`），已逐条回读核对；评定标准与边界见 §① 附注、§③。
 > 本文件三部分：① 可直接粘贴进 `docs/official-tags-members.md` 的条目；② 证据表（供 results JSON 与复核）；③ 遗留问题（供写入 `docs/official-tags-members.md` §6）。
 

@@ -7,8 +7,11 @@
 - 其余章节（§1/§2/§6/§7/§8/§9 等）原样保留；成员表按实装时间倒序（同日期保持文件内相对序）。
 - 成员表列＝`干员 | 编号 | 条件 | 备注`（编号＝charId，值由分模块单元格提供；映射文件
   `material_datas/tag_pipeline/char_ids.json`）；过渡期兼容旧的 3 列（编号留空并 warn）。
+- `--sync-dicts` 另按分模块重建机读字典 `merged.json`（干员→TAG id，id 按 catalog 顺序；
+  键集沿用原文件，含空数组者）与 `final_lists.tsv`（TAG→成员，按 id 排序）；`catalog.json`
+  只读不写（缺条目时 warn），`deterministic.json` 为基础属性快照、不随 TAG 变化。
 
-用法：.venv/Scripts/python.exe -X utf8 _merge_official_to_docs.py [--check]
+用法：.venv/Scripts/python.exe -X utf8 _merge_official_to_docs.py [--check] [--sync-dicts]
 """
 import json
 import os
@@ -22,6 +25,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 DOC = os.path.join(ROOT, "docs", "official-tags-members.md")
 DATES = json.load(open(os.path.join(ROOT, "material_datas", "tag_pipeline",
                                     "player_tags", "_launch_dates.json"), encoding="utf-8"))
+CATALOG = os.path.join(ROOT, "material_datas", "tag_pipeline", "catalog.json")
+MERGED = os.path.join(ROOT, "material_datas", "tag_pipeline", "merged.json")
+FINAL_LISTS = os.path.join(ROOT, "material_datas", "tag_pipeline", "final_lists.tsv")
 
 FILES = [
     ("A 控制·异常（对敌施加）", ["A-控制异常-1.md", "A-控制异常-2.md", "A-控制异常-3.md"]),
@@ -124,8 +130,53 @@ def build_category(cat, fnames):
     return out_lines, stat
 
 
+def sync_dicts():
+    """按分模块重建机读字典 merged.json / final_lists.tsv（catalog.json 只读）。"""
+    catalog = json.load(open(CATALOG, encoding="utf-8"))
+    order = {t["id"]: i for i, t in enumerate(catalog["tags"])}
+    name2id = {t["name"]: t["id"] for t in catalog["tags"]}
+
+    per_tag = {}
+    for _, fnames in FILES:
+        for fn in fnames:
+            for e in parse_file(fn):
+                tid = name2id.get(e["name"])
+                if tid is None:
+                    warnings.append(f"字典同步：catalog.json 缺少 TAG「{e['name']}」")
+                    continue
+                if tid in per_tag:
+                    warnings.append(f"字典同步：TAG「{e['name']}」重复出现")
+                per_tag[tid] = [(op, date_of(op)) for op, _, _, _ in e["rows"]]
+
+    if len(per_tag) != len(order):
+        warnings.append(f"字典同步：TAG 数不一致 分模块 {len(per_tag)} / catalog {len(order)}"
+                        f"；缺 {sorted(set(order) - set(per_tag))}")
+
+    rows = []
+    for tid in sorted(per_tag):
+        members = per_tag[tid]
+        dated = sorted([m for m in members if m[1]], key=lambda m: m[1], reverse=True)
+        undated = [m for m in members if not m[1]]
+        if undated:
+            warnings.append(f"字典同步：{tid} 成员缺实装日期 " + "、".join(m[0] for m in undated))
+        first = dated[-1][1] if dated else "—"
+        names = [m[0] for m in dated + undated]
+        rows.append(f"{tid}\t{len(members)}\t{first}\t" + "、".join(names))
+    open(FINAL_LISTS, "w", encoding="utf-8", newline="\r\n").write("\n".join(rows))
+
+    merged = json.load(open(MERGED, encoding="utf-8"))  # 键集与顺序沿用原文件
+    out = {}
+    for op in merged:
+        ids = [tid for tid, members in per_tag.items() if any(m[0] == op for m in members)]
+        out[op] = sorted(ids, key=lambda t: order[t])
+    open(MERGED, "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False))
+    print(f"  字典同步：final_lists.tsv {len(rows)} 行；merged.json {len(out)} 名干员")
+
+
 def main():
     check_only = "--check" in sys.argv
+    if "--sync-dicts" in sys.argv:
+        sync_dicts()
     text = open(DOC, encoding="utf-8").read()
     lines = text.splitlines()
 

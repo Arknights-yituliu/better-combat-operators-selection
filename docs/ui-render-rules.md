@@ -2,7 +2,7 @@
 
 > 编写：2026-09-18。
 > 消费端：一图流前端项目 `frontend-v2-plus` 的页面 `src/pages/tools/better-combat-operator-filter.vue`（路由 `/tools/better-combat-operator-filter`，站内位置：一图流工具箱），数据取自 `src/static/json/combat/` 下的两份副本（与 `results/` 逐字节一致，不在前端仓库内手工维护）。
-> 数据快照：`results/operator-tags.json`（v1 / 2026-09-17：398 名干员、93 个 TAG ＝ 官方 81 ＋ 玩家 12、1668 条成员条目、14 个阵容组合、26 条荐）＋ `results/combat_glossary.json`（5 节 65 条术语）。
+> 数据快照：以 `results/operator-tags.json`（干员数／TAG 数／成员条目／组合／荐）与 `results/combat_glossary.json`（章节与术语数）的当前内容为准，本文不另行记数。
 > 定位：本文记录**消费端当前怎样读取与展示结果 JSON**，作为源项目后续改动的核对清单 —— 修改 JSON 结构、字段语义或名单规则时，对照 §8 判断前端是否需要同步。JSON 本身的格式规范见 `docs/output-standard.md`，荐的评定标准见其 §6，本文只讲"前端怎么用"。
 > 维护：前端页面的渲染规则一变，本文同步更新。
 
@@ -53,7 +53,7 @@
 | `prtsUrl` | 条目级外链 |
 | `combo` | **P12 专用**：组合名（同一 TAG 内要求唯一，前端以它为 key） |
 | `providers[]` | **P12 专用**：提供者（`operator` / `condition` / `remark` / `prtsUrl`）；只有 `operator` 会用于取头像与星级 |
-| `beneficiaries[]` | **P12 专用**：受益者名字，只渲染成纯文字 chips，**不取头像**（可以不在 `operators[]` 里，现状 272 处提及中有 26 个名字不在其中） |
+| `beneficiaries[]` | **P12 专用**：受益者名字，只渲染成纯文字 chips，**不取头像**（可以不在 `operators[]` 里） |
 
 ---
 
@@ -67,7 +67,7 @@
 | `opEntriesByTag` | `tagId → 干员名 → 条目[]` | **跳过 `P12`**（组合条目没有 `operator`）；同一干员在同一 TAG 下的多条条目会聚合在一个数组里 |
 | `opTagIds` | `干员名 → TAG id[]` | 未筛选时卡片上的 TAG chips、详情卡片的条目选择都用它 |
 | `recSets` | `tagId → Set(荐名单)` | — |
-| `recTagIdsByName` | `干员名/组合名 → 荐它的 TAG id[]` | 由 `recSets` 倒排，避免逐张卡片重复扫描 93 个 TAG |
+| `recTagIdsByName` | `干员名/组合名 → 荐它的 TAG id[]` | 由 `recSets` 倒排，避免逐张卡片重复扫描全部 TAG |
 | `subOptionsByTag` | `tagId → [{key, group, value}]` | 由该 TAG 全部成员的 `subTags` 去重而来；**`P12` 的子项＝组合名**（`key = combo|组合名`） |
 | `p12Combos` | `P12.members` 中带 `combo` 的条目 | — |
 | `providersCharId` / `providersRarity` | `干员名 → charId / rarity` | 由 `operators[]` 建，用于组合卡片的提供者头像 |
@@ -105,7 +105,7 @@
 
 | 情形 | 干员区 | 组合区 |
 |---|---|---|
-| 未筛选 | 全部 398 名干员 | 不展示 |
+| 未筛选 | 全部干员 | 不展示 |
 | 只选了 P12 | **不展示**（避免"组合→全部干员"的空降噪音） | 14 张组合卡片 |
 | 选了非 P12 的 TAG | 命中交集的干员 | 不展示 |
 
@@ -194,7 +194,7 @@
 
 | # | 约定 | 现状 | 破坏后的表现 |
 |---|---|---|---|
-| 1 | `operators[]` 覆盖全部成员条目中的干员名（含 P12 的全部 `providers`） | 是；**例外**：P12 的 `beneficiaries` 有 26 个名字不在其中 | 不在 `operators[]` 的干员**不会出现在干员区**；组合提供者会失去头像（按默认 6 星渲染） |
+| 1 | `operators[]` 覆盖全部成员条目中的干员名（含 P12 的全部 `providers`） | 是；**例外**：P12 的 `beneficiaries` 可能含不在其中的名字 | 不在 `operators[]` 的干员**不会出现在干员区**；组合提供者会失去头像（按默认 6 星渲染） |
 | 2 | 干员名唯一 | 是 | 索引按名字聚合，重名会被合并成同一张卡片、同一份条目 |
 | 3 | `charId` 唯一且非空 | 是 | 卡片以 `charId` 为 key，重复会互相顶掉 |
 | 4 | 组合名在 P12 内唯一 | 是 | 组合卡片与子项筛选都以组合名为 key |

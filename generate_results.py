@@ -40,6 +40,9 @@ OFFICIAL_DOC = ROOT / "docs" / "official-tags-members.md"
 PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
+# docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化等须递增版本
+VERSION = "v2"
+
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
@@ -340,6 +343,9 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
             elif name == "抗削弱":
                 remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
                 sub_values = vals
+            elif name == "帧级结算":
+                remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
+                sub_values = vals
             member = {"operator": op, "condition": cond}
             if remark:
                 member["remark"] = remark
@@ -571,7 +577,7 @@ def build() -> dict:
     player, ops_b = parse_player(idx)
     operators = build_operators(ops_a, ops_b)
     return {
-        "version": "v1",
+        "version": VERSION,
         "updated": rj.today_str(),
         "operators": operators,
         "tags": official + player,

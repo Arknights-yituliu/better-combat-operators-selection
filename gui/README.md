@@ -103,7 +103,7 @@ TAG), carrying their 条件 / 备注 where that makes sense.
 ```
 ┌ TAG tree ──────────┬ operator list ────────────────┬ full-roster picker ─┐
 │ 玩家体感 TAG (12)   │ rows of the selected scope     │ search + 431 people │
-│ 官方设定 TAG (81)   │ click = expand the card        │ left-click = stage   │
+│ 官方设定 TAG        │ click = expand the card        │ left-click = stage   │
 ├─────────────────────┴───────────────────────────────┤ (expand mode only)  │
 │ staging area (临时区) — click an item to fold it in │                     │
 └─────────────────────────────────────────────────────┴─────────────────────┘

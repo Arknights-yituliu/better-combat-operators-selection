@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A **data-production repository** (not an app) for an Arknights operator-filtering system. It crawls the PRTS wiki into local markdown, then classifies every operator under two TAG systems (official-defined + player-perception) and produces per-operator results consumed by a **separate UI project**. There is no build/lint/test tooling; the code is a handful of one-off Python data scripts. Working language is Chinese; all documents/outputs are Chinese.
 
-The eventual product is a single results JSON (`results/operator-tags.json`; format spec: `docs/output-standard.md`). TAG definitions, membership lists, counts and open questions change frequently — this file describes stable structure and conventions only; treat `docs/` as the source of truth for content.
+The eventual product is two JSONs: `results/operator-tags.json` (main output; format spec: `docs/output-standard.md`) and `results/combat_glossary.json` (combat-term glossary, generated from `docs/glossary.md`). TAG definitions, membership lists, counts and open questions change frequently — this file describes stable structure and conventions only; treat `docs/` as the source of truth for content.
 
 ## Data flow / architecture
 
@@ -27,11 +27,21 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 ```
 
 - `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links).
-- `material_datas/tag_pipeline/` — official-TAG pipeline artifacts (`catalog.json` = TAG dictionary, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons, `final_lists.tsv` = TAG→members) and `player_tags/` for the player-TAG workflow.
-- `information_records/` — pipeline/crawler notes and extraction decisions; `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls; `docs/player-tags.md` — v1 draft of player TAGs from the video corpus (leads only, not authoritative).
-- `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows; `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐); `docs/untagged-operators.md` — 未归入任何 TAG 的干员（auto-written by `generate_results.py`: full roster minus `operators[]`).
+- `material_datas/tag_pipeline/` — official-TAG machine-readable dicts (`catalog.json` = TAG dictionary — the only dict scripts read, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons — a snapshot that does not follow TAG changes; `merged.json` / `final_lists.tsv` rebuilt by `_merge_official_to_docs.py --sync-dicts`; `final_lists.tsv` = TAG→members) and `player_tags/` for the player-TAG workflow.
+- `information_records/` — pipeline/crawler notes and extraction decisions; `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls (dated notes — their counts reflect the day they were written; current lists live in the member docs).
+- `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows (the one place those writing rules live); `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐); `docs/untagged-operators.md` — 未归入任何 TAG 的干员（auto-written by `generate_results.py`: full roster minus `operators[]`). `docs/player-tags-specify.md` — 玩家 TAG 定义（开发者手改）; `docs/ui-render-rules.md` — 消费端（前端项目）渲染规则记录，改 JSON 结构时对照之.
 - `gui/` — the maintenance panel as a package: `config/errors/md` (leaf) → `tags/roster/recommends/merges/results_json` (data) → `writeback/model` (business) → `server/selfcheck/__main__`; page assets in `gui/static/` (`index.html` + `app.css` + `app.js`, styled with ak-ui dark tokens — see the CSS header for provenance and the density compromise). `recommend_gui.py` at the root is a thin entry point (`python -m gui` is equivalent). Usage guide (English): `gui/README.md`.
 - The UI itself is **out of scope** for this repo (the panel above is a maintainer tool, not the product UI).
+
+### File authority map (what to trust, what to edit)
+
+Read only what the task needs; the two member docs and the two results JSONs are large — read them by §／target TAG, never whole.
+
+**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`material_datas/tag_pipeline/official_tags/[A-I]-*.md`（官方 TAG 定义与成员，GUI 写回可改）、`material_datas/tag_pipeline/player_tags/NN-*.md`（玩家 TAG 判定＋证据；`_brief.md` 为作业规范）、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`。
+
+**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `generate_results.py`；`results/combat_glossary.json` ← `glossary_to_json.py`；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
+
+**只为背景、不作依据**: `information_records/*`、`docs/verification-complaints.md`、`docs/mechanism-understanding.md`（含整理当日的旧计数）、`player_tags/_mode-limited-module-audit.md`、`official-fullmap-aura.md`（历史转制稿）。
 
 ## Commands
 
@@ -63,16 +73,25 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
 .venv/Scripts/python.exe -X utf8 crawl_ranges.py            # --only 干员名 / --force
+
+# Regenerate the combat-term glossary JSON from docs/glossary.md (mirror-checked inside)
+.venv/Scripts/python.exe -X utf8 glossary_to_json.py
+
+# Refresh the PRTS《特殊机制》snapshot + normalized entries (network; throttled)
+.venv/Scripts/python.exe -X utf8 crawl_special_mechanics.py  # --emit / --apply（追加术语章节）/ --input
+
+# After any official-TAG structural change (add/rename/merge TAGs, member edits): rebuild
+# the machine-readable dicts merged.json / final_lists.tsv from the module files
+.venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts
 ```
 
-- `main.py` is an unused PyCharm stub.
 - On Windows the console is GBK: always run Python with `-X utf8` / `PYTHONIOENCODING=utf-8`, or write CJK output to a UTF-8 file and read it with the Read tool — printing CJK directly yields mojibake.
 - PRTS requires **full browser headers** (UA + Accept + Accept-Language + Referer) and throttling (default 1.2–2.8 s/request); never crawl in a tight loop. See `.claude/skills/crawl-prts-operator/SKILL.md` for crawler internals and cleanup gotchas (hidden-span passes, markdownify image loss, Windows `os.replace` retry).
 
 ## Classification conventions (apply when adding/editing TABs or members)
 
 - **Evidence-based**: every judgment cites `文件:行号` under `material_datas/PRTS/`; never classify from model memory. Uncertain items are marked `[待考]` and routed to 待开发者确认.
-- **条件 vs 备注**: 条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; "无" if available at E0L1). 备注 = processed info — numbers, durations, hidden mechanics, tactical use; do not restate what the in-game text already shows plainly.
+- **条件 vs 备注**: 条件 = hard requirements, 备注 = processed info (numbers, durations, hidden mechanics, tactical use) — the full rules, 反例 and 正例 live in `docs/concept.md`「结果展示」; follow that instead of restating it here.
 - **No dropped capabilities**: an operator's entry lists **every** capability meeting that TAG's 评定标准 — multiple qualifying features are all written (条件 covers each hard requirement, 备注 itemizes them); never omit one because it overlaps, is smaller, or a stronger one is already written.
 - **Module tiers (模组档位)**: when a module enhances the capability a TAG judges, 条件 names the module + level (e.g. `Y模组3级`) and 备注 uses that tier's values; with multiple modules pick the one that strengthens **this TAG's** capability — different TAG rows may cite different modules. No vague "X模组更佳/可选" phrasing; modules irrelevant to the TAG are not mentioned.
 - **Summons/devices count as the owner's capability.** **Mode-limited modules (ISW-α/RA-α etc.) count** for player TAGs — state the mode restriction in 条件 and note it in 备注.

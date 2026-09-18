@@ -1,17 +1,15 @@
 # 未归入任何 TAG 的干员
 
 > 本文件自动生成，勿手改：由 `generate_results.py` 在生成 `results/operator-tags.json` 时同步写出（命令见 `docs/output-standard.md` §7）。
-> 口径：全量干员（`docs/operators.txt`，431 名）− 结果 JSON `operators[]`（398 名）＝ **33 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
+> 口径：全量干员（`docs/operators.txt`，431 名）− 结果 JSON `operators[]`（400 名）＝ **31 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
 > 官方设定 TAG 的「无 TAG 干员」名单（`docs/official-tags-members.md` §3）中已有部分被玩家体感 TAG 收录，故本表与其不完全重合；某干员一旦进入任一成员表，重新生成时自动移出本表。
-> 构成（按职业）：狙击 9、术师 8、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
+> 构成（按职业）：狙击 9、术师 6、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
 
 | 干员 | 编号 | 星级 | 职业·分支 | 实装时间 |
 |---|---|---|---|---|
-| [复奏](https://prts.wiki/w/%E5%A4%8D%E5%A5%8F) | char_4031_liesel | 5 | 术师·扩散术师 | 2026-03-10 |
 | [协律](https://prts.wiki/w/%E5%8D%8F%E5%BE%8B) | char_4051_akkord | 4 | 术师·轰击术师 | 2025-11-01 |
 | [录武官](https://prts.wiki/w/%E5%BD%95%E6%AD%A6%E5%AE%98) | char_4196_reckpr | 5 | 医疗·医师 | 2025-07-08 |
 | [跃跃](https://prts.wiki/w/%E8%B7%83%E8%B7%83) | char_4100_caper | 4 | 狙击·回环射手 | 2023-11-01 |
-| [戴菲恩](https://prts.wiki/w/%E6%88%B4%E8%8F%B2%E6%81%A9) | char_4110_delphn | 5 | 术师·秘术师 | 2023-10-08 |
 | [玫拉](https://prts.wiki/w/%E7%8E%AB%E6%8B%89) | char_4006_melnte | 5 | 狙击·重射手 | 2023-05-01 |
 | [明椒](https://prts.wiki/w/%E6%98%8E%E6%A4%92) | char_4071_peper | 5 | 医疗·链愈师 | 2022-10-11 |
 | [至简](https://prts.wiki/w/%E8%87%B3%E7%AE%80) | char_4054_malist | 5 | 术师·驭械术师 | 2022-08-11 |
