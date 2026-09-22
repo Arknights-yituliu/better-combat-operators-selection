@@ -366,6 +366,45 @@ def _nums_in(text: str) -> str:
     return re.sub(r"[0-9.%⌊⌋＋+\-−×÷/＝=（）()「」《》 　]", "", t)
 
 
+def item_pairs(obj: dict) -> list[tuple[str, str]]:
+    """条目的全部替换对：对 1（old_fragment→new_fragment）＋ extra_edits。"""
+    pairs = [(str(obj.get("old_fragment", "")), str(obj.get("new_fragment", "")))]
+    for e in obj.get("extra_edits") or []:
+        pairs.append((str(e.get("old", "")), str(e.get("new", ""))))
+    return pairs
+
+
+def apply_pairs(raw: str, pairs: list[tuple[str, str]]) -> str:
+    """按 old 在 raw 中出现位置先后，依序应用全部替换对。"""
+    ordered = sorted(pairs, key=lambda p: raw.find(p[0]))
+    out = raw
+    for old, new in ordered:
+        out = out.replace(old, new, 1)
+    return out
+
+
+_INPUT_HINTS = ("攻击间隔", "间隔改写", "攻击速度", "攻速", "持续", "窗口", "目标数", "弹药",
+                "轮数", "面板", "信赖", "潜能", "触发次数", "命中数", "形态", "时间模式",
+                "召唤物数量", "枚数", "段数基准", "计数", "单位数", "阵型")
+_EXPLAIN_HINTS = ("控制", "停顿", "束缚", "眩晕", "晕眩", "冻结", "寒冷", "睡眠", "浮空",
+                  "沉默", "缴械", "闪避", "屏障", "护盾", "治疗", "回复", "生命", "减益",
+                  "法穿", "穿透", "减抗", "损伤", "移速", "重量", "部署", "费用", "隐身",
+                  "反隐", "阻挡", "无敌", "生存", "代价", "不含")
+
+
+def derive_role(factor: dict) -> str:
+    """因素审计三分（输入项/说明项/因素）：优先 role 字段，缺则按 type/name 推断。"""
+    role = str(factor.get("role") or "").strip()
+    if role in ("输入项", "说明项", "因素"):
+        return role
+    text = f"{factor.get('type', '')}{factor.get('name', '')}{factor.get('f', '')}"
+    if any(h in text for h in _INPUT_HINTS):
+        return "输入项"
+    if any(h in text for h in _EXPLAIN_HINTS):
+        return "说明项"
+    return "因素"
+
+
 def check() -> int:
     import math
 
@@ -414,25 +453,63 @@ def check() -> int:
             continue
         concl = obj.get("conclusion")
         tally[concl] = tally.get(concl, 0) + 1 if concl in tally else tally.get(concl, 0)
-        # ---- 片段自洽
+        # ---- 替换对自洽（对 1 ＋ extra_edits）
         old_f, new_f = obj.get("old_fragment", ""), obj.get("new_fragment", "")
         raw_note = it["raw_note"]
         if not old_f or not new_f:
             errors.append(f"{pid}: 缺 old_fragment/new_fragment")
         else:
-            if raw_note.count(old_f) != 1:
-                errors.append(f"{pid}: 旧片段在备注格出现 {raw_note.count(old_f)} 次（须恰好 1 次）：{old_f!r}")
-            if "待验证" in new_f:
-                errors.append(f"{pid}: 新片段仍含「待验证」")
-            expect = raw_note.replace(old_f, new_f)
-            if obj.get("new_remark_expected") != expect:
-                errors.append(f"{pid}: new_remark_expected 与「旧→新」替换结果不一致")
-            if _nums_in(old_f) != _nums_in(new_f):
-                review.append(f"{pid}: 片段含非数值文字差异 → 旧{_nums_in(old_f)!r} / 新{_nums_in(new_f)!r}")
-            if new_f != MARK_STRICT.sub("", old_f):
-                pos = raw_note.find(old_f)
-                if raw_note[:pos].rstrip().endswith(("＝", "=")):
-                    review.append(f"{pid}: 新片段改写了算式而旧片段前是「＝」——须确认旧片段覆盖完整算式项（防回填断裂）")
+            pairs = item_pairs(obj)
+            if len(pairs) > 4:
+                errors.append(f"{pid}: 替换对超过 4 对（{len(pairs)}）")
+            spans: list[tuple[int, int]] = []
+            for pi, (po, pn) in enumerate(pairs, 1):
+                if not po or not pn:
+                    errors.append(f"{pid}: 第 {pi} 对缺 old/new")
+                    continue
+                cnt = raw_note.count(po)
+                if cnt != 1:
+                    errors.append(f"{pid}: 第 {pi} 对旧片段在备注格出现 {cnt} 次（须恰好 1 次）：{po!r}")
+                    continue
+                if "待验证" in pn:
+                    errors.append(f"{pid}: 第 {pi} 对新片段仍含「待验证」")
+                s0 = raw_note.find(po)
+                spans.append((s0, s0 + len(po)))
+                if pn != MARK_STRICT.sub("", po):
+                    if raw_note[:s0].rstrip().endswith(("＝", "=")):
+                        review.append(f"{pid}: 第 {pi} 对改写了算式而旧片段前是「＝」——须确认旧片段覆盖完整算式项（防回填断裂）")
+                    if _nums_in(po) != _nums_in(pn):
+                        review.append(f"{pid}: 第 {pi} 对含非数值文字差异 → 旧{_nums_in(po)!r} / 新{_nums_in(pn)!r}")
+            for a in range(len(spans)):
+                for b in range(a + 1, len(spans)):
+                    (s1, e1), (s2, e2) = spans[a], spans[b]
+                    if not (e1 <= s2 or e2 <= s1):
+                        errors.append(f"{pid}: 替换对区间重叠（第 {a + 1} 对与第 {b + 1} 对）")
+            for i2, (_o1, n1) in enumerate(pairs, 1):
+                for j2, (o2, _n2) in enumerate(pairs, 1):
+                    if i2 != j2 and o2 and o2 in (n1 or ""):
+                        errors.append(f"{pid}: 第 {i2} 对的新文本包含第 {j2} 对的旧片段（防二次替换）")
+            if obj.get("new_remark_expected") != apply_pairs(raw_note, pairs):
+                errors.append(f"{pid}: new_remark_expected 与「全部替换对依序应用」结果不一致")
+            rv_tokens = re.findall(r"[0-9]+(?:\.[0-9]+)?", str(obj.get("recomputed_value", "")))
+            new_blob = new_f + "".join(str(e.get("new", "")) for e in obj.get("extra_edits") or [])
+            if rv_tokens and not any(t in new_blob for t in rv_tokens):
+                errors.append(f"{pid}: 复算值 {obj.get('recomputed_value')} 的数字未出现在任何替换对的新文本中")
+        # ---- 条件改写自洽（支持单个或多个替换对）
+        ce = obj.get("cond_edits")
+        if ce:
+            ces = ce if isinstance(ce, list) else [ce]
+            raw_cond = it["raw_cond"]
+            expect_c = raw_cond
+            for ci2, pair in enumerate(ces, 1):
+                co, cn = str(pair.get("old", "")), str(pair.get("new", ""))
+                if raw_cond.count(co) != 1:
+                    errors.append(f"{pid}: 条件第 {ci2} 对旧文本出现 {raw_cond.count(co)} 次（须恰好 1 次）：{co!r}")
+                if "待验证" in cn or "|" in cn:
+                    errors.append(f"{pid}: 条件第 {ci2} 对新文本含「待验证」或竖线")
+                expect_c = expect_c.replace(co, cn, 1)
+            if obj.get("cond_new_expected") != expect_c:
+                errors.append(f"{pid}: cond_new_expected 与「条件全部替换对依序应用」结果不一致")
         # ---- 步进算术
         steps = obj.get("steps") or []
         if not steps:
@@ -541,6 +618,18 @@ def _norm_verdict(v: str) -> str:
     if head in ("待裁定", "待人工"):
         return "待裁定"
     return str(v)
+
+
+def _f_name(f: dict) -> str:
+    return str(f.get("name") or f.get("f") or "")
+
+
+def _f_reason(f: dict) -> str:
+    for k in ("where_or_reason", "reason", "where", "why", "use"):
+        v = f.get(k)
+        if v:
+            return str(v)
+    return ""
 
 
 def _fmt_num(v) -> str:
@@ -708,30 +797,46 @@ def report(dest: pathlib.Path | None = None) -> int:
         lines.append(f"- **复算值**：**{obj.get('recomputed_value', '')}**　结论：{concl}{tail}{pr}")
         impact = obj.get("impact") or {}
         lines.append(f"- **影响判定**：{impact.get('text', '无')}")
-        lines.append(f"- **回填**：`回填：文件={it['file']}；行={it['line']}；干员={it['operator']}；"
-                     f"旧={obj.get('old_fragment', '')}；新={obj.get('new_fragment', '')}`")
+        bf = [f"文件={it['file']}；行={it['line']}；干员={it['operator']}",
+              f"旧={obj.get('old_fragment', '')}；新={obj.get('new_fragment', '')}"]
+        for k, e in enumerate(obj.get("extra_edits") or [], start=2):
+            bf.append(f"旧{k}={e.get('old', '')}；新{k}={e.get('new', '')}")
+        ce = obj.get("cond_edits")
+        if ce:
+            ces = ce if isinstance(ce, list) else [ce]
+            for k, pair in enumerate(ces, 1):
+                suf = "" if k == 1 else str(k)
+                bf.append(f"条件旧{suf}={pair.get('old', '')}；条件新{suf}={pair.get('new', '')}")
+        lines.append(f"- **回填**：`回填：{'；'.join(bf)}`")
         lines.append(f"- **备注**：{obj.get('notes') or '—'}")
         au = audits.get(it["id"])
         if au:
-            inc = [f for f in au.get("factors", []) if f.get("included")]
-            exc = [f for f in au.get("factors", []) if not f.get("included")]
+            fac, inp, exp = [], [], []
+            for f in au.get("factors") or []:
+                {"输入项": inp, "说明项": exp}.get(derive_role(f), fac).append(f)
+            inc = [f for f in fac if f.get("included")]
+            exc = [f for f in fac if not f.get("included")]
             ok = au.get("placement_ok")
             nv = _norm_verdict(au.get("verdict", ""))
-            lines.append(f"- **因素审计**：计入 {len(inc)} 项 / 未计入 {len(exc)} 项；"
-                         f"乘区位置：{'通过' if ok else '**不合格**'}"
+            lines.append(f"- **因素审计**：因素 {len(fac)} 项（计入 {len(inc)}／未计入 {len(exc)}）；"
+                         f"输入项 {len(inp)} 项（已纳入计算）；乘区位置：{'通过' if ok else '**不合格**'}"
                          f"；结论：{'通过' if nv == '通过' else ('**' + nv + '**')}")
             if it["id"] in disp:
                 lines.append(f"- **审计处置**：{disp[it['id']]}")
             for f in inc:
-                lines.append(f"  - 计入：{f.get('name', '')}（{f.get('where_or_reason', '')}；`{f.get('src', '')}`）")
+                lines.append(f"  - 计入：{_f_name(f)}（{_f_reason(f)}；`{f.get('src', '')}`）")
             for f in exc:
-                lines.append(f"  - 未计入：{f.get('name', '')}——{f.get('where_or_reason', '')}（`{f.get('src', '')}`）")
+                lines.append(f"  - 未计入：{_f_name(f)}——{_f_reason(f)}（`{f.get('src', '')}`）")
             if au.get("placement_notes"):
                 lines.append(f"  - 位置说明：{au['placement_notes']}")
             for m in au.get("missed") or []:
                 lines.append(f"  - **疑似漏算**：{m.get('what', '')}（建议：{m.get('suggested', '')}；`{m.get('src', '')}`）")
             if au.get("panel_note"):
                 lines.append(f"  - 面板注记：{au['panel_note']}")
+            if inp:
+                lines.append("  - 输入项：" + "；".join(_f_name(f) or _f_reason(f) for f in inp))
+            if exp:
+                lines.append("  - 说明项：" + "；".join(_f_name(f) or _f_reason(f) for f in exp))
         lines.append("")
 
     # §5 因素审计（完整性 + 乘区位置）
@@ -748,11 +853,15 @@ def report(dest: pathlib.Path | None = None) -> int:
         n_badplace = sum(1 for it in audit_items if not audits[it["id"]].get("placement_ok"))
         n_fixed = sum(1 for v in disp.values() if v.startswith("已修正"))
         n_hold = sum(1 for v in disp.values() if v.startswith("未修正"))
+        extra_line = ""
+        if n_fixed or n_hold:
+            extra_line = f"；经审计触发的修正已回填值 **{n_fixed}** 条、保留待裁定 **{n_hold}** 条"
         lines += [
             f"- 已审计 **{len(audit_items)}/{len(items)}** 条；结论：通过 **{tally_audit.get('通过', 0)}** ／ "
             f"有问题 **{tally_audit.get('有问题', 0)}** ／ 待裁定 **{tally_audit.get('待裁定', 0)}**"
-            f"（其中疑似漏算 {n_missed} 条、乘区位置不合格 {n_badplace} 条）；"
-            f"经审计触发的修正已回填值 **{n_fixed}** 条、保留待裁定 **{n_hold}** 条",
+            f"（其中疑似漏算 {n_missed} 条、乘区位置不合格 {n_badplace} 条）" + extra_line,
+            f"- 因素口径：因素/输入项/说明项三分——输入项（攻击间隔、持续、窗口、已计入的攻速来源等）"
+            f"为计数输入，不计入因素统计；只有因素参与计入/未计入判定。",
             "",
             "### 有问题条目（扫描表）", "",
             "| id | 干员 | 疑似漏算 | 位置 | 面板/说明 |",
@@ -798,7 +907,7 @@ def report(dest: pathlib.Path | None = None) -> int:
 
 # ---------------------------------------------------------------- apply
 
-KEY_RE = re.compile(r"(文件|行|干员|旧|新)\s*[=＝]")
+KEY_RE = re.compile(r"(条件旧\d*|条件新\d*|文件|行|干员|旧\d*|新\d*)\s*[=＝]")
 
 
 def parse_backfill_line(line: str) -> list[dict]:
@@ -841,8 +950,31 @@ def apply_backfill(review: pathlib.Path, dry_run: bool) -> int:
             if not d.get("文件") or d.get("旧") is None or d.get("新") is None:
                 parse_fail += 1
                 continue
-            if "待验证" in d["新"]:
-                d["_err"] = "新片段仍含「待验证」"
+            pairs = [(d["旧"], d["新"])]
+            k = 2
+            while d.get(f"旧{k}") is not None or d.get(f"新{k}") is not None:
+                if d.get(f"旧{k}") is None or d.get(f"新{k}") is None:
+                    d["_err"] = f"第 {k} 对缺「旧{k}/新{k}」之一"
+                    break
+                pairs.append((d[f"旧{k}"], d[f"新{k}"]))
+                k += 1
+            if any("待验证" in pn for _po, pn in pairs):
+                d["_err"] = "新文本仍含「待验证」"
+            cond_pairs: list[tuple[str, str]] = []
+            if d.get("条件旧") is not None or d.get("条件新") is not None:
+                if not d.get("条件旧") or not d.get("条件新"):
+                    d["_err"] = "条件改写缺「条件旧/条件新」之一"
+                else:
+                    cond_pairs.append((d["条件旧"], d["条件新"]))
+            kk = 2
+            while d.get(f"条件旧{kk}") is not None or d.get(f"条件新{kk}") is not None:
+                if d.get(f"条件旧{kk}") is None or d.get(f"条件新{kk}") is None:
+                    d["_err"] = f"第 {kk} 个条件改写缺「条件旧{kk}/条件新{kk}」之一"
+                    break
+                cond_pairs.append((d[f"条件旧{kk}"], d[f"条件新{kk}"]))
+                kk += 1
+            d["_cond_pairs"] = cond_pairs
+            d["_pairs"] = pairs
             entries.append({**d, "review_line": ln})
 
     results: list[str] = []
@@ -893,30 +1025,61 @@ def apply_backfill(review: pathlib.Path, dry_run: bool) -> int:
         header, cells = _table_at(lines, target)
         ci, ni = header.index("条件"), header.index("备注")
         note = cells[ni]
-        statuses = []
+        cond = cells[ci]
+        statuses: list[tuple[str, str]] = []
+        flat: list[tuple[dict, str, str]] = []
         for e in group:
             if e.get("_err"):
                 statuses.append(("PARSE-FAIL", e["_err"]))
-            elif e["旧"] == e["新"]:
+                continue
+            for po, pn in e["_pairs"]:
+                flat.append((e, po, pn))
+        # 依原始备注中的出现位置排序；未命中的排最后
+        flat.sort(key=lambda t: note.find(t[1]) if note.find(t[1]) >= 0 else 10 ** 9)
+        for e, po, pn in flat:
+            cnt = note.count(po)
+            if po == pn:
                 statuses.append(("NO-OP", "旧＝新，无需回填"))
-            elif e["旧"] in note:
-                note = note.replace(e["旧"], e["新"], 1)
-                statuses.append(("APPLIED", ""))
-            elif e["新"] in note:
+            elif cnt == 1:
+                note = note.replace(po, pn, 1)
+                statuses.append(("APPLIED", "" if len(e["_pairs"]) == 1 else "（多对之一）"))
+            elif cnt > 1:
+                statuses.append(("AMBIG", f"旧文本出现 {cnt} 次：{po!r}"))
+            elif pn in note:
                 statuses.append(("ALREADY-APPLIED", ""))
             else:
-                statuses.append(("MISS", f"旧片段不在备注中：{e['旧']!r}"))
-        if note == cells[ni]:
+                statuses.append(("MISS", f"旧文本不在备注中：{po!r}"))
+        cond_pairs: list[tuple[str, str]] = []
+        for e in group:
+            cond_pairs += list(e.get("_cond_pairs") or [])
+        if cond_pairs:
+            ok_all = True
+            for co, cn in cond_pairs:
+                if cond.count(co) == 1:
+                    cond = cond.replace(co, cn, 1)
+                    statuses.append(("COND-APPLIED", ""))
+                elif cn in cond:
+                    statuses.append(("COND-ALREADY", ""))
+                else:
+                    ok_all = False
+                    statuses.append(("COND-MISMATCH", f"条件旧文本未唯一命中：{co!r}"))
+            if not ok_all:
+                for i, (st, msg) in enumerate(statuses):
+                    if st == "APPLIED":
+                        statuses[i] = ("COND-MISMATCH", "同组含条件改写失败，整组跳过")
+                cond = cells[ci]  # 条件失败时整组回滚
+                note = cells[ni]
+        if note == cells[ni] and cond == cells[ci]:
             for st, msg in statuses:
                 rec(st, msg)
             continue
         if dry_run:
             for st, msg in statuses:
-                rec(st, msg + ("（dry-run 未写盘）" if st == "APPLIED" else ""))
+                rec(st, msg + ("（dry-run 未写盘）" if st in ("APPLIED", "COND-APPLIED") else ""))
             continue
         try:
             save_cell(pathlib.PurePath(fname).name, target, lines[target - 1].rstrip("\r\n"),
-                      cells[ci], note)
+                      cond, note)
         except UserError as exc:
             for st, msg in statuses:
                 rec(st, f"写回失败：{exc}")
@@ -1027,6 +1190,7 @@ def verify() -> int:
     head_raw = _git_show("results/operator-tags.json")
     struct_bad: list[str] = []
     changed_urls: list[str] = []
+    cond_changes: list[str] = []
     if head_raw:
         head = json.loads(head_raw)
         if [o["name"] for o in head["operators"]] != [o["name"] for o in doc["operators"]]:
@@ -1045,9 +1209,12 @@ def verify() -> int:
             for i, (a, b) in enumerate(zip(hm, cm)):
                 a2, b2 = dict(a), dict(b)
                 a2.pop("remark", None), b2.pop("remark", None)
+                cond_changed = a2.pop("condition", None) != b2.pop("condition", None)
                 if a2 != b2:
-                    # 移除 remark 后仍不同（prtsUrl/subTags/condition/operator…）
+                    # 移除 remark/condition 后仍不同（prtsUrl/subTags/operator…）
                     struct_bad.append(f"{tid}[{i}] {a.get('operator') or a.get('combo')}: 非备注字段变化")
+                if cond_changed:
+                    cond_changes.append(f"{tid} {a.get('operator') or a.get('combo')}")
                 if a.get("prtsUrl") != b.get("prtsUrl"):
                     changed_urls.append(f"{tid} {a.get('operator') or a.get('combo')}: "
                                         f"{a.get('prtsUrl')} → {b.get('prtsUrl')}")
@@ -1055,6 +1222,8 @@ def verify() -> int:
                        "；".join(struct_bad[:6]) if struct_bad else "通过"))
         checks.append(("prtsUrl 锚点稳定", not changed_urls,
                        "；".join(changed_urls[:8]) if changed_urls else "无变化"))
+        checks.append(("条件变更清单（经 cond_edits 者属预期）", True,
+                       f"{len(cond_changes)} 条" + ("：" + "、".join(cond_changes[:10]) if cond_changes else "")))
     else:
         checks.append(("结构 diff（对 HEAD）", False, "无法读取 HEAD 版本"))
 
@@ -1075,6 +1244,281 @@ def verify() -> int:
     print(f"OK verify: checks={len(checks)} FAIL={bad}")
     print(f"report: {REPORTS_DIR / 'verify.md'}")
     return 0 if bad == 0 else 1
+
+
+# ---------------------------------------------------------------- audit-normalize
+
+def audit_normalize(dry_run: bool) -> int:
+    """把 G1–G6 audit.jsonl 的因素条目归一到规范字段（additive，原键保留）：
+    {name,type,layer,included,role,src,where_or_reason}。"""
+    changed = 0
+    unresolved: list[str] = []
+    per_file: list[str] = []
+
+    def norm_factor(f: dict, gid: str) -> bool:
+        nonlocal changed
+        before = json.dumps(f, ensure_ascii=False, sort_keys=True)
+        inc = f.get("included")
+        if not isinstance(inc, bool):
+            counted = f.get("counted")
+            if isinstance(counted, bool):
+                inc = counted
+            else:
+                text = str(f.get("status") or f.get("use") or "")
+                head = text.split("（")[0].split("(")[0]
+                if "计入" in head and "未计入" not in head:
+                    inc = True
+                elif ("未计入" in text or "不计" in head or "不适用" in text
+                      or head.strip() in ("—", "-", "无")):
+                    inc = False
+                else:
+                    inc = None
+        if inc is not None:
+            f["included"] = inc
+        if not f.get("where_or_reason"):
+            for k in ("reason", "where", "why", "use", "status"):
+                v = f.get(k)
+                if v:
+                    f["where_or_reason"] = str(v)
+                    break
+        f["role"] = derive_role(f)
+        if not isinstance(f.get("included"), bool):
+            unresolved.append(f"{gid}: {_f_name(f) or f}")
+        changed_flag = json.dumps(f, ensure_ascii=False, sort_keys=True) != before
+        if changed_flag:
+            changed += 1
+        return changed_flag
+
+    for af in sorted((RV_DIR / "parts").glob("G*.audit.jsonl")):
+        out_lines: list[str] = []
+        for ln, line in enumerate(af.read_text(encoding="utf-8").splitlines(), 1):
+            if not line.strip():
+                out_lines.append(line)
+                continue
+            obj = json.loads(line)
+            for f in obj.get("factors") or []:
+                norm_factor(f, f"{af.stem}:{ln}")
+            out_lines.append(json.dumps(obj, ensure_ascii=False))
+        per_file.append(f"{af.name}（{len(out_lines)} 行）")
+        if not dry_run:
+            af.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
+    rep = ["# audit-normalize 报告", "",
+           f"- 模式：{'dry-run（未写盘）' if dry_run else '已写盘'}；有改动的因素计数：{changed}",
+           f"- 文件：{'；'.join(per_file)}",
+           f"- 无法判定 included 的因素：{len(unresolved)}"]
+    rep += [f"  - {u}" for u in unresolved[:80]]
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORTS_DIR / "audit_normalize.md").write_text("\n".join(rep) + "\n", encoding="utf-8")
+    print(f"OK audit-normalize{'（dry-run）' if dry_run else ''}: changed≈{changed} "
+          f"unresolved={len(unresolved)}")
+    print(f"report: {REPORTS_DIR / 'audit_normalize.md'}")
+    return 0
+
+
+# ---------------------------------------------------------------- lint
+
+def _render_text() -> str:
+    """渲染复核文件文本而不落盘（供 lint 使用）。"""
+    buf: dict[str, str] = {}
+    real_write = pathlib.Path.write_text
+
+    def _fake(self, data, *args, **kwargs):
+        buf["t"] = str(data)
+        return None
+
+    pathlib.Path.write_text = _fake
+    try:
+        report(pathlib.Path("NUL"))
+    finally:
+        pathlib.Path.write_text = real_write
+    return buf.get("t", "")
+
+
+ANNOTATION_MARKERS = ("——需要", "——确认", "——按2次算吧", "——实际上精英化", "——对于这类计算",
+                      "——因素审计目前", "——原因同上", "——模组档位固定属性需要", "——是，",
+                      "——确认为漏算", "——不能够直接这么算", "——取纠正后的数值", "——统一采用",
+                      "——每满足条件的伤害", "——是，PRTS")
+
+
+def _num_tokens(text: str) -> set[str]:
+    return set(re.findall(r"[0-9]+(?:\.[0-9]+)?%?", str(text)))
+
+
+def lint() -> int:
+    items = [json.loads(l) for l in ITEMS_FILE.read_text(encoding="utf-8").splitlines() if l.strip()]
+    parts: dict[str, dict] = {}
+    for pf in sorted((RV_DIR / "parts").glob("G*.jsonl")):
+        for line in pf.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                obj = json.loads(line)
+                parts[obj["id"]] = obj
+    t = _render_text()
+    disk = ROOT / "待验证复算.md"
+    if disk.exists():   # 以磁盘上的复核文件为准（可检出人工编辑造成的漂移）
+        t = disk.read_text(encoding="utf-8")
+    lines = t.splitlines()
+
+    issues: list[str] = []
+
+    # 解析渲染文本：按章节区间取表（§0 摘要表 6 竖线、§3 概要表 8 竖线、§4 详情块）
+    def _sec_range(start_prefix: str, stop_prefix: str) -> tuple[int, int]:
+        a = b = None
+        for i, ln in enumerate(lines):
+            if a is None and ln.startswith(start_prefix):
+                a = i
+            elif a is not None and ln.startswith(stop_prefix):
+                b = i
+                break
+        return (a if a is not None else 0, b if b is not None else len(lines))
+
+    r0 = _sec_range("## 0.", "## 1.")
+    r3 = _sec_range("## 3.", "## 4.")
+    r4 = _sec_range("## 4.", "## 5.")
+    sec0: dict[str, str] = {}
+    sec3: dict[str, str] = {}
+    for i in range(*r0):
+        ln = lines[i]
+        if ln.startswith("| P0") and ln.count("|") == 6:
+            cells = [c.strip() for c in ln.strip("|").split("|")]
+            sec0[cells[0]] = cells[2]
+    for i in range(*r3):
+        ln = lines[i]
+        if ln.startswith("| P0") and ln.count("|") == 8:
+            cells = [c.strip() for c in ln.strip("|").split("|")]
+            sec3[cells[0]] = cells[5]
+    detail_val: dict[str, str] = {}
+    detail_bf: dict[str, str] = {}
+    cur = None
+    for i in range(*r4):
+        ln = lines[i]
+        m = re.match(r"^#### (P\d\d-\S+?)　", ln)
+        if m:
+            cur = m.group(1)
+            continue
+        if cur:
+            if ln.startswith("- **复算值**："):
+                detail_val[cur] = ln
+            elif ln.startswith("- **回填**："):
+                detail_bf[cur] = ln
+
+    for it in items:
+        pid = it["id"]
+        obj = parts.get(pid)
+        if obj is None:
+            continue
+        rv_tok = _num_tokens(obj.get("recomputed_value", ""))
+        if not rv_tok:
+            continue
+        delta = obj.get("delta") or {}
+        d_tok = _num_tokens(delta.get("from", "")) | _num_tokens(delta.get("to", ""))
+        allow = rv_tok | d_tok
+        # S1 三处同值（§0 允许显示 delta 值；§3/§4/回填新 须含复算值 token）
+        for src_name, text, ref in (("§0", sec0.get(pid, ""), allow), ("§3", sec3.get(pid, ""), rv_tok),
+                                    ("§4", detail_val.get(pid, ""), rv_tok), ("回填新", detail_bf.get(pid, ""), rv_tok)):
+            if text and not (ref & _num_tokens(text)):
+                issues.append(f"S1 {pid}: 复算值 {obj.get('recomputed_value')} 未出现在 {src_name}")
+        # S2 片段含值（主数值须出现在某替换对的新文本中）
+        rv_full = str(obj.get("recomputed_value", ""))
+        rv_toks = re.findall(r"[0-9]+(?:\.[0-9]+)?", rv_full)
+        new_blob_lint = str(obj.get("new_fragment", "")) + "".join(
+            str(e.get("new", "")) for e in obj.get("extra_edits") or [])
+        if rv_toks and rv_toks[0] not in new_blob_lint:
+            d_toks = re.findall(r"[0-9]+(?:\.[0-9]+)?", str((obj.get("delta") or {}).get("to", "")))
+            if not (d_toks and d_toks[0] in new_blob_lint):
+                issues.append(f"S2 {pid}: 复算值主数值 {rv_toks[0]} 不在任何替换对新文本中")
+        # S3 旧值残留（对 raw_note 施加全部对后，旧片段不得完整残留）
+        raw_note = it["raw_note"]
+        pairs = item_pairs(obj)
+        if all(raw_note.count(o) == 1 for o, _ in pairs if o):
+            final = apply_pairs(raw_note, pairs)
+            for o, n in pairs:
+                if o and o not in n and o in final:
+                    issues.append(f"S3 {pid}: 应用后旧片段仍完整出现：{o[:40]!r}")
+        # S4 跨区块陈旧（§3 值列 / §4 复算值 行不得含旧 token（除同时属于新））
+        new_tok_all = set()
+        for _o, n in pairs:
+            new_tok_all |= _num_tokens(n)
+        m4 = re.search(r"\*\*复算值\*\*：\*\*(.+?)\*\*", detail_val.get(pid, ""))
+        d4 = m4.group(1) if m4 else ""
+        for o, _n in pairs:
+            stale = (_num_tokens(o) - new_tok_all)
+            for src_name, text in (("§3", sec3.get(pid, "")), ("§4", d4)):
+                hit = stale & _num_tokens(text)
+                if hit:
+                    issues.append(f"S4 {pid}: {src_name} 出现旧值 token {sorted(hit)}")
+        # S6 并列值需 pending_rule（技能分支／R15 就近取整／窗口并列等正当并列由 notes 证明者除外）
+        if "／" in rv_full and not str(obj.get("pending_rule") or "").strip() \
+                and not re.search(r"R15|就近取整|分支|窗口|技能|档", str(obj.get("notes") or "")):
+            issues.append(f"S6 {pid}: 复算值含并列但仍无 pending_rule")
+        # S7 标记归零（替换对新文本）
+        for _o, n in pairs:
+            if "待验证" in n:
+                issues.append(f"S7 {pid}: 替换对新文本含「待验证」")
+        # S8 回填往返
+        bf_line = detail_bf.get(pid)
+        if bf_line:
+            parsed = parse_backfill_line(bf_line)
+            if not parsed:
+                issues.append(f"S8 {pid}: 回填行无法反解")
+            else:
+                d = parsed[0]
+                exp_main = (obj.get("old_fragment", ""), obj.get("new_fragment", ""))
+                if (d.get("旧"), d.get("新")) != exp_main:
+                    issues.append(f"S8 {pid}: 回填行对 1 与 parts 不一致")
+                for k, e in enumerate(obj.get("extra_edits") or [], start=2):
+                    if (d.get(f"旧{k}"), d.get(f"新{k}")) != (e.get("old"), e.get("new")):
+                        issues.append(f"S8 {pid}: 回填行第 {k} 对与 parts 不一致")
+                ce = obj.get("cond_edits")
+                if ce:
+                    ces = ce if isinstance(ce, list) else [ce]
+                    okc = True
+                    for k, pair in enumerate(ces, 1):
+                        suf = "" if k == 1 else str(k)
+                        if (d.get(f"条件旧{suf}"), d.get(f"条件新{suf}")) != (pair.get("old"), pair.get("new")):
+                            okc = False
+                    if not okc:
+                        issues.append(f"S8 {pid}: 回填行条件改写与 parts 不一致")
+        elif sec3.get(pid):
+            issues.append(f"S8 {pid}: 缺回填行")
+
+    # S9 批注与过程语残留（渲染文本）
+    for m in ANNOTATION_MARKERS:
+        if m in t:
+            issues.append(f"S9: 渲染文本含批注痕迹 {m!r}")
+    for p, sec_name in ((RV_DIR / "rules.md", "rules.md"), (ROOT / "docs" / "calc-rules.md", "calc-rules.md")):
+        if p.exists():
+            for i, ln in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+                if re.search(r"20[0-9]{2}-[0-9]{2}", ln):
+                    issues.append(f"S9 {sec_name}:{i} 含日期")
+    # S5 审计↔产物（单独一轮，轻量）
+    audits_all: dict[str, dict] = {}
+    for af in sorted((RV_DIR / "parts").glob("G*.audit.jsonl")):
+        for line in af.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                a = json.loads(line)
+                audits_all[a["id"]] = a
+    s5_open: list[str] = []
+    for pid, au in audits_all.items():
+        obj = parts.get(pid)
+        if obj is None:
+            continue
+        if str(obj.get("pending_rule") or "").strip():
+            continue
+        for f in au.get("factors") or []:
+            reason = _f_reason(f)
+            if f.get("included") is False and ("必定生效" in reason or "漏算" in reason):
+                s5_open.append(f"{pid}: 因素「{_f_name(f)}」——按必生效应计入但现为未计入（待开发者裁定）")
+
+    rep = ["# lint 报告", "",
+           f"- 检查条目 {len(items)}；缺陷 {len(issues)}；审计未决候选 {len(s5_open)}", ""]
+    rep += [f"- {x}" for x in issues] if issues else ["- 缺陷：（无）"]
+    rep += ["", "## 审计未决候选（随复核文件交开发者裁定，非缺陷）", ""]
+    rep += [f"- {x}" for x in s5_open] if s5_open else ["- （无）"]
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORTS_DIR / "lint.md").write_text("\n".join(rep) + "\n", encoding="utf-8")
+    print(f"OK lint: issues={len(issues)}")
+    print(f"report: {REPORTS_DIR / 'lint.md'}")
+    return 0 if not issues else 0
 
 
 # ---------------------------------------------------------------- fetch-rules
@@ -1126,6 +1570,9 @@ def main() -> int:
     ap_apply = sub.add_parser("apply", help="按复核文件回填分文件")
     ap_apply.add_argument("--dry-run", action="store_true", help="只报告不写盘")
     ap_apply.add_argument("--review", default=str(ROOT / "待验证复算.md"), help="复核文件路径")
+    ap_norm = sub.add_parser("audit-normalize", help="归一审计因素字段（included/role/where_or_reason）")
+    ap_norm.add_argument("--dry-run", action="store_true", help="只报告不写盘")
+    sub.add_parser("lint", help="复核文件一致性巡检（S1–S9）")
     sub.add_parser("verify", help="重生成后验收（待实现）")
     fr = sub.add_parser("fetch-rules", help="抓取 PRTS 机制页快照 → material_datas/PRTS/_rules/")
     fr.add_argument("--pages", nargs="*", default=["作战机制"],
@@ -1139,6 +1586,10 @@ def main() -> int:
         return report()
     if args.cmd == "apply":
         return apply_backfill(pathlib.Path(args.review), args.dry_run)
+    if args.cmd == "audit-normalize":
+        return audit_normalize(args.dry_run)
+    if args.cmd == "lint":
+        return lint()
     if args.cmd == "verify":
         return verify()
     if args.cmd == "fetch-rules":
