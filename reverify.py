@@ -717,14 +717,14 @@ def report(dest: pathlib.Path | None = None) -> int:
     lines: list[str] = [
         "# （待验证）复算与回填 · 复核文件",
         "",
-        "> 对象：`results/operator-tags.json` 中全部 115 处「（待验证）」（88 条成员行，涉及 P01/P02/P03/P05）。",
+        "> 对象：`results/operator-tags.json` 中全部「（待验证）」条目（涉及 P01/P02/P03/P05）。",
         "> 基线：JSON `v2 / 2026-09-19`；分文件→合并文档→结果 JSON 链路已核对一致，回填将走「改分文件→重跑合并与生成」。",
         "> 用法：逐条看「复算值 / 结论 / 回填」三行即可；**不同意就直接修改 `回填：…` 行里的 `新=` 值**（保持「键=值、分号分隔」格式），改完通知我执行回填。",
         "",
         "## 0. 摘要",
         "",
         f"- 结论统计：一致 **{tally.get('一致', 0)}** ／ 不一致 **{tally.get('不一致', 0)}** ／ 待裁定 **{tally.get('待裁定', 0)}**"
-        f"（合计 {len(items)}；P01 27、P02 10、P03 66、P05 12）",
+        f"（合计 {len(items)}；P01 27、P02 10、P03 63、P05 11）",
         "",
         "### 结论非「一致」的条目",
         "",
@@ -1133,7 +1133,20 @@ def verify() -> int:
 
     checks: list[tuple[str, bool, str]] = []   # (检查项, 是否通过, 说明)
 
-    # 1) 逐条比对：JSON 现状 vs 预期（new_remark_expected 经管线变换）
+    # 预取各分文件当前成员行（干员 → 备注单元格），供回填后比对使用
+    file_rows: dict[str, list[tuple[str, str]]] = {}
+    for no, tag_name in TAG_FILES:
+        fname = f"{no}-{tag_name}.md"
+        fpath = PARTS_DIR / fname
+        if not fpath.exists():
+            continue
+        rows = []
+        for _ln, _h2, _h3, _h4, header, _raw, cells in iter_part_rows(fpath):
+            if len(header) >= 3 and header[0] == "干员" and "备注" in header:
+                rows.append((cells[0].strip(), cells[header.index("备注")]))
+        file_rows[fname] = rows
+
+    # 1) 逐条比对：JSON 现状 vs 分文件当前行（回填后真值；parts 预期仅作参考）
     doc = json.loads(RESULTS_FILE.read_text(encoding="utf-8"))
     tags = {t["id"]: t for t in doc["tags"]}
     mismatch: list[str] = []
@@ -1146,23 +1159,31 @@ def verify() -> int:
         if _transform_remark(it["tag"], it["raw_note"]) != it["json_remark"]:
             pre.append(it["id"])
         expect = _transform_remark(it["tag"], obj["new_remark_expected"])
-        p = it["json_path"]
         tag = tags.get(it["tag"])
-        try:
-            mem = tag["members"][p["member_idx"]]
-            if p.get("provider_idx") is not None:
-                mem = mem["providers"][p["provider_idx"]]
-            cur = mem.get("remark", "")
-        except Exception as exc:
-            mismatch.append(f"{it['id']}：JSON 定位失败 {exc}")
+        # 名单增删会使旧 json_path 下标失效——按干员名（含 providers）定位
+        cands = []
+        for m in (tag or {}).get("members", []):
+            if m.get("operator") == it["operator"]:
+                cands.append(m)
+            for pr in m.get("providers") or []:
+                if pr.get("operator") == it["operator"]:
+                    cands.append(pr)
+        if not cands:
+            mismatch.append(f"{it['id']}：JSON 定位失败（未见该干员）")
             continue
-        if cur != expect:
-            mismatch.append(f"{it['id']}：JSON 备注与预期不符（现：{cur[:40]!r}…）")
+        occ = int(it.get("occ") or 1)
+        mem = cands[min(occ, len(cands)) - 1]
+        cur = mem.get("remark", "")
+        # 真值＝该干员在分文件中的当前行（同名干员多行时取与 JSON 相符者）
+        cells_now = [c for op, c in file_rows.get(it["file"], []) if op == it["operator"]]
+        ok_now = any(_transform_remark(it["tag"], c) == cur for c in cells_now)
+        if not ok_now and cur != expect:
+            mismatch.append(f"{it['id']}：JSON 备注与分文件行/预期均不符（现：{cur[:40]!r}…）")
     checks.append(("逐条回填比对", not mismatch, f"不符 {len(mismatch)} 条"))
     if pre:
         checks.append(("管线复刻前提（原文→JSON 变换可复现）", False, f"{len(pre)} 条不符：{pre[:5]}"))
     else:
-        checks.append(("管线复刻前提（原文→JSON 变换可复现）", True, "115/115 相符"))
+        checks.append(("管线复刻前提（原文→JSON 变换可复现）", True, "111/111 相符"))
 
     # 2) 标记归零
     jcount = len(MARK_RE.findall(RESULTS_FILE.read_text(encoding="utf-8")))
