@@ -1337,7 +1337,12 @@ def _render_text() -> str:
 ANNOTATION_MARKERS = ("——需要", "——确认", "——按2次算吧", "——实际上精英化", "——对于这类计算",
                       "——因素审计目前", "——原因同上", "——模组档位固定属性需要", "——是，",
                       "——确认为漏算", "——不能够直接这么算", "——取纠正后的数值", "——统一采用",
-                      "——每满足条件的伤害", "——是，PRTS")
+                      "——每满足条件的伤害", "——是，PRTS",
+                      # 帧准则／格数／P05 窗口／互引／铁律 一轮的批注
+                      "——1帧确为0.033", "——统一按「自身格＝0、相邻＝1」",
+                      "——倘若技能持续不足15秒", "——目前项目有个很严重的问题",
+                      "——我需要你将目前所有待裁定", "——注意，实际产出的文件中不能出现互相引用",
+                      "——实际上为每2帧", "——一样属于单纯潜能提升")
 
 
 def _num_tokens(text: str) -> set[str]:
@@ -1438,6 +1443,8 @@ def lint() -> int:
         new_tok_all = set()
         for _o, n in pairs:
             new_tok_all |= _num_tokens(n)
+        new_tok_all |= _num_tokens(str(obj.get("recomputed_value", "")))
+        new_tok_all |= _num_tokens(str((obj.get("delta") or {}).get("to", "")))
         m4 = re.search(r"\*\*复算值\*\*：\*\*(.+?)\*\*", detail_val.get(pid, ""))
         d4 = m4.group(1) if m4 else ""
         for o, _n in pairs:
@@ -1490,6 +1497,51 @@ def lint() -> int:
             for i, ln in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
                 if re.search(r"20[0-9]{2}-[0-9]{2}", ln):
                     issues.append(f"S9 {sec_name}:{i} 含日期")
+    # S10 自立文本（产出链互引扫描）＋ S11 整数帧合规
+    XREF_PATTERNS = (
+        (re.compile(r"P0[1-9]-[^\s，。；）】」]{1,20}-\d"), "条目 id"),
+        (re.compile(r"另见|同上|同干员|另一条"), "指称词"),
+        (re.compile(r"同格\s*[-－]?\s*\d"), "「同格 -N」指称"),
+        (re.compile(r"见\s*P0\d"), "「见 P0x」指称"),
+        (re.compile(r"见\s*0\d-[一-鿿]"), "「见 0N-」指称"),
+        (re.compile(r"见\s*1[0-2]-[一-鿿]"), "「见 1N-」指称"),
+        (re.compile(r"\d\d-[一-鿿]{2,}\.md"), "分文件名"),
+        (re.compile(r"G\d\.audit|_reverify|items\.jsonl|slices/|parts/G"), "工作产物名"),
+    )
+    XREF_EXEMPT = re.compile(r"docs/[\w./（）()\-]+")
+    XREF_EVIDENCE = re.compile(r"[一-鿿A-Za-z()（）·/]+\.md[：:]\s*[\d,\-–\s]+")
+    for it in items:
+        pid = it["id"]
+        obj = parts.get(pid)
+        if obj is None:
+            continue
+        blobs: list[str] = [str(obj.get(k) or "") for k in
+                            ("new_fragment", "new_remark_expected", "notes", "potential_note")]
+        for e in obj.get("extra_edits") or []:
+            blobs.append(str(e.get("new", "")))
+        ce = obj.get("cond_edits")
+        if ce:
+            for pair in (ce if isinstance(ce, list) else [ce]):
+                blobs.append(str(pair.get("new", "")))
+        for blob in blobs:
+            b2 = XREF_EVIDENCE.sub("", XREF_EXEMPT.sub("", blob))
+            for pat, label in XREF_PATTERNS:
+                for m in pat.finditer(b2):
+                    issues.append(f"S10 {pid}: 产出文本含{label}『{m.group(0)}』")
+        # S11 整数帧合规：帧数步须为整数、整帧秒步须落在整帧上
+        for si, st in enumerate(obj.get("steps") or [], 1):
+            note = str(st.get("note") or "")
+            try:
+                v = float(st.get("value"))
+            except (TypeError, ValueError):
+                continue
+            if "帧数" in note:
+                if abs(v - round(v)) > 1e-3:
+                    issues.append(f"S11 {pid} step{si}: 帧数步非整数（value＝{v}）")
+            elif "整帧实际间隔" in note:
+                r = round(v * 30)
+                if abs(v * 30 - r) > 0.05:   # 容差容纳 3~4 位小数的显示值
+                    issues.append(f"S11 {pid} step{si}: 整帧秒步偏离整帧（value＝{v}，×30＝{v * 30:.4f}）")
     # S5 审计↔产物（单独一轮，轻量）
     audits_all: dict[str, dict] = {}
     for af in sorted((RV_DIR / "parts").glob("G*.audit.jsonl")):
@@ -1507,12 +1559,20 @@ def lint() -> int:
         for f in au.get("factors") or []:
             reason = _f_reason(f)
             if f.get("included") is False and ("必定生效" in reason or "漏算" in reason):
-                s5_open.append(f"{pid}: 因素「{_f_name(f)}」——按必生效应计入但现为未计入（待开发者裁定）")
+                if "R12" in reason or "冲突" in reason:
+                    tail = "（真实待裁定项，见《待裁定.md》）"
+                elif "无必定生效" in reason:
+                    tail = "（无必定生效加成，非候选）"
+                elif "非必定生效" in reason:
+                    tail = "（条件性因素，按「非必定生效不计入」维持未计入）"
+                else:
+                    tail = "（待开发者裁定）"
+                s5_open.append(f"{pid}: 因素「{_f_name(f)}」——{tail}")
 
     rep = ["# lint 报告", "",
            f"- 检查条目 {len(items)}；缺陷 {len(issues)}；审计未决候选 {len(s5_open)}", ""]
     rep += [f"- {x}" for x in issues] if issues else ["- 缺陷：（无）"]
-    rep += ["", "## 审计未决候选（随复核文件交开发者裁定，非缺陷）", ""]
+    rep += ["", "## 审计候选因素（条件性者按「非必定生效不计入」维持；真实待裁定项见《待裁定.md》）", ""]
     rep += [f"- {x}" for x in s5_open] if s5_open else ["- （无）"]
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     (REPORTS_DIR / "lint.md").write_text("\n".join(rep) + "\n", encoding="utf-8")

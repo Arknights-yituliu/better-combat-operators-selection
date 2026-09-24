@@ -37,7 +37,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
 
 Read only what the task needs; the two member docs and the two results JSONs are large — read them by §／target TAG, never whole.
 
-**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `player_tags/_reverify/rules.md`）、`material_datas/tag_pipeline/official_tags/[A-I]-*.md`（官方 TAG 定义与成员，GUI 写回可改）、`material_datas/tag_pipeline/player_tags/NN-*.md`（玩家 TAG 判定＋证据；`_brief.md` 为作业规范）、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`。
+**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `player_tags/_reverify/rules.md`）、`docs/term-map.md`（代称映射表：一切自创代称／缩写／自编号的含义与查阅位置，改动或新增代称时同步）、`material_datas/tag_pipeline/official_tags/[A-I]-*.md`（官方 TAG 定义与成员，GUI 写回可改）、`material_datas/tag_pipeline/player_tags/NN-*.md`（玩家 TAG 判定＋证据；`_brief.md` 为作业规范）、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`。
 
 **生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `generate_results.py`；`results/combat_glossary.json` ← `glossary_to_json.py`；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
 
@@ -115,6 +115,11 @@ Read only what the task needs; the two member docs and the two results JSONs are
   - 风格一致 — 统一用 `**纳入**：`、`**排除**：`、`**与其它 TAG 的关系**：`、`**约定**：` 等加粗标签起头。
 - Fold each new standard into the existing structure — the path it belongs to, the member table, the boundary records — then re-read that TAG's whole 评定标准 section and tidy it: merge redundancies, renumber paths, re-word so it reads as one clean spec written in a single pass.
 - Boundary, exclusion and 待开发者确认 records state rules/facts and their rationale only; they are not a changelog of how the list evolved (drop 本轮／日期／已落实-style labels there too). 检索记录 is the one place where dated process entries may remain.
+
+## AI 协作铁律（工作流程）
+
+1. **自创代称必须映射**：文档与本仓库 AI 输出中使用的任何代称、缩写、自编号（规则号 R1–R20、冲突号 C1–C10、TAG 代号 P01–P12、X模组/Y模组、公式符号等），一律登记在 `docs/term-map.md`（代称映射表）——逐条写明含义、用法与查阅位置。**创建任何新的代称／自创词时必须同步维护该表**；未登记的代称不得在交付文本中使用。
+2. **裁定内容所见即所得**：所有待开发者裁定的内容集中于根目录单一文件 `待裁定.md`——每条自包含（背景、候选值／选项、需要你决定什么），开发者**仅需阅读该文件**即可完成全部裁定，无需查阅任何其它文件；裁定完成后折入源文件（分文件／规则／复算产物），并**整体移除该文件**。该流程用于降低认知负担、提升裁定效率；新增待裁定项一律先并入该文件再交付。与《待验证复算.md》的分工：后者只保留数值复核职能（复算值与结论、回填行），一切需要开发者裁决的问题一律并入 `待裁定.md`。
 
 ## Working notes
 
