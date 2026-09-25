@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化等须递增版本
-VERSION = "v3"
+VERSION = "v4"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -296,8 +296,67 @@ def split_halo(value: str) -> list[str]:
     return out
 
 
+# 官方 TAG 的取值闭集：TAG 名 → [(组名, 取值…)]。分模块成员行的备注列以「子 TAG：…。」
+# 开头书写，可连续出现多个前缀、一次一组；组名不写在行内，由「取值 → 组名」反查，
+# 故前缀先后顺序不影响解析（见 docs/output-standard.md §4.3）。
+OFFICIAL_SUB_GROUPS: dict[str, list[tuple[str, tuple[str, ...]]]] = {
+    "闪避": [("闪避类型", ("物理闪避", "法术闪避", "全伤害闪避")),
+             ("作用范围", ("仅自身", "可给予他人"))],
+    "全场光环": [("子 TAG", ("伤害光环", "削弱光环", "增益光环", "治疗光环", "增伤光环"))],
+    "抗削弱": [("子 TAG", ("下限保护", "上限提高"))],
+    "帧级结算": [("子 TAG", ("帧级判定", "帧伤"))],
+    "护盾（按层抵挡）": [("作用范围", ("仅自身", "可给予他人"))],
+    "屏障（吸收值）": [("作用范围", ("仅自身", "可给予他人"))],
+    "免死/复活/替身": [("作用范围", ("仅自身", "可给予他人"))],
+    "伤害减免/减伤": [("作用范围", ("仅自身", "可给予他人"))],
+    "庇护（物法减伤）": [("作用范围", ("仅自身", "可给予他人"))],
+    "迷彩": [("作用范围", ("仅自身", "可给予他人"))],
+    "抵抗": [("作用范围", ("仅自身", "可给予他人"))],
+    "嘲讽/吸引攻击": [("作用范围", ("仅自身", "可给予他人"))],
+    "降低被攻击优先级": [("作用范围", ("仅自身", "可给予他人"))],
+}
+
+# 组合写法的取值（全场光环「伤害+削弱光环」）先展开再查表
+SUB_EXPANDERS = {"全场光环": split_halo}
+
+SUB_PREFIX_RE = re.compile(r"^子 ?TAG[:：]([^。]*)。")
+SUB_PROBLEMS: list[str] = []
+
+
+def sub_group_of(tag: str, value: str) -> str:
+    """按取值反查组名；未登记取值返回空串。"""
+    for group, values in OFFICIAL_SUB_GROUPS.get(tag, ()):
+        if value in values:
+            return group
+    return ""
+
+
+def parse_sub_prefix(remark: str, tag: str) -> tuple[str, list[dict]]:
+    """剥离备注开头连续出现的「子 TAG：…。」前缀，返回 (剩余备注, subTags)。"""
+    subs: list[dict] = []
+    while True:
+        m = SUB_PREFIX_RE.match(remark)
+        if not m:
+            break
+        expand = SUB_EXPANDERS.get(tag)
+        values = [v.strip() for v in m.group(1).split("、") if v.strip()]
+        for value in (x for v in values for x in (expand(v) if expand else [v])):
+            group = sub_group_of(tag, value)
+            if not group:
+                if tag in OFFICIAL_SUB_GROUPS:
+                    SUB_PROBLEMS.append(f"{tag}：子 TAG 取值「{value}」不在闭集内")
+                group = "子 TAG"
+            item = {"group": group, "value": value}
+            if item not in subs:
+                subs.append(item)
+        remark = remark[m.end():].lstrip("；。")
+    return remark, subs
+
+
 def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict]]:
     name2id = {t["name"]: t for t in catalog["tags"]}
+    unknown = [n for n in OFFICIAL_SUB_GROUPS if n not in name2id]
+    assert not unknown, f"子 TAG 取值闭集表里的 TAG 不在 catalog.json：{unknown}"
     tags, operators = [], {}
     lines = OFFICIAL_DOC.read_text(encoding="utf-8").splitlines()
     category = ""
@@ -333,25 +392,14 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
                 continue
             op = cells[0].replace("**", "").strip()
             cond, remark = clean_cell(cells[ci]), clean_cell(cells[ni])
-            sub_values: list[str] = []
-            if name == "闪避":
-                remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
-                sub_values = vals
-            elif name == "全场光环":
-                remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
-                sub_values = [v for val in vals for v in split_halo(val)]
-            elif name == "抗削弱":
-                remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
-                sub_values = vals
-            elif name == "帧级结算":
-                remark, vals = strip_marker(remark, [re.compile(r"^子 ?TAG[:：]([^。]*)。")])
-                sub_values = vals
+            remark, subs = parse_sub_prefix(remark, name)
+            if re.match(r"^子\s?TAG", remark):  # 前缀漏写「。」时正则失配、前缀会原样混入备注
+                SUB_PROBLEMS.append(f"{name}｜{op}：备注开头的子 TAG 前缀未以「。」收尾")
             member = {"operator": op, "condition": cond}
             if remark:
                 member["remark"] = remark
-            if sub_values:
-                group = "闪避类型" if name == "闪避" else "子 TAG"
-                member["subTags"] = [{"group": group, "value": v} for v in dict.fromkeys(sub_values)]
+            if subs:
+                member["subTags"] = subs
             # 召唤物类 TAG：能力即「拥有/回收/绑定召唤物」，常驻者锚召唤物信息段（§5 表）
             if name in ("拥有召唤物", "召唤物退场返还/自动刷新", "技能-召唤物绑定"):
                 anchor = "#技能" if re.search(r"[0-9一二三]技能", cond) else "#召唤物信息"
@@ -597,9 +645,13 @@ def main() -> int:
         ply = [t for t in doc["tags"] if t["source"] == "player"]
         print(f"官方 TAG {len(off)} 个 / 玩家 TAG {len(ply)} 个 / 干员 {len(doc['operators'])} 名")
         for t in doc["tags"]:
-            anchored = sum(1 for m in t["members"] if "#" in m["prtsUrl"])
+            anchored = sum(1 for m in t["members"] if "#" in m.get("prtsUrl", ""))  # 组合条目无 prtsUrl
             subs = sum(1 for m in t["members"] if m.get("subTags"))
             print(f"  {t['id']:<12} {t['name']:<14} 成员 {len(t['members']):>3}  锚点 {anchored:>3}  子TAG {subs:>3}")
+    if SUB_PROBLEMS:
+        print(f"\n子 TAG 解析问题：{len(SUB_PROBLEMS)} 条")
+        for p in SUB_PROBLEMS[:40]:
+            print("  " + p)
     if problems:
         errs = [p for p in problems if p["level"] == "error"]
         warns = [p for p in problems if p["level"] == "warn"]
@@ -609,7 +661,9 @@ def main() -> int:
     else:
         print("\n校验：无问题")
     if args.check:
-        return 1 if any(p["level"] == "error" for p in problems) else 0
+        return 1 if (any(p["level"] == "error" for p in problems) or SUB_PROBLEMS) else 0
+    if SUB_PROBLEMS:
+        return 1  # 解析问题未解决，不写出
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUT_FILE.write_bytes(rj.render_results(doc, eol="crlf").encode("utf-8"))  # 仓库落盘风格：CRLF
     print(f"已写出 {OUT_FILE.relative_to(ROOT)}（{OUT_FILE.stat().st_size} 字节）")
