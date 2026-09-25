@@ -26,7 +26,7 @@ crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击�
                         └─► docs/untagged-operators.md（未归 TAG 干员，随生成一并写出）
 ```
 
-- `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links).
+- `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links). 语料**只含作战信息**：章节级剧情（`干员档案`/`语音记录`/`干员密录`…）由 `STOP_SECTIONS` 整节丢弃，模组剧情、模组解锁任务、升级材料、`后勤技能` 由 `strip_noncombat()` 剥离（模组等级图标改写为 `**模组等级N**` 文本行，模组类型码保留为 `**ART-X**` 形式的文本行）。剥离压缩了行号，全仓库 `文件:行号` 引用随之整体平移，核对方式见下方 `strip_prts_noncombat.py --audit`。
 - `material_datas/tag_pipeline/` — official-TAG machine-readable dicts (`catalog.json` = TAG dictionary — the only dict scripts read, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons — a snapshot that does not follow TAG changes; `merged.json` / `final_lists.tsv` rebuilt by `_merge_official_to_docs.py --sync-dicts`; `final_lists.tsv` = TAG→members) and `player_tags/` for the player-TAG workflow.
 - `information_records/` — pipeline/crawler notes and extraction decisions; `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls (dated notes — their counts reflect the day they were written; current lists live in the member docs).
 - `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows (the one place those writing rules live); `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐); `docs/untagged-operators.md` — 未归入任何 TAG 的干员（auto-written by `generate_results.py`: full roster minus `operators[]`). `docs/player-tags-specify.md` — 玩家 TAG 定义（开发者手改）; `docs/calc-rules.md` — 计算规则正本（结算层位与总式、游戏文本→因素映射、演算流程、未定项索引），数值门槛与术语只作指针指向 `docs/player-tags-specify.md`／`docs/glossary.md`; `docs/ui-render-rules.md` — 消费端（前端项目）渲染规则记录，改 JSON 结构时对照之.
@@ -41,6 +41,17 @@ Read only what the task needs; the two member docs and the two results JSONs are
 
 **生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `generate_results.py`；`results/combat_glossary.json` ← `glossary_to_json.py`；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
 
+**剥离工具（非生成链路，按需运行）**: `strip_prts_noncombat.py` —— 剥离逻辑本体在 `crawl_prts.py` 的 `plan_strip()`／`render_strip()`／`strip_noncombat()`，本脚本只 import 之，用于回填历史语料与审计。`--dry-run` 先看改动与冲突；`--fix-stale` 补正审计发现的失效引用。删除行会平移其后行号，任何再次剥离都必须同时跑改写与审计。
+
+`--audit` 报三类，判据是**与 HEAD 对比**——取每条引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值：
+- **失效**（应为 0）：工作区没带上应有的值，即漏改；
+- **未解析**（应为 0）：解析不到目标、但文件名属于 PRTS 语料，属于"看不懂就当没问题"的静默跳过；
+- **指向已删行**（每次改动剥离规则后需人工过一遍其原文）：原锚点所在行被剥离删除，逐条看删的是不是作战内容。
+
+**不要**用"新行号处的文本 == 旧行号处的文本"做这个检查。剥离保证 `new[map(x)-1] == old[x-1]` 对任何在范围内的行号都成立，无论它是改写后的还是漏改的——那样的检查只会发现越界，正是本仓库踩过的坑。有意偏离机械映射的引用（改锚到真正支撑论点的行）登记在脚本内的 `ACCEPTED`，新增即视为一次显式裁定。
+
+扫描范围按目录显式枚举（`REF_GLOBS`），新增目录时须同步——漏一个目录就是整批引用静默保留旧行号。
+
 **只为背景、不作依据**: `information_records/*`、`docs/verification-complaints.md`、`docs/mechanism-understanding.md`（含整理当日的旧计数）、`player_tags/_mode-limited-module-audit.md`、`official-fullmap-aura.md`（历史转制稿）。
 
 ## Commands
@@ -50,6 +61,10 @@ Read only what the task needs; the two member docs and the two results JSONs are
 .venv/Scripts/python.exe -X utf8 crawl_prts.py --only "干员名"
 #   new operator? first add a line to docs/operators.txt:  干员名 https://prts.wiki/w/干员名
 #   flags: --force (re-crawl ok entries), --delay-min/--delay-max, --operators-file, --out-dir
+#   爬虫写出前会跑 strip_noncombat()，落盘语料不含剧情/养成内容
+
+# 核对证据层：全仓库 文件:行号 是否仍指向剥离前的原文（剥离或改行号后必跑）
+.venv/Scripts/python.exe -X utf8 strip_prts_noncombat.py --audit   # --fix-stale 补正
 
 # Regenerate the merged player-TAG document after editing part files
 .venv/Scripts/python.exe -X utf8 material_datas/tag_pipeline/player_tags/_merge_to_docs.py

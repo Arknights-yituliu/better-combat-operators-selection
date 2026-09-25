@@ -264,6 +264,131 @@ def to_markdown(sections: list, title: str, url: str, smw: dict | None) -> str:
     return re.sub(r"\n{3,}", "\n\n", "".join(parts)).strip() + "\n"
 
 
+# ---------------------------------------------------------------- 非作战内容剥离
+# The wiki's module sections interleave lore with mechanics: every module carries
+# its story twice (an expanded 全文阅读 copy and a byte-identical collapsed
+# 关闭全文 copy), plus unlock conditions and upgrade-material tables. None of it is
+# combat information, and none of it is ever cited as evidence.
+MODULE_LEVEL_ICON = re.compile(r"%E6%A8%A1%E7%BB%84%E7%AD%89%E7%BA%A7_(\d)\.png")
+MODULE_ART = re.compile(
+    r"uniequip_img|uniequip_type"
+    r"|%E8%81%8C%E4%B8%9A%E5%88%86%E6%94%AF%E5%9B%BE%E6%A0%87"   # 职业分支图标
+    r"|%E6%A8%A1%E7%BB%84_%E8%AF%81%E7%AB%A0"                    # 模组_证章
+    r"|%E6%A8%A1%E7%BB%84%E7%B1%BB%E5%9E%8B"                     # 模组类型_基础
+)
+DROP_SECTIONS = {"精英化材料", "技能升级材料", "后勤技能"}
+
+
+def plan_strip(lines: list) -> list:
+    """Decide each line's fate: None to drop, else the text to keep.
+
+    The 模组 section is a small state machine. Its story blocks end at the next
+    level icon (the icon is itself level 1's marker) or the next heading; the
+    material block ends at the first line that is neither blank nor an image,
+    which keeps trailing footnotes that carry real mechanics notes.
+    Module type codes stay: every uniequip_type icon is followed by the same
+    code as plain text, so dropping the image loses nothing.
+    """
+    out = []
+    section = None
+    state = None
+    for line in lines:
+        stripped = line.strip()
+        if line.startswith("## "):
+            section = line[3:].strip()
+            state = None
+        elif line.startswith("### "):
+            state = None
+        if line.startswith("## ") or line.startswith("### "):
+            out.append(None if section in DROP_SECTIONS else line)
+            continue
+        if section in DROP_SECTIONS:
+            out.append(None)
+            continue
+        if section != "模组":
+            out.append(line)
+            continue
+        if "#cite_ref" in line:
+            # Wiki footnotes carry real mechanics notes on some operators
+            # (e.g. 涤火杰西卡) and sit right after a story block, so they must
+            # end any drop state rather than be swallowed by it.
+            state = None
+            out.append(line)
+            continue
+        if stripped.startswith("**基础信息**"):
+            state = "story"
+            out.append(None)
+            continue
+        if stripped.startswith("**模组解锁任务**"):
+            state = "task"
+            out.append(None)
+            continue
+        if stripped.startswith("**解锁需求与材料消耗**"):
+            state = "cost"
+            out.append(None)
+            continue
+        if state == "task":
+            out.append(None)
+            continue
+        if state == "story":
+            level = MODULE_LEVEL_ICON.search(line)
+            if level:                      # story ends here; this icon is level 1
+                state = None
+                out.append(f"**模组等级{level.group(1)}**")
+            else:
+                out.append(None)
+            continue
+        if state == "cost" and (not stripped or "![](" in line):
+            out.append(None)
+            continue
+        state = None                       # material block ended on real content
+        level = MODULE_LEVEL_ICON.search(line)
+        if level:
+            out.append(f"**模组等级{level.group(1)}**")
+            continue
+        out.append(None if MODULE_ART.search(line) else line)
+    return out
+
+
+def render_strip(planned: list) -> tuple:
+    """Apply a plan: collapse blank runs, drop trailing blanks.
+
+    Returns (kept_lines, old_to_new) where old_to_new[i] is the 1-based new line
+    number of source line i+1, or None if that line was dropped. Callers that
+    rewrite 文件:行号 evidence pointers need the map; strip_noncombat discards it.
+    """
+    kept = []
+    old_to_new = []
+    blanks = 0
+    for item in planned:
+        if item is None:
+            old_to_new.append(None)
+            continue
+        if not item.strip():
+            blanks += 1
+            if blanks > 1:
+                old_to_new.append(None)
+                continue
+        else:
+            blanks = 0
+        kept.append(item)
+        old_to_new.append(len(kept))
+    while kept and not kept[-1].strip():
+        kept.pop()
+    old_to_new = [n if n is None or n <= len(kept) else None for n in old_to_new]
+    return kept, old_to_new
+
+
+def strip_noncombat(text: str) -> str:
+    """Drop lore and upgrade-economy content from one operator markdown page.
+
+    Returns the same plain-LF convention to_markdown() uses; the CRLF translation
+    happens in Path.write_text on write, so callers must not pre-expand newlines.
+    """
+    kept, _ = render_strip(plan_strip(text.splitlines()))
+    return "\n".join(kept) + "\n"
+
+
 def fetch_smw_rarity_class(session: requests.Session) -> dict:
     """Batched SMW query: rarity and class for every page in 分类:干员."""
     r = fetch(session, API, params={
@@ -307,7 +432,8 @@ def crawl_page(session: requests.Session, url: str, out_dir: Path, filename: str
     sections = collect_sections(content)
     out_path = out_dir / filename
     out_path.write_text(
-        to_markdown(sections, title, url, smw_lines(smw_entry)), encoding="utf-8")
+        strip_noncombat(to_markdown(sections, title, url, smw_lines(smw_entry))),
+        encoding="utf-8")
     return {"title": title, "path": out_path, "summons": summons}
 
 

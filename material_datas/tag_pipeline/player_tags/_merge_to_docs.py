@@ -228,9 +228,9 @@ def main():
 
     out.append("## 附录 A：文档勘误（判定中发现）")
     out.append("")
-    out.append("1. `docs/official-tags-members.md` §6 第 4 条写的「星熊/可颂 X 模组（阻挡数+1）」实为 **PRO-Y**（星熊.md:374/411、可颂.md:169/198；角峰、暴雨同理为 Y）；`docs/player-tags-specify.md` 的「年 2 技能 Y 模组」与 PRTS 一致。")
+    out.append("1. `docs/official-tags-members.md` §6 第 4 条写的「星熊/可颂 X 模组（阻挡数+1）」实为 **PRO-Y**（星熊.md:173/179、可颂.md:124/130；角峰、暴雨同理为 Y）；`docs/player-tags-specify.md` 的「年 2 技能 Y 模组」与 PRTS 一致。")
     out.append("2. `docs/player-tags-specify.md` 写「号角 **2 天赋**（仅限重装）」，但 PRTS 将「军事要塞」（在场时所有重装干员攻击力+20%）列为**第一天赋**，「血战」为第二天赋（号角/号角.md:56-59,63）。")
-    out.append("3. 早期v1线索稿曾把「深海色」列入深海猎人组合，但 PRTS 中深海色所属势力为【阿戈尔】且无【深海猎人】联动文本（深海色/深海色.md:144,154,242），不应计入。")
+    out.append("3. 早期v1线索稿曾把「深海色」列入深海猎人组合，但 PRTS 中深海色所属势力为【阿戈尔】、天赋为召唤物系且无【深海猎人】联动文本（深海色/深海色.md:34,54-58），不应计入。")
     out.append("")
     out.append("## 附录 B：与官方定义类 TAG 的互链")
     out.append("")

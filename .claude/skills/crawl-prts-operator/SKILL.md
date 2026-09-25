@@ -27,6 +27,15 @@ The project crawler `crawl_prts.py` (run it with the project venv) does everythi
 3. The gameplay sections are present: `## 特性`, `## 天赋`, `## 技能`, `## 模组` (older/low-rarity operators may legitimately lack some).
 4. Summon files contain the stat table (`## 召唤物信息`) and the owner name resolves (持有者 cell shows the operator's name, not empty).
 5. No leaked tooltip text in data rows: body text should not contain `术语:` or `异常效果:` definitions inline.
+6. No non-combat content survived: `## 精英化材料`, `## 技能升级材料`, `## 后勤技能` must be **absent**, and `## 模组` must contain no prose story, no `**模组解锁任务**`/`**解锁需求与材料消耗**`, and no image lines. Module tiers appear as `**模组等级1/2/3**` text lines and the type code as a `**ART-X**`-style text line.
+
+## 非作战内容剥离
+
+`crawl_page()` writes `strip_noncombat(to_markdown(...))`, so the corpus holds only combat information: section-level lore is dropped by `STOP_SECTIONS`, and module story (which PRTS emits twice — a `全文阅读` and a byte-identical `关闭全文` copy), unlock tasks, upgrade-material blocks, and 后勤技能 are stripped line-wise by `plan_strip()`/`render_strip()` in `crawl_prts.py`. Level icons become `**模组等级N**`; type icons are dropped because the same code sits on the next line as plain text.
+
+Anything cited as `文件:行号` is a **post-strip** line number. Changing what gets stripped shifts every pointer below the edit, so after any change to the strip rules run `strip_prts_noncombat.py --audit`. It takes each pointer as it stood at HEAD, maps it, and requires the working tree to carry the mapped value; it reports 失效 (missed rewrite — must be 0), 未解析 (resolves to no file yet names a PRTS one, i.e. silently skipped — must be 0), and 指向已删行 (the anchor's line was stripped; review each one's original text to confirm it was not combat content). `--fix-stale` repairs 失效 pointers; `--dry-run` previews a backfill.
+
+Do **not** try to detect a stale pointer with a content test — `new[map(x)-1] == old[x-1]` holds for every in-range number whichever side of the map it was written on, so such a check only ever catches out-of-range ones. Deliberate departures from the mechanical map (re-anchoring onto the line that actually supports the claim) live in the script's `ACCEPTED` set. Coverage comes from `REF_GLOBS`, enumerated by directory — a file one level outside a listed glob is never scanned, so add new citation-bearing directories there.
 
 ## What the crawler does (for context when debugging)
 
@@ -34,7 +43,7 @@ The project crawler `crawl_prts.py` (run it with the project venv) does everythi
 2. Splits `#mw-content-text > div.mw-content-ltr.mw-parser-output` into sections, keeping 干员信息 → 模组 and stopping at the first lore section (相关道具/干员档案/语音记录/干员密录/悖论模拟/干员模型/注释与链接).
 3. Reads the 召唤物信息 section, follows its `/w/` links (deduped), and crawls each summon page the same way (stop at 召唤物模型).
 4. Gets 稀有度/职业 for all operators via one batched Semantic MediaWiki `action=ask` query.
-5. Cleans wiki noise, converts to markdown, writes files, updates `_manifest.json` after every operator (crash-safe resume).
+5. Cleans wiki noise, converts to markdown, strips non-combat content, writes files, updates `_manifest.json` after every operator (crash-safe resume).
 
 ## Notes / gotchas
 
