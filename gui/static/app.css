@@ -336,6 +336,9 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 .row.ro .val:hover { border-color: transparent; background: none; }
 .val.empty { color: var(--ak-signal-accent); background: color-mix(in srgb, var(--ak-signal-accent) 12%, transparent); }
 .editline { display: flex; gap: var(--ak-space-1); align-items: flex-start; margin-top: 2px; }
+.remark-block { display: flex; gap: var(--ak-space-1); align-items: flex-start; margin: 2px 0; width: 100%; }
+.remark-block input { flex: 0 0 9em; font-size: 13px; }
+.remark-block textarea { flex: 1 1 auto; min-width: 0; font-size: 13px; }
 .editline input, .editline textarea { flex: 1; min-width: 0; font-size: 13px; }
 
 /* ---- 12. 人工归纳：临时区 ------------------------------------------------ */

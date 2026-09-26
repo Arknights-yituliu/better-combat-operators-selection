@@ -1034,6 +1034,78 @@ function field(el, get, set, opts) {
   };
   return el;
 }
+// ---------------------------------------------------------------- 备注块编辑
+
+// 备注 = 块数组 [{label?, items:[{label?, text}]}]（docs/output-standard.md §4.2）。
+// 编辑形态：每块一行「块标签 + 该块各条」——条用「；」分隔、条内写「标签：正文」，与撰写源文件同构。
+const REMARK_ITEM_BAD = /[（）「」，。、]/;
+
+// 旧字符串备注就地升级为单块（不影响落盘形状，保存时按数组写出）
+function remarkBlocks(holder) {
+  if (!Array.isArray(holder.remark)) {
+    const t = String(holder.remark == null ? "" : holder.remark).trim();
+    holder.remark = t ? [{items: [{text: t}]}] : [];
+  }
+  return holder.remark;
+}
+
+function parseRemarkItems(text) {
+  return String(text || "").split("；").map(s => s.trim()).filter(Boolean).map(s => {
+    const i = s.indexOf("：");
+    if (i > 0) {
+      const label = s.slice(0, i).trim(), rest = s.slice(i + 1).trim();
+      if (rest && label.length <= 12 && !REMARK_ITEM_BAD.test(label)) return {label: label, text: rest};
+    }
+    return {text: s};
+  });
+}
+
+function remarkEditor(el, holder) {
+  el.classList.add("val");
+  const blocks = remarkBlocks(holder);
+  const commit = () => {
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      const items = (blocks[i].items || []).filter(x => String(x.text || "").trim());
+      if (items.length) blocks[i].items = items; else blocks.splice(i, 1);
+    }
+    if (!blocks.length) delete holder.remark;
+    resMark();
+    renderResults();
+  };
+  const paint = () => {
+    el.innerHTML = "";
+    el.classList.toggle("empty", !blocks.length);
+    if (!blocks.length) el.textContent = "（空，保存时省略该字段）";
+    blocks.forEach((b, bi) => {
+      const row = document.createElement("div");
+      row.className = "remark-block";
+      const lab = document.createElement("input");
+      lab.type = "text";
+      lab.value = b.label || "";
+      lab.placeholder = "块标签";
+      lab.title = "成绩／2技能「技能名」／第一天赋「…」／计算／说明";
+      lab.onchange = () => { const v = lab.value.trim(); if (v) b.label = v; else delete b.label; commit(); };
+      const ta = document.createElement("textarea");
+      ta.rows = 2;
+      ta.value = (b.items || []).map(i => (i.label ? i.label + "：" : "") + i.text).join("；");
+      ta.onchange = () => { b.items = parseRemarkItems(ta.value); commit(); };
+      const del = document.createElement("button");
+      del.textContent = "×";
+      del.title = "删除该块";
+      del.onclick = () => { blocks.splice(bi, 1); commit(); };
+      row.append(lab, ta, del);
+      el.appendChild(row);
+    });
+    const add = document.createElement("button");
+    add.textContent = "＋ 块";
+    add.title = "新增一个备注块";
+    add.onclick = () => { blocks.push({items: [{text: ""}]}); paint(); };
+    el.appendChild(add);
+  };
+  paint();
+  return el;
+}
+
 function kv(label, valueEl, note) {
   const d = document.createElement("div");
   d.className = "kv";
@@ -1123,7 +1195,7 @@ function memberCard(t, m) {
   field(condEl, () => m.condition, v => { m.condition = v; }, {multi: true, empty: "（待填）"});
   g.appendChild(kv("条件", condEl));
   const noteEl = document.createElement("span");
-  field(noteEl, () => m.remark, v => { if (v.trim()) m.remark = v; else delete m.remark; }, {multi: true, empty: "（空，保存时省略该字段）"});
+  remarkEditor(noteEl, m);
   g.appendChild(kv("备注", noteEl));
 
   const sg = document.createElement("div");
@@ -1204,7 +1276,7 @@ function comboCard(t, m) {
   field(condEl, () => m.condition, v => { m.condition = v; }, {multi: true, empty: "（待填）"});
   g.appendChild(kv("条件", condEl));
   const noteEl = document.createElement("span");
-  field(noteEl, () => m.remark, v => { if (v.trim()) m.remark = v; else delete m.remark; }, {multi: true, empty: "（空，保存时省略该字段）"});
+  remarkEditor(noteEl, m);
   g.appendChild(kv("备注", noteEl));
   const benEl = document.createElement("span");
   field(benEl, () => (m.beneficiaries || []).join("、"), v => {
@@ -1232,7 +1304,7 @@ function comboCard(t, m) {
     field(pc, () => p.condition, v => { p.condition = v; }, {multi: true, empty: "（待填）"});
     wrap.appendChild(kv("条件", pc));
     const pn = document.createElement("span");
-    field(pn, () => p.remark, v => { if (v.trim()) p.remark = v; else delete p.remark; }, {multi: true, empty: "（空，省略）"});
+    remarkEditor(pn, p);
     wrap.appendChild(kv("备注", pn));
     const pu = document.createElement("span");
     field(pu, () => p.prtsUrl, v => { p.prtsUrl = v; }, {});
@@ -1455,7 +1527,7 @@ function resSortAll() {
   let emptyRemark = 0, emptySub = 0, missingRec = 0;
   doc.tags.forEach(t => {
     (t.members || []).forEach(m => {
-      if ("remark" in m && !String(m.remark || "").trim()) emptyRemark++;
+      if ("remark" in m && (Array.isArray(m.remark) ? !m.remark.length : !String(m.remark || "").trim())) emptyRemark++;
       if ("subTags" in m && (!Array.isArray(m.subTags) || !m.subTags.length)) emptySub++;
     });
     if (t.source === "player" && !Array.isArray(t.recommended)) missingRec++;
@@ -1469,7 +1541,7 @@ function resSortAll() {
   doc.operators = opsSorted;
   doc.tags.forEach(t => {
     (t.members || []).forEach(m => {
-      if ("remark" in m && !String(m.remark || "").trim()) delete m.remark;
+      if ("remark" in m && (Array.isArray(m.remark) ? !m.remark.length : !String(m.remark || "").trim())) delete m.remark;
       if ("subTags" in m && (!Array.isArray(m.subTags) || !m.subTags.length)) delete m.subTags;
     });
     if (t.source === "player" && !Array.isArray(t.recommended)) t.recommended = [];

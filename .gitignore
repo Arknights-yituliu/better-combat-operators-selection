@@ -8,3 +8,6 @@
 # Python
 __pycache__/
 *.py[cod]
+
+# Scratch batch output for _apply_batch.py (tag-rewrite sub-agent productions)
+_out/

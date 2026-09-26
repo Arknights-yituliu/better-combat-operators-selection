@@ -40,8 +40,8 @@ OFFICIAL_DOC = ROOT / "docs" / "official-tags-members.md"
 PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
-# docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化等须递增版本
-VERSION = "v4"
+# docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
+VERSION = "v5"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -79,6 +79,178 @@ def clean_cell(text: str) -> str:
 
 def url_of(name: str, anchor: str = "") -> str:
     return "https://prts.wiki/w/" + urllib.parse.quote(name) + anchor
+
+
+# ---------------------------------------------------------------- 备注分块（写法见 docs/concept.md「备注分块」）
+
+BLOCK_SEP = "｜"                    # 块分隔：全角竖线（ASCII | 会破坏表格结构，撰写侧禁用）
+ITEM_SEP = "；"                     # 条分隔
+BLOCK_LABEL_MAX = 40                # 块标签字数上限，超长视为正文（避免整句被当标题）
+BLOCK_LABEL_BAD = set("；。，")       # 块标签不得含句读与逗号（引文整句不是标签）
+BLOCK_LABEL_FREE = ("成绩", "计算", "说明")  # 保留块类：标签不受字数上限约束（成绩情形名可带面板口径）
+ITEM_LABEL_MAX = 12                 # 条标签字数上限
+ITEM_LABEL_BAD = set("（）「」，。、")  # 条标签不得含标点（技能名带「」者按正文处理）
+BRACKETS = {"（": "）", "(": ")", "「": "」", "【": "】"}   # 括号内不切分
+CLOSERS = {"）", ")", "」", "】"}    # 闭括号宽窄混用（`（…）`）按闭合处理：宁可少切一刀，不可静默错切
+# 块标签只能是能力名或保留块类，绝不会以引号开头（`「…」：` 是引文正文，不是标签）
+BLOCK_HINT_RE = re.compile(r"^(?:成绩|计算|说明)[：\s]")
+ABILITY_HEAD_RE = re.compile(r"^(?:第[一二三]天赋|[0-9一二三]技能|召唤物|装置|特性|模组)")
+
+
+def block_hint(chunk: str) -> bool:
+    """块首像能力名却不是标签？——`第一天赋「X」（…）：…` 这类带限定语的块名被退回正文时，
+    lint 必须报出来（否则整块静默降级成一段正文）。引文式散文（`第一天赋「X」的额外伤害…`）
+    没有紧跟的 `：`，不会误报。"""
+    if BLOCK_HINT_RE.match(chunk):
+        return True
+    m = ABILITY_HEAD_RE.match(chunk)
+    return bool(m) and chunk[len(m.group(0)):].startswith(("「", "（", "(")) and "：" in chunk[:48]
+TEXT_PROBLEMS: list[str] = []       # 文本 lint 报告（只报告、不阻断；即存量待重排清单）
+
+
+def split_top(text: str, sep: str) -> list[str]:
+    """按 sep 切分，但**括号内不切**（`（）`／`「」`／`【】`／`()`）。
+
+    括号里的 `；` 是括号内容的一部分（如「（最低可满足档 面板433×…；最高档 面板535×…）」），
+    若照切会把一条拆成两条、后半条失去条标签。
+    """
+    out: list[str] = []
+    buf: list[str] = []
+    stack: list[str] = []
+    for ch in text:
+        if ch in BRACKETS:
+            stack.append(BRACKETS[ch])
+        elif stack and ch in CLOSERS:
+            stack.pop()
+        if ch == sep and not stack:
+            out.append("".join(buf))
+            buf = []
+        else:
+            buf.append(ch)
+    out.append("".join(buf))
+    return out
+
+
+def balanced(text: str) -> bool:
+    """括号／引号是否配对；不配对会让分隔符判据整体失效（`split_top` 的静默失效模式）。"""
+    stack: list[str] = []
+    for ch in text:
+        if ch in BRACKETS:
+            stack.append(BRACKETS[ch])
+        elif stack and ch in CLOSERS:
+            stack.pop()
+        elif ch in CLOSERS:
+            return False
+    return not stack
+
+
+def split_block_label(chunk: str) -> tuple[str, str]:
+    """块的 `标签：正文` → (标签, 正文)；不合规的标签一律留作正文。"""
+    i = chunk.find("：")
+    if i <= 0:
+        return "", chunk
+    head = chunk[:i].strip()
+    # 句读判据只看括号外的部分：`第二天赋「…」（精英2，潜能5）` 里的逗号是限定语的一部分，
+    # 而整句引文（`「…，…」：…`）仍会被挡住。
+    bare = re.sub(r"[（(][^）)]*[）)]|[「][^」]*[」]", "", head)
+    if not head or head.startswith("「") or (set(bare) & BLOCK_LABEL_BAD):
+        return "", chunk
+    free = any(head == k or head.startswith(k + " ") for k in BLOCK_LABEL_FREE)
+    if not free and len(head) > BLOCK_LABEL_MAX:
+        return "", chunk
+    return head, chunk[i + 1:].strip()
+
+
+def split_item_label(text: str) -> tuple[str, str]:
+    j = text.find("：")
+    if j <= 0:
+        return "", text
+    head, tail = text[:j].strip(), text[j + 1:].strip()
+    if tail and head and len(head) <= ITEM_LABEL_MAX and not (set(head) & ITEM_LABEL_BAD):
+        return head, tail
+    return "", text
+
+
+def parse_blocks(text: str) -> list[dict]:
+    """备注源文本 → 块数组（docs/output-standard.md §4.2）。
+
+    `｜` 分块、`；` 分条（两者在括号内都不生效）；两个层级共用同一句法 `标签：正文`。
+    不含分隔符的旧文本自然成为「单块 + 条按 `；` 拆分」。
+    """
+    blocks: list[dict] = []
+    for raw_block in split_top(text, BLOCK_SEP):
+        chunk = raw_block.strip()
+        if not chunk:
+            continue
+        label, body = split_block_label(chunk)
+        items: list[dict] = []
+        for raw_item in split_top(body, ITEM_SEP):
+            item_text = raw_item.strip()
+            if not item_text:
+                continue
+            ilabel, itext = split_item_label(item_text)
+            items.append({"label": ilabel, "text": itext} if ilabel else {"text": item_text})
+        if not items:
+            continue
+        blocks.append({"label": label, "items": items} if label else {"items": items})
+    return blocks
+
+
+# 备注禁用项：正则 → 说明（docs/concept.md「备注分块」末节）
+LINT_PATTERNS = (
+    (r"(?<![0-9])★", "含 ★ 分类标记（★ 仅用于星级写法 N★）"),
+    (r"备注[:：]", "含「备注：」字样"),
+    (r"PRTS\s?(?:备注|注)[:：]", "含「PRTS 备注/注」字样"),
+    (r"(?:天赋|技能)原文[:：]", "含「原文」字样"),
+    (r"[（(]下详[）)]|见备注|同上|另见", "含指向别处的悬空引用（应自包含写全）"),
+    (r"UI 建议|作为强条件提示", "含面向 UI 的指令文字"),
+    (r"(?<![A-Za-z])S[123](?![0-9])", "用 S1/S2/S3 简写（应写「N技能「技能名」」）"),
+)
+
+
+def lint_text(tag: str, op: str, cond: str, remark: str) -> None:
+    """按 docs/concept.md「备注分块」检查源文本。只报告、不阻断写出。
+
+    结构类检查（括号配对、空块／空条、块标签是否被识别）与内容类检查（禁用字样、块序）并列——
+    结构类问题是静默的（解析只会少切一刀），必须由 lint 兜住。
+    """
+    def rep(msg: str) -> None:
+        TEXT_PROBLEMS.append(f"{tag}｜{op}：{msg}")
+
+    for pattern, msg in LINT_PATTERNS:
+        if re.search(pattern, remark):
+            rep(msg)
+    if not balanced(remark):
+        rep("括号／引号不配对（分隔符判据会整体失效，先补全括号）")
+    raw_blocks = [s for s in split_top(remark, BLOCK_SEP)]
+    for raw in raw_blocks:
+        chunk = raw.strip()
+        if not chunk:
+            continue
+        label, body = split_block_label(chunk)
+        if not label and block_hint(chunk):
+            rep(f"块首疑似标签但未被识别：{chunk[:24]}…")
+        if label and not any(label == k or label.startswith(k + " ") for k in BLOCK_LABEL_FREE) \
+                and len(label) > 30:
+            rep(f"块标签偏长（{len(label)} 字）：{label[:20]}…")
+        segs = split_top(body, ITEM_SEP)
+        if any(not s.strip() for s in segs[1:-1]):
+            rep(f"块「{label or '（无标签）'}」内含空的条（`；` 连写）")
+    labels = [b.get("label", "") for b in parse_blocks(remark)]
+    for label in labels:
+        if re.fullmatch(r"[0-9一二三]技能", label):
+            rep(f"块标签「{label}」未点名技能（应写「{label}「技能名」」）")
+    if any(l.startswith("成绩") for l in labels) and not labels[0].startswith("成绩"):
+        rep("成绩块未排在首位（块序应为 成绩→能力→计算→说明）")
+    tail = [i for i, l in enumerate(labels) if l in ("计算", "说明")]
+    if tail:
+        between = labels[tail[0]:]
+        if any(l not in ("计算", "说明") for l in between):
+            rep("「计算」／「说明」块之后还有能力块（块序应为 成绩→能力→计算→说明）")
+        elif "计算" in between and "说明" in between and between.index("说明") < between.index("计算"):
+            rep("「说明」块排在「计算」之前")
+    if len(cond) > 50:
+        rep(f"条件过长（{len(cond)} 字）：面板/计数口径句应移入备注「说明」块")
 
 
 # ---------------------------------------------------------------- 阵容组合（P12）组合级元数据
@@ -395,9 +567,11 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
             remark, subs = parse_sub_prefix(remark, name)
             if re.match(r"^子\s?TAG", remark):  # 前缀漏写「。」时正则失配、前缀会原样混入备注
                 SUB_PROBLEMS.append(f"{name}｜{op}：备注开头的子 TAG 前缀未以「。」收尾")
+            lint_text(name, op, cond, remark)
             member = {"operator": op, "condition": cond}
-            if remark:
-                member["remark"] = remark
+            blocks = parse_blocks(remark)
+            if blocks:
+                member["remark"] = blocks
             if subs:
                 member["subTags"] = subs
             # 召唤物类 TAG：能力即「拥有/回收/绑定召唤物」，常驻者锚召唤物信息段（§5 表）
@@ -505,17 +679,21 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
                 cm = COMBO_NAME_RE.match(h3.strip())
                 combo = cm.group(1).strip() if cm else ""
                 entry = combos.setdefault(combo, {"combo": combo, "providers": []})
+                lint_text("阵容组合/" + combo, op, cond, remark)
                 prov = {"operator": op, "condition": cond}
-                if remark:
-                    prov["remark"] = remark
+                blocks = parse_blocks(remark)
+                if blocks:
+                    prov["remark"] = blocks
                 prov["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
                 entry["providers"].append(prov)
                 seen_ops.append(op)
                 continue
             remark, subs = player_subtags(tag_no, h3, h4, header, clean, cond, remark)
+            lint_text(tag_name, op, cond, remark)
             member = {"operator": op, "condition": cond}
-            if remark:
-                member["remark"] = remark
+            blocks = parse_blocks(remark)
+            if blocks:
+                member["remark"] = blocks
             if subs:
                 member["subTags"] = subs
             member["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
@@ -526,9 +704,13 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
             members = []
             for combo, entry in combos.items():
                 meta = combo_meta.get(combo, {})
-                item = {"combo": combo,
-                        "condition": clean_cell(meta.get("condition", "")),
-                        "remark": clean_cell(meta.get("remark", ""))}
+                cond = clean_cell(meta.get("condition", ""))
+                remark = clean_cell(meta.get("remark", ""))
+                lint_text("阵容组合/" + combo, combo, cond, remark)
+                item = {"combo": combo, "condition": cond}
+                blocks = parse_blocks(remark)
+                if blocks:
+                    item["remark"] = blocks
                 if meta.get("beneficiaries"):
                     item["beneficiaries"] = meta["beneficiaries"]
                 item["providers"] = entry["providers"]
@@ -652,6 +834,15 @@ def main() -> int:
         print(f"\n子 TAG 解析问题：{len(SUB_PROBLEMS)} 条")
         for p in SUB_PROBLEMS[:40]:
             print("  " + p)
+    if TEXT_PROBLEMS:
+        by_tag: dict[str, int] = {}
+        for p in TEXT_PROBLEMS:
+            by_tag[p.split("｜", 1)[0]] = by_tag.get(p.split("｜", 1)[0], 0) + 1
+        head = "、".join(f"{k} {v}" for k, v in sorted(by_tag.items(), key=lambda kv: -kv[1])[:12])
+        print(f"\n文本 lint：{len(TEXT_PROBLEMS)} 条待重排（不阻断写出；按 TAG 分布：{head}）")
+        if args.report:
+            for p in TEXT_PROBLEMS:
+                print("  " + p)
     if problems:
         errs = [p for p in problems if p["level"] == "error"]
         warns = [p for p in problems if p["level"] == "warn"]

@@ -110,8 +110,8 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
     cond = mem.get("condition")
     if not isinstance(cond, str) or not cond.strip():
         add("error", "C2", f"{base}.condition", mplc + ["condition"], clabel, "组合 condition 必填（来自「触发条件」bullet）")
-    if "remark" in mem and (not isinstance(mem.get("remark"), str) or not mem.get("remark").strip()):
-        add("warn", "C6", f"{base}.remark", mplc + ["remark"], clabel, "组合 remark 为空时应省略该字段")
+    if "remark" in mem:
+        check_remark(mem.get("remark"), add, "C6", f"{base}.remark", mplc + ["remark"], clabel)
     bens = mem.get("beneficiaries")
     if bens is not None and not (isinstance(bens, list) and all(isinstance(x, str) and x.strip() for x in bens)):
         add("error", "C3", f"{base}.beneficiaries", mplc + ["beneficiaries"], clabel, "beneficiaries 应为字符串数组")
@@ -141,8 +141,8 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
         pcond = prov.get("condition")
         if not isinstance(pcond, str) or not pcond.strip():
             add("error", "M5", f"{pbase}.condition", pplc + ["condition"], plabel, "condition 必填（精英 0·1 级即具备写「无」）")
-        if "remark" in prov and (not isinstance(prov.get("remark"), str) or not prov.get("remark").strip()):
-            add("warn", "M6", f"{pbase}.remark", pplc + ["remark"], plabel, "remark 为空时应省略该字段")
+        if "remark" in prov:
+            check_remark(prov.get("remark"), add, "M6", f"{pbase}.remark", pplc + ["remark"], plabel)
         purl = prov.get("prtsUrl")
         if not isinstance(purl, str) or not purl.strip():
             add("error", "M10", f"{pbase}.prtsUrl", pplc + ["prtsUrl"], plabel, "prtsUrl 必填")
@@ -158,6 +158,42 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
     for key in mem:
         if key not in ("combo", "condition", "remark", "beneficiaries", "providers"):
             add("warn", "M12", f"{base}.{key}", mplc + [key], clabel, f"规范之外的字段「{key}」")
+
+
+def check_remark(remark, add, code: str, path: str, loc: list, label: str) -> None:
+    """remark 块数组结构（docs/output-standard.md §4.2）：块 {label?, items[]}、条 {label?, text}。"""
+    if not isinstance(remark, list) or not remark:
+        add("warn", code, path, loc, label, "remark 应为非空块数组；无内容时应省略该字段")
+        return
+    for bi, block in enumerate(remark):
+        bpath, bloc = f"{path}[{bi}]", loc + ["remark", bi]
+        if not isinstance(block, dict):
+            add("error", code, bpath, bloc, label, "remark 的块必须是对象")
+            continue
+        bl = block.get("label")
+        if bl is not None and (not isinstance(bl, str) or not bl.strip()):
+            add("warn", code, bpath + ".label", bloc + ["label"], label, "块 label 为空时应省略该字段")
+        items = block.get("items")
+        if not isinstance(items, list) or not items:
+            add("error", code, bpath + ".items", bloc + ["items"], label, "块的 items 必填且至少一条")
+            continue
+        for ii, item in enumerate(items):
+            ipath, iloc = f"{bpath}.items[{ii}]", bloc + ["items", ii]
+            if not isinstance(item, dict):
+                add("error", code, ipath, iloc, label, "条必须是对象")
+                continue
+            text = item.get("text")
+            if not isinstance(text, str) or not text.strip():
+                add("error", code, ipath + ".text", iloc + ["text"], label, "条的 text 必填")
+            il = item.get("label")
+            if il is not None and (not isinstance(il, str) or not il.strip()):
+                add("warn", code, ipath + ".label", iloc + ["label"], label, "条 label 为空时应省略该字段")
+            for key in item:
+                if key not in ("label", "text"):
+                    add("warn", code, f"{ipath}.{key}", iloc + [key], label, f"规范之外的字段「{key}」")
+        for key in block:
+            if key not in ("label", "items"):
+                add("warn", code, f"{bpath}.{key}", bloc + [key], label, f"规范之外的字段「{key}」")
 
 
 def validate_results(doc) -> tuple[list[dict], dict | None]:
@@ -317,9 +353,9 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
             if not isinstance(cond, str) or not cond.strip():
                 add("error", "M5", f"tags[{ti}].members[{mi}].condition", mplc + ["condition"], label + " · " + (mname or ""),
                     "condition 必填（精英 0·1 级即具备写「无」）")
-            if "remark" in mem and (not isinstance(mem.get("remark"), str) or not mem.get("remark").strip()):
-                add("warn", "M6", f"tags[{ti}].members[{mi}].remark", mplc + ["remark"], label + " · " + (mname or ""),
-                    "remark 为空时应省略该字段")
+            if "remark" in mem:
+                check_remark(mem.get("remark"), add, "M6", f"tags[{ti}].members[{mi}].remark",
+                             mplc + ["remark"], label + " · " + (mname or ""))
             subs = mem.get("subTags")
             leaves = {("", "", "")}
             if subs is not None:

@@ -65,6 +65,29 @@ ACCEPTED = {
     ("material_datas/tag_pipeline/player_tags/_merge_to_docs.py", "154"),
     # _brief.md 的示例行原本锚在一处空表格行上，改为锚 3 技能 Rank Ⅲ 行。
     ("material_datas/tag_pipeline/player_tags/_brief.md", "120"),
+    # 异客行的备注正文里曾内联两处证据（`异客/异客.md:208`／`:209`）——按
+    # docs/output-standard.md「证据只写进依据列」已从正文删除，同一组行号仍在依据列
+    # （`异客/异客.md:59,60,62,208,209,216,223`）里保留。
+    ("material_datas/tag_pipeline/player_tags/04-远程消耗.md", "208"),
+    ("material_datas/tag_pipeline/player_tags/04-远程消耗.md", "209"),
+    # 准入门槛读法收紧后移出的两行（死芒「对单 24 跳 <25」、洛洛「爬升均值 ≈244% <250%」）：
+    # 成员行与其依据引用一同离开文件；两行各在「边界与排除记录」留下带行号的条目
+    # （死芒 → :110、洛洛 → :15,101），故这三条 33／55／40 与 33 不再出现。
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "33"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "55"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "40"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "33"),
+    # 排除⑦ 撤销：H 节「攻击型短间隔连射」判例条目整体删除，随它提供的四条技能行号引用
+    # （能天使3／安洁莉娜2／可露希尔2／烛煌3）不再出现；这四条技能现已按新口径重判并各自入表。
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "128"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "115"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "108"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "132"),
+    # 同上两行：其行号在「边界与排除记录」的新条目里重新出现，但已不在原位置——按位置比对的审计
+    # 需要显式放行（引用本身仍指向同一处原文，未失效）。
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "110"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "15"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "101"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
