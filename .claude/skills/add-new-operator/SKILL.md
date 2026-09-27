@@ -29,7 +29,7 @@ Read the new operator's md in full (summons included), then screen all TAGs. Eff
 1. **机制词表粗筛** — list the operator's mechanisms in plain words (控制/位移/召唤/伤害类型/资源回复/生存/部署/攻击行为…), then open only the plausible TAG entries.
 2. **官方设定 TAG** — `docs/official-tags-members.md`: apply §1 判定铁律 (免疫≠持有、名称≠机制、数值减益不设 TAG…) and each §4 entry's definition + 备注. Summons/devices count as the owner; **mode-limited modules do NOT count for official TAGs** (they count for player TAGs only — see `CLAUDE.md`). Collect the TAGs whose 成员 line gains the new operator.
 3. **玩家体感 TAG** — `material_datas/tag_pipeline/player_tags/NN-*.md` (12 files): read each file's `## 评定标准` **and its 边界与排除记录** before deciding. Prepare the member row in the file's format:
-   - `| 干员 | 编号 | [子 TAG] | 条件 | 备注 | 依据 |` — 编号＝charId（取自 `char_ids.json`，缺列的老表按文件现状）；条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; `无` if available at E0·1), 备注 = processed info (numbers, durations, hidden mechanics, tactical use), 依据 = `文件:行号`.
+   - `| 干员 | 编号 | [子 TAG] | 条件 | 备注 | 依据 |` — 编号＝charId（取自 `char_ids.json`，缺列的老表按文件现状）；条件 = hard requirements (精英化/技能/专精/模组与等级/模式限定/目标限制; `无` if available at E0·1), 备注 = processed info (numbers, durations, hidden mechanics, tactical use), 依据 = `文件:行号` (module `※` hidden mechanics: `docs/module-hidden-mechanics.md`).
    - Judge the sub-TAGs too: 拐杖 子 TAG 列 / 次数对策 两张子表 / 吃拐一轮秒 聚爆·连射 / 保人 七个分部 等。
    - Follow `docs/player-tags-members.md` §0 通用评定标准: **多项特性只要各自符合评定标准都要写**（不因重叠/幅度小而省略）；**模组档位**——判定能力受模组增强时「条件」写模组名与等级、「备注」取该档位数值，多模组按**本 TAG** 选型（不同 TAG 各行可分别取不同模组）；**「（待验证）」只标攻速/间隔换算与倍率相乘类推算值**。玩家表格按实装时间倒序（12-阵容组合 按组合分组）。
    - 阵容组合 以**组合**为单位：新干员作为某组合的「提供者」入该组合子表，或新建组合子表——每个组合表前固定三条 bullet（`触发条件`／`组合整体机制`／`可用受益干员`），结果 JSON 据此生成组合条目（`docs/output-standard.md` §4.2）。

@@ -48,11 +48,25 @@ REVIEWED_TIERS: dict[tuple[str, str], str] = {
     ("吃拐一轮秒", "迷迭香"): "取 X模组1级——2／3 级只更新无视防御与固定攻击，段数不变，不取",
     ("插拔容错", "佩佩"): "取生息演算特限模组1级——「携带资源时再部署 −90%」在 1 级即完整；2／3 级只加余震、资源点、防御与宝箱视野，不改再部署，不取",
     ("插拔容错", "凯尔希"): "取集成战略特限模组2级——「不占用部署位」自 2 级起具备；3 级只把 Mon3tr 生命／攻击 +25%→+50% 并追加受治疗 +50%，不改 25 秒再部署与救急窗口，不取",
+    ("吃拐一轮秒", "蓝毒"): "取 Y模组1级——2／3 级只加固定攻击（+26／+30）与取整帧后同为 27 帧的攻速（+3／+4），并把天赋中毒数值 75→85／95（按解耦不折入倍率），对本 TAG 判据无新增帮助，不取",
     ("次数对策", "暮落"): "取 X模组1级：2／3 级只更新第二天赋「厄运宣告」的减抗概率与持续时间（作用于敌方法术抗性数值、默认木桩 0 抗无增量），段数与结算间隔不变",
     ("次数对策", "斩业星熊"): "X 模组 2／3 级只更新第二天赋坚忍的攻击力与门槛；二连击／三连击的段数与结算间隔不变，不取",
     ("插拔容错", "艾雅法拉"): "Y 模组 3 级只追加乱火的随机攻速 6~15，取最大值后技力与 3 连发不变、攻速不落在「初动为满」判据上，不取",
     ("插拔容错", "菲亚梅塔"): "集成战略特限模组 2／3 级只提高「陈述苦难」与「再度施放」并加攻速，不改变「倒下时立即重新部署」，不取",
     ("插拔容错", "麒麟R夜刀"): "Y 模组 3 级只把法术附加 23%→25%、术法充盈 35%→50%；X 线 2／3 级只提高第二天赋攻击力与固定攻击——两线的「首次撤退再部署为 0」「撤退返还 80%」自 1 级即具备，不取",
+    ("充电", "矩"): "X 模组 2／3 级只追加对生命值低于一半单位的 +8%／+12% 增伤（自身输出向），击杀者回复技力 1／2 点不变，不取",
+    ("充电", "罗小黑"): "Y 模组 2／3 级只追加对低生命值单位的 +8%／+12% 增伤（自身输出向），击倒回复的技力不变，不取",
+    ("充电", "嵯峨"): "X 模组 2／3 级只追加对低生命值单位的 +10%／+15% 增伤（自身输出向），回复技力不变，不取",
+    ("充电", "白铁"): "X 模组 2／3 级只提高白铁自身的技力回复速度（+0.1／+0.2 每秒、需周围 8 格有自身装置）——只回自身，本 TAG 判的是给他人回复，不取",
+    ("充电", "瑕光"): "Y 模组 2／3 级只使「其他卡西米尔干员部署时自身获得 2／3 点技力」——只回自身，不取",
+    ("充电", "铃兰"): "X 线 2／3 级的技力数值与无模组同为 +0.4 每秒，追加的是受光环【辅助】攻击力 +6%／+9%，不取",
+    ("充电", "陈"): "取 X模组2级：3 级追加「自身额外回复 1 点」只回自身，给他人数值不变，不取 3 级",
+    ("充电", "推进之王"): "取 Y模组2级：3 级只把自身回复 1→3 点，给予他人的 1 点不变，不取 3 级",
+    ("充电", "空弦"): "特限线取集成战略特限模组2级：3 级追加的增伤不改技力数值，不取 3 级",
+    ("充电", "异客"): "不取通用线——X 线仅自身 +0.25 每秒、Y 线仅自身增伤，只写特限线",
+    ("充电", "归溟幽灵鲨"): "不取集成战略特限线——该线下第二天赋为未更新版本、不回复技力，只写通用线",
+    ("初动增加", "新约能天使"): "X 模组 1 级只追加自身技力回复速度、2／3 级只更新第一天赋轰炸，均不改给予的 6 点技力，不取",
+    ("初动增加", "炎狱炎熔"): "X 模组 1 级只追加攻击范围、2／3 级只把首次部署的自身部分提到 33／35 点，对术师的 +4 不变，不取",
 }
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -71,7 +85,8 @@ POT_RE = re.compile(r"潜能(\d)")
 # 模组线：X／Y／Δ 中文线名（线与「模组」间可有空格）；模式限定模组按产物写法「集成战略特限模组 3级」等
 MODULE_RE = re.compile(
     r"([XYΔ])\s?模组\s?(\d)\s?级"
-    r"|(集成战略特限模组|生息演算特限模组|岁的界园志异特限模组|ISW-α|RA-α|SO-α|SO-β)[^\d；。]{0,8}?(\d)\s?级")
+    r"|(集成战略特限模组|生息演算特限模组|岁的界园志异特限模组|ISW-α|RA-α|SO-α|SO-β)"
+    r"(?:「([^」]+)」)?[^\d；。]{0,8}?(\d)\s?级")
 # 模式限定写法 → 语料里的模组线代号（stats.json 的 line）
 MODE_ALIAS = {"集成战略特限模组": "α", "生息演算特限模组": "α", "岁的界园志异特限模组": "α",
               "ISW-α": "α", "RA-α": "α", "SO-α": "α", "SO-β": "α"}
@@ -99,20 +114,39 @@ def entry_text(member: dict, skip_note: bool = False) -> str:
 
 
 def parse_config(text: str) -> dict:
-    """文本里的档位口径 → {stage, pot, mods:[(线,档)]}。"""
+    """文本里的档位口径 → {stage, pot, mods:[(线,档)]}。
+
+    模式限定模组：同一模式可能有多条线（如 岁的界园志异 的 α「特勤证章」与 β 等），
+    此时按产物写法点名的**模块名**（`…特限模组「新起点」3级`）解析到对应的线；未点名者按 MODE_ALIAS。
+    """
     elite = ELITE_RE.search(text)
     pot = POT_RE.search(text)
-    mods = [(zh, int(zt)) if zh else (MODE_ALIAS.get(code, code), int(ct))
-            for zh, zt, code, ct in MODULE_RE.findall(text)]
+    mods: list[tuple[str, int]] = []
+    for m in MODULE_RE.finditer(text):
+        if m.group(1):
+            mods.append((m.group(1), int(m.group(2))))
+        elif m.group(4):
+            mods.append((f"name:{m.group(4)}", int(m.group(5))))
+        else:
+            mods.append((MODE_ALIAS.get(m.group(3), m.group(3)), int(m.group(5))))
     return {"stage": STAGE_OF.get(elite.group(1), "e2") if elite else "e2",
             "pot": int(pot.group(1)) if pot else None,
             "mods": list(dict.fromkeys(mods))}
 
 
+def resolve_line(op: str, key: str) -> str:
+    """把 mods 的键解析成 stats.json 里的模组线代号；`name:…` 键按模块名解析。"""
+    if not key.startswith("name:"):
+        return key
+    want = key[5:]
+    rec = load_stats().get(op, {})
+    return next((m["line"] for m in rec.get("modules", []) if m.get("name") == want), None) or "α"
+
+
 def panel_of_config(op: str, cfg: dict) -> list[dict]:
     if not cfg["mods"]:
         return [panel_of(op, cfg["stage"], cfg["pot"])]
-    return [panel_of(op, cfg["stage"], cfg["pot"], line, tier) for line, tier in cfg["mods"]]
+    return [panel_of(op, cfg["stage"], cfg["pot"], resolve_line(op, line), tier) for line, tier in cfg["mods"]]
 
 
 def explain_panel(op: str, target: int) -> str:
@@ -151,9 +185,17 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
                 declared[str(block["label"])[:BLOCK_SHORT]] = cfg
     known: dict[int, list[str]] = {}
     for name, cfg in declared.items():
-        for r in panel_of_config(op, cfg):
-            if r["value"]:
-                known.setdefault(r["value"], []).append(f"{name}（{r['labeled'].split('＝')[0]}）")
+        cfgs = [cfg]
+        # 条件里的「精英0/1 可满足 ／ 精英2 最高档」多档写法：每个提到的精英档都算已申报口径，
+        # 否则只取第一个 精英N 会与成绩块的高档面板对不上（双档行的正常形态）。
+        if name == "条件":
+            tiers = sorted(set(ELITE_RE.findall(str(member.get("condition", "")))))
+            if len(tiers) > 1:
+                cfgs = [{**cfg, "stage": STAGE_OF.get(t, "e2")} for t in tiers]
+        for c2 in cfgs:
+            for r in panel_of_config(op, c2):
+                if r["value"]:
+                    known.setdefault(r["value"], []).append(f"{name}（{r['labeled'].split('＝')[0]}）")
     for p in sorted({int(n) for n in PANEL_RE.findall(entry_text(member, skip_note=True))}):
         if p not in known:
             out.append(f"{who}：面板 {p} 与任何已声明口径都对不上；能凑出它的是「{explain_panel(op, p)}」")
@@ -162,7 +204,7 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
     damage_entry = bool(PANEL_RE.search(text)) or bool(re.search(r"×\d+(?:\.\d+)?%", text))
     if damage_entry:
         for line, tier in declared["条件"]["mods"]:
-            mod = module_of(stats[op], line)
+            mod = module_of(stats[op], resolve_line(op, line))
             if not mod:
                 continue
             cur = next((t for t in mod["tiers"] if t["n"] == tier), None)
@@ -240,7 +282,7 @@ def main() -> int:
             print(f"\n■ 档位取舍已复核（REVIEWED_TIERS，按各 TAG 判据裁定不取更高档）：{len(reviewed)} 条")
             for x in reviewed:
                 print("  " + x.split("｜已复核：")[0] + "｜" + x.split("｜已复核：")[-1])
-    print(f"\n■ 因子覆盖提示：{len(cover)} 条（只列条目里从未出现的名字，供人判「计入／未计入＋理由」）")
+    print(f"\n■ 因子覆盖提示：{len(cover)} 条（只列条目里从未出现的名字；**仅供写手自查，不再是产物要求**——条目只写与本 TAG 相关的内容，未计入项不再逐条写入）")
     for x in cover[:40]:
         print("  " + x)
     if len(cover) > 40:

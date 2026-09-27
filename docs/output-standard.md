@@ -123,7 +123,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 |---|---|---|---|
 | operator | string | 是 | 干员名，指向 `operators[].name` |
 | condition | string | 是 | **硬性达成条件**（精英化／技能／专精／模组与等级／模式限定／目标限制）；精英 0·1 级即具备者写 `"无"`；`；` 分隔各条要求、`／` 表「或」 |
-| remark | array | 否 | **信息加工后的备注**（数值、持续时间、隐藏机制、特殊用法、战术帮助），块数组，结构见下；无内容时省略该字段 |
+| remark | array | 否 | **信息加工后的备注**（数值、持续时间、隐藏机制、特殊用法、战术帮助），块数组，结构见下；无内容时省略该字段（模组隐藏机制查 `docs/module-hidden-mechanics.md`） |
 | subTags | array | 否 | 子 TAG／分组（支持两级嵌套，可被筛选，多选取交集），元素为 `{group, value, detail?}`，见 4.3；无分组时省略 |
 | prtsUrl | string | 是 | 该 TAG 下点击卡片的 PRTS 跳转地址，见 §5 |
 

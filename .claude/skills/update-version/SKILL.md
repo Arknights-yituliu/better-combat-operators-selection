@@ -28,7 +28,7 @@ For each new module on an existing operator:
 
 1. Locate **every** row of that operator across `player_tags/NN-*.md` (12 files) and `official_tags/[A-I]-*.md`.
 2. Judge per row whether the module **enhances the capability that row judges**:
-   - Yes → 条件 adds the module name + level, 备注 switches to that tier's values (recompute derived numbers; keep the「（待验证）」rule for 攻速/间隔换算与倍率相乘类推算值), 依据 gains the module's `文件:行号`.
+   - Yes → 条件 adds the module name + level, 备注 switches to that tier's values (recompute derived numbers; keep the「（待验证）」rule for 攻速/间隔换算与倍率相乘类推算值), 依据 gains the module's `文件:行号`. The module's `※` hidden-mechanic lines are collected in `docs/module-hidden-mechanics.md` — check it before judging a tier's effect (thresholds like 距离增伤的门槛格数 live only there).
    - Several modules → each TAG row picks the module serving **its own** capability (worked precedent: 温蒂 — 10-大力推拉 uses PUS-Y 推力档, 07-充电 uses PUS-X 技力档; 空弦 — 02 uses MAR-X, 05 uses MAR-Y, 07 uses X2/X3 + ISW-α, 08 uses ISW-α). Two modules enhancing the same capability → list both routes (precedent: 迷迭香「X模组1级 或 ISW-α模组1级」).
    - Irrelevant modules stay unmentioned; vague phrasing like「X模组更佳／可选」must be replaced by explicit tiers + values (or dropped if irrelevant).
 3. Official rows follow the official rules (只记原文；**模式限定模组不计**；条件写模组名+等级、备注引原文档位).

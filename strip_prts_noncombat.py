@@ -57,6 +57,31 @@ REF_EXCLUDE = {"docs/player-tags-members.md"}
 # points at. Each is (source file, HEAD-side atom). --audit reports anything not
 # listed here, so adding to this set is the deliberate act of accepting a deviation.
 ACCEPTED = {
+    # 根目录《待裁定.md》每轮整体重写（其条目随裁定折入后移除），旧版里引用过的 11-阻挡数5 例证（`珊比.md:33`）随重写消失——属流程性的整文件替换。
+    ("待裁定.md", "33"),
+    # 11-阻挡数5.md 三行（珊比／酒神／余）的备注原内联了证据，按「证据只写进依据列」
+    # 移到依据列后改用全路径写法（`珊比/珊比.md:…`），原短路径写法（`珊比.md:121`）随之消失——
+    # 属有意为之的写法统一，非漏改。
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "121"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "122"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "120"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "121"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "122"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "21"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "26"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "28"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "101"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "102"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "103"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "104"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "105"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "106"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "107"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "108"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "109"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "110"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "55"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "56"),
     # 连射「可及距离 ≥3 格」门槛的成员调整：以下 9 行（祐天寺若麦、聆音、维娜·维多利亚、
     # 百炼嘉维尔、归溟幽灵鲨、龙舌兰、山、瑕光、傀影）由主进程移出 03-吃拐一轮秒.md，
     # 其被移除行所带的指针随行消失——属有意为之的成员变动，非漏改（见该文件「边界与排除记录」H）。
@@ -153,6 +178,25 @@ ACCEPTED = {
     ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "110"),
     ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "15"),
     ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "101"),
+    # 上拐门槛（台账「吃拐一轮秒：上拐单位数 ≤1」）：电弧、伺夜 两行因「召唤物按自身攻击力结算、
+    # 须分别上拐」移出 03-吃拐一轮秒.md，其被移除行所带的指针随行消失——属有意为之的成员变动。
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "61"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "238"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "11"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "23"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "54"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "66"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "133"),
+    ("material_datas/tag_pipeline/player_tags/03-吃拐一轮秒.md", "40"),
+    # 11-阻挡数5.md 年行：原备注内联的 `年.md:…` 证据随重扫改写而删除（新备注不再内联证据，
+    # 依据列保留指向 `年/年.md` 的引用）——属有意为之的写法统一，非漏改。
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "172"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "174"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "178"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "180"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "181"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "111"),
+    ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "112"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.

@@ -39,13 +39,15 @@ Read only what the task needs; the two member docs and the two results JSONs are
 
 **手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `player_tags/_reverify/rules.md`）、**`docs/rulings.md`（裁定台账：开发者对判断类问题的裁定逐条留痕——裁定／理由／适用范围／折入位置；判断类问题先查它，别再问第二遍）**、`docs/term-map.md`（代称映射表：一切自创代称／缩写／自编号的含义与查阅位置，改动或新增代称时同步）、`material_datas/tag_pipeline/official_tags/[A-I]-*.md`（官方 TAG 定义与成员，GUI 写回可改）、`material_datas/tag_pipeline/player_tags/NN-*.md`（玩家 TAG 判定＋证据；`_brief.md` 为作业规范）、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`。
 
-**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `generate_results.py`；`results/combat_glossary.json` ← `glossary_to_json.py`；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
+**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `generate_results.py`；`results/combat_glossary.json` ← `glossary_to_json.py`；`docs/module-hidden-mechanics.md`（各模组「※」隐藏机制汇编）← `module_notes.py --emit`（源＝`docs/temp.txt`）；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
 
 **属性与数值工具（非生成链路，按需运行）**: `prts_stats.py`（PRTS 语料 → `stats.json`，并提供 `panel_of()` 面板复算）与 `verify_numbers.py`（对着 `stats.json` 校准产物里的面板／档位／恒等式／内部代号／因子覆盖）。两者与 `stats.json` 一样是**生成物**：改 `stats.json` 要改爬虫侧或重跑 `prts_stats.py`，不手改。
 
 **剥离工具（非生成链路，按需运行）**: `strip_prts_noncombat.py` —— 剥离逻辑本体在 `crawl_prts.py` 的 `plan_strip()`／`render_strip()`／`strip_noncombat()`，本脚本只 import 之，用于回填历史语料与审计。`--dry-run` 先看改动与冲突；`--fix-stale` 补正审计发现的失效引用。删除行会平移其后行号，任何再次剥离都必须同时跑改写与审计。
 
 **回填工具（非生成链路，按需运行）**: `_apply_batch.py` —— 把 `_out/<批名>.json`（`tag-rewrite` 子代理的产出，键＝干员名，值＝`{condition, remark, why}`）写回分文件：**按表头定位列、以 HEAD 重建整行**，只替换「条件」「备注」两格，其余列原样取 HEAD（既防写错列，也能修复写错列的历史行）；行首机器协议前缀（插拔容错的 `救急路径：`、充电的 `子 TAG：`）用 `--keep-prefix` 保留，否则整批丢子 TAG。`_out/` 为临时批次目录（已 gitignore）。
+
+**隐藏机制工具（非生成链路，按需运行）**: `module_notes.py` —— 解析 `docs/temp.txt`（PRTS《模组》页表格快照，开发者收集）里各模组**效果格的「※」条文**，汇编成 `docs/module-hidden-mechanics.md`（按干员／按类别索引；跨模组重复的通用注释单列）。术语弹窗里的 glossary 释义不计入本档（它们归 `docs/glossary.md`）。`--list` 只看统计；`--emit` 写出。
 
 `--audit` 报三类，判据是**与 HEAD 对比**——取每条引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值：
 - **失效**（应为 0）：工作区没带上应有的值，即漏改；
@@ -117,6 +119,9 @@ Read only what the task needs; the two member docs and the two results JSONs are
 # Regenerate the combat-term glossary JSON from docs/glossary.md (mirror-checked inside)
 .venv/Scripts/python.exe -X utf8 glossary_to_json.py
 
+# 解析 docs/temp.txt（PRTS《模组》页快照）→ 模组隐藏机制汇编 docs/module-hidden-mechanics.md
+.venv/Scripts/python.exe -X utf8 module_notes.py            # --list 只看统计；--emit 写出
+
 # Refresh the PRTS《特殊机制》snapshot + normalized entries (network; throttled)
 .venv/Scripts/python.exe -X utf8 crawl_special_mechanics.py  # --emit / --apply（追加术语章节）/ --input
 
@@ -134,6 +139,7 @@ Read only what the task needs; the two member docs and the two results JSONs are
 - **条件 vs 备注**: 条件 = hard requirements, 备注 = processed info (numbers, durations, hidden mechanics, tactical use) — the full rules, 反例 and 正例 live in `docs/concept.md`「结果展示」; follow that instead of restating it here. 两者的**排布规范**同在该文件：「条件分条」（`；` 只切并列要求，「或」合并成一条、支内用 `／`）与「备注分块」（`｜` 分块、`；` 分条、两层都用 `标签：正文`；块序 成绩→能力→计算→说明；`★` 分类标记与 `备注：` 类前缀禁用）。源单元格里用 `｜` 写、生成器解析成结果 JSON 的块数组；不符规范的行由 `generate_results.py --check` 的文本 lint 逐条列出，改动过的行另跑 `audit_text_migration.py`（数字守恒／依据不丢）。
 - **数值取自机读层、不手抄**: 面板（满信赖＋最高精英满级＋有效潜能最高档＋条件点名模组档位固定属性）、潜能与模组各档固定属性的**唯一取数处是** `material_datas/tag_pipeline/stats.json`（`prts_stats.py` 从 PRTS 语料抽取，`panel_of()` 给面板与组成式）；产物里的每个 `面板NNN` 由 `verify_numbers.py` 回头校准。模组／潜能取对本 TAG 有帮助的最高档并写进条件（**「有帮助」按绝对贡献判**——不得因更高档会拉低比值／稀释均值而改取低档；多条通用模组之间平权、取成绩更高者；持**特限证章**者通用线与特限线**分别计算**、UI 分别展示且特限线优先，无者默认模组增伤条件均满足、取更高者并把条件写进条件，见 `docs/rulings.md`）。**计算规则只作用于玩家体感 TAG**——官方设定 TAG 不涉及计算部分；成绩只允许「精英0/1 可满足的最低档＋最高档」与「特殊机制多情形」两种并列，其余取满配档；能力块必须自足（写清该能力本身）；未计入项逐条写进 `说明`；**内部代号（范围代号、`S1/S2/S3`、`表 2A`、`路径⑤`、英文模组码）不入产物**。演算默认敌人为**纯木桩**（0 防御／0 法抗／0 闪避免伤／无减伤）：作用于敌方防/抗数值的减益与穿透不计入，承伤倍率型增伤（脆弱、通缉）照计。
 - **No dropped capabilities**: an operator's entry lists **every** capability meeting that TAG's 评定标准 — multiple qualifying features are all written (条件 covers each hard requirement, 备注 itemizes them); never omit one because it overlaps, is smaller, or a stronger one is already written.
+- **And nothing unrelated**: an entry writes only what belongs to that TAG's 评定对象 — other abilities (特性／别的天赋／别的技能／未取用的模组线) and their 「未计入」 notes are not written; what is actually folded into the calculation (面板组成式、算式) is kept. See `docs/rulings.md`「条目只写与本 TAG 相关的内容」and `docs/concept.md`「备注分块」.
 - **Module tiers (模组档位)**: when a module enhances the capability a TAG judges, 条件 names the module + level (e.g. `Y模组3级`) and 备注 uses that tier's values; pick the highest tier whose **absolute** contribution to this TAG's judged capability is greatest — never a lower tier just because the higher one dilutes a ratio or margin. Multiple **通用** module lines are equal-ranked: take the higher-scoring one. Operators with a **特限证章** (mode-limited module) get **both** the universal line and the 特限 line computed and presented (特限 first, per `docs/ui-render-rules.md`); everyone else assumes every module's boost condition holds and takes the higher line, writing the enabling condition into 条件. Different TAG rows may cite different modules. No vague "X模组更佳/可选" phrasing; modules irrelevant to the TAG are not mentioned. **Calculation rules apply to player TAGs only — official TAGs carry no computation.**
 - **Summons/devices count as the owner's capability.** **Mode-limited modules (ISW-α/RA-α etc.) count** for player TAGs — state the mode restriction in 条件 and note it in 备注.
 - Direction matters (to allies vs self vs enemies); one operator may belong to **multiple TAGs**; player TAGs may have **sub-TAGs** (implementation/type/scope distinctions).

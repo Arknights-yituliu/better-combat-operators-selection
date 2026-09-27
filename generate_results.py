@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v5"
+VERSION = "v6"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")

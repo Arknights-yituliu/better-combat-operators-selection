@@ -72,6 +72,7 @@
 | **剥离 / `strip_noncombat`** | 移除 PRTS 语料中与作战无关的内容：模组剧情（PRTS 每段发两份——`全文阅读` 与 `关闭全文`，后者与前者逐字节相同）、模组解锁任务、解锁与升级材料、`精英化材料`／`技能升级材料`／`后勤技能` 三节。实现为 `crawl_prts.py` 的 `plan_strip()`＋`render_strip()`，爬虫每次写盘前调用；历史语料用 `strip_prts_noncombat.py` 回填 | 「剥离后行号整体平移」 | `crawl_prts.py`；`strip_prts_noncombat.py` |
 | **审计 / `--audit`** | 取每条 `文件:行号` 引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值。报三类：失效（漏改，须 0）／未解析（解析不到但文件名属 PRTS 语料，须 0）／指向已删行（需人工过一遍原文）。判据必须是这个——「新旧行号处文本一致」对正确与漏改的引用同时成立，只能用来越界检查 | 「审计 0 失效 0 未解析」 | `strip_prts_noncombat.py --audit`；`--fix-stale` 补正 |
 | **`**模组等级N**`** | 剥离后语料里标记模组档位的行（N＝1／2／3），取代原 `模组等级_N.png` 图标行；模组数值与效果行的档位归属据此判读 | 「`**模组等级3**` 生命 +200」 | 各干员 PRTS 页 `## 模组` |
+| **隐藏机制汇编 / `module-hidden-mechanics.md`** | `docs/module-hidden-mechanics.md`：从 `docs/temp.txt`（PRTS《模组》页表格快照）解析出的各模组效果格「※」条文（含按干员、按类别两套索引；跨模组重复的通用注释单列一节） | 「查 提丰 的模组隐藏机制」 | 由 `module_notes.py --emit` 生成（勿手改） |
 | **分文件 / 合并文档 / 结果 JSON** | 分文件＝各 `player_tags/NN-*.md`；合并文档＝`docs/player-tags-members.md`；结果 JSON＝`results/operator-tags.json`（最终产物） | 「改分文件→重跑合并与生成」 | 链路见 CLAUDE.md「数据流」 |
 | **_brief.md** | `player_tags/_brief.md`：玩家 TAG 分文件的**作业规范**（共享评定标准） | 「依据 `_brief.md` §2.3」 | `material_datas/tag_pipeline/player_tags/_brief.md` |
 | **_recalc_brief.md** | 本轮整数帧重算的**小组代理作业说明**（临时件） | 「按 brief 改写 steps」 | `_reverify/parts/_recalc_brief.md` |
