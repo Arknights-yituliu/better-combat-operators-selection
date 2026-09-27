@@ -197,6 +197,44 @@ ACCEPTED = {
     ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "181"),
     ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "111"),
     ("material_datas/tag_pipeline/player_tags/11-阻挡数5.md", "112"),
+    # 「模组代号进产物」全库补入：官方 A-控制异常-3.md 塑心行的键里插入了 `（RIT-Y）`，
+    # 引用本身（`塑心/塑心.md:181`）未变、仍指向同一处原文——属有意为之的写法变更，非漏改。
+    ("material_datas/tag_pipeline/official_tags/A-控制异常-3.md", "181"),# 根目录《待裁定.md》每轮整体重写（条目随裁定折入后移除）：旧版自带的  等
+    # 引用随重写消失——属流程性的整文件替换，非漏改（与上方同类条目一致）。
+    ("待裁定.md", "20"),
+    ("待裁定.md", "23"),
+    ("待裁定.md", "38"),
+    ("待裁定.md", "58"),
+    ("待裁定.md", "74"),
+    ("待裁定.md", "109"),
+    ("待裁定.md", "110"),
+    ("待裁定.md", "111"),
+    ("待裁定.md", "112"),
+    ("待裁定.md", "130"),
+    ("待裁定.md", "133"),
+    ("待裁定.md", "175"),
+    ("待裁定.md", "176"),
+    ("待裁定.md", "177"),
+    ("待裁定.md", "178"),
+    ("待裁定.md", "179"),
+    ("待裁定.md", "180"),
+    ("待裁定.md", "181"),
+    ("待裁定.md", "182"),
+    ("待裁定.md", "183"),
+    ("待裁定.md", "184"),
+    ("待裁定.md", "185"),
+    ("待裁定.md", "186"),
+    ("待裁定.md", "187"),
+    ("待裁定.md", "188"),
+    ("待裁定.md", "189"),
+    ("待裁定.md", "190"),
+    ("待裁定.md", "191"),
+    ("待裁定.md", "192"),
+    ("待裁定.md", "193"),
+    ("待裁定.md", "194"),
+    ("待裁定.md", "195"),
+    ("待裁定.md", "196"),
+    ("待裁定.md", "197"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
@@ -204,7 +242,7 @@ ACCEPTED = {
 # 保护目标（冻结状态）); resolution below trims any prose that gets swept in.
 # `:` is excluded from the path so a match cannot swallow a preceding citation in
 # the same whitespace-free run (`…（星熊.md:173/179、可颂.md:124/130`).
-CITE_RE = re.compile(r'([^\s|；;:\[\]"]+\.md):(\d+(?:[，,、/]\d+|\s*[-–]\s*\d+)*)')
+CITE_RE = re.compile(r'([^\s|；;：:\[\]"]+\.md):(\d+(?:[，,、/]\d+|\s*[-–]\s*\d+)*)')
 RANGE_RE = re.compile(r"^(\d+)\s*([-–])\s*(\d+)$")
 SPLIT_RE = re.compile(r"([，,、/])")
 # The one deliberate content rewrite: a module level icon line becomes this.

@@ -298,7 +298,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                 ids[tid] = ti
             if src == "official" and not re.fullmatch(r"[A-I]_[a-z0-9_]+", tid):
                 add("error", "G3", f"tags[{ti}].id", plc + ["id"], label, f"官方 id 形态应为 A_x 之类（当前 {tid!r}）")
-            if src == "player" and not re.fullmatch(r"P(0[1-9]|1[0-2])", tid):
+            if src == "player" and not re.fullmatch(r"P(0[1-9]|1[0-3])", tid):
                 add("error", "G3", f"tags[{ti}].id", plc + ["id"], label, f"玩家 id 应为 P01–P12（当前 {tid!r}）")
         else:
             add("error", "G3", f"tags[{ti}].id", plc + ["id"], label, f"id 应为字符串（当前 {tid!r}）")

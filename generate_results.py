@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v6"
+VERSION = "v7"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -95,6 +95,22 @@ CLOSERS = {"）", ")", "」", "】"}    # 闭括号宽窄混用（`（…）`）
 # 块标签只能是能力名或保留块类，绝不会以引号开头（`「…」：` 是引文正文，不是标签）
 BLOCK_HINT_RE = re.compile(r"^(?:成绩|计算|说明)[：\s]")
 ABILITY_HEAD_RE = re.compile(r"^(?:第[一二三]天赋|[0-9一二三]技能|召唤物|装置|特性|模组)")
+
+
+def _strip_brackets(s: str) -> str:
+    """剥掉**配对**括号／引号内的内容（支持嵌套，如 `（Y模组3级（PUM-Y），潜能5）`）。
+
+    块标签的句读判据只看括号外的部分——用正则会漏掉嵌套写法，导致标签被静默退回正文。
+    """
+    out, depth = [], 0
+    for ch in s:
+        if ch in "（(「【":
+            depth += 1
+        elif ch in "）)」】":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            out.append(ch)
+    return "".join(out)
 
 
 def block_hint(chunk: str) -> bool:
@@ -152,7 +168,7 @@ def split_block_label(chunk: str) -> tuple[str, str]:
     head = chunk[:i].strip()
     # 句读判据只看括号外的部分：`第二天赋「…」（精英2，潜能5）` 里的逗号是限定语的一部分，
     # 而整句引文（`「…，…」：…`）仍会被挡住。
-    bare = re.sub(r"[（(][^）)]*[）)]|[「][^」]*[」]", "", head)
+    bare = _strip_brackets(head)
     if not head or head.startswith("「") or (set(bare) & BLOCK_LABEL_BAD):
         return "", chunk
     free = any(head == k or head.startswith(k + " ") for k in BLOCK_LABEL_FREE)
@@ -231,7 +247,7 @@ def lint_text(tag: str, op: str, cond: str, remark: str) -> None:
         if not label and block_hint(chunk):
             rep(f"块首疑似标签但未被识别：{chunk[:24]}…")
         if label and not any(label == k or label.startswith(k + " ") for k in BLOCK_LABEL_FREE) \
-                and len(label) > 30:
+                and len(label) > BLOCK_LABEL_MAX:
             rep(f"块标签偏长（{len(label)} 字）：{label[:20]}…")
         segs = split_top(body, ITEM_SEP)
         if any(not s.strip() for s in segs[1:-1]):
@@ -606,6 +622,10 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
             subs.append(item)
 
     if tag_no == "02":
+        for v in re.split(r"[、＋+]", h3):
+            if v.strip():
+                add("子 TAG", v.strip())
+    elif tag_no == "13":          # 高档控制：子表标题即子 TAG（大力推拉／阻挡数5／长效控制）
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())

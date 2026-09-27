@@ -194,6 +194,16 @@ def module_of(rec: dict, line: str) -> dict | None:
     return None
 
 
+MODE_PREFIX = {"ISW": "集成战略", "RA": "生息演算", "SO": "岁的界园志异"}
+
+
+def module_label(mod: dict, tier: int) -> str:
+    """模组在产物里的写法（`docs/rulings.md`「模组代号进产物」）：`X模组3级（HOK-X）`／`集成战略特限模组3级（ISW-α）`。"""
+    code, line = mod.get("code", ""), mod.get("line", "")
+    name = f"{line}模组" if line in ("X", "Y", "Δ") else f"{MODE_PREFIX.get(code.split('-')[0], '')}特限模组"
+    return f"{name}{tier}级（{code}）" if code else f"{name}{tier}级"
+
+
 def module_tier(mod: dict | None, tier: int | None) -> dict | None:
     if not mod or not tier:
         return None
@@ -234,7 +244,7 @@ def panel_of(op: str, stage: str = "e2", pot: int | None = None,
         elif t is None:
             missing.append(f"{op} 缺模组 {module} {tier} 级")
         elif t["atk"]:
-            parts.append({"label": f"{mod['line']}模组{tier}级攻击", "value": t["atk"]})
+            parts.append({"label": f"{module_label(mod, tier)}攻击", "value": t["atk"]})
         else:
             missing.append(f"{op} 模组 {mod['code']}{tier} 级无攻击加成")
     values = [p["value"] for p in parts]

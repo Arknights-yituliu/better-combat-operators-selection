@@ -84,9 +84,10 @@ ELITE_RE = re.compile(r"精英([012])")
 POT_RE = re.compile(r"潜能(\d)")
 # 模组线：X／Y／Δ 中文线名（线与「模组」间可有空格）；模式限定模组按产物写法「集成战略特限模组 3级」等
 MODULE_RE = re.compile(
-    r"([XYΔ])\s?模组\s?(\d)\s?级"
+    r"([XYΔ])\s?模组\s?(\d)\s?级(?:（([A-Z]{2,5}-[A-Za-zΔαβ])）)?"
     r"|(集成战略特限模组|生息演算特限模组|岁的界园志异特限模组|ISW-α|RA-α|SO-α|SO-β)"
-    r"(?:「([^」]+)」)?[^\d；。]{0,8}?(\d)\s?级")
+    r"(?:「([^」]+)」)?[^\d；。]{0,8}?(\d)\s?级(?:（([A-Z]{2,5}-[A-Za-zΔαβ])）)?"
+    r"|([A-Z]{2,5}-[A-Za-zΔαβ])\s?模组\s?(\d)\s?级")
 # 模式限定写法 → 语料里的模组线代号（stats.json 的 line）
 MODE_ALIAS = {"集成战略特限模组": "α", "生息演算特限模组": "α", "岁的界园志异特限模组": "α",
               "ISW-α": "α", "RA-α": "α", "SO-α": "α", "SO-β": "α"}
@@ -116,26 +117,29 @@ def entry_text(member: dict, skip_note: bool = False) -> str:
 def parse_config(text: str) -> dict:
     """文本里的档位口径 → {stage, pot, mods:[(线,档)]}。
 
-    模式限定模组：同一模式可能有多条线（如 岁的界园志异 的 α「特勤证章」与 β 等），
-    此时按产物写法点名的**模块名**（`…特限模组「新起点」3级`）解析到对应的线；未点名者按 MODE_ALIAS。
+    模组写法（`docs/rulings.md`「模组代号进产物」）：`X模组3级（HOK-X）`／
+    `集成战略特限模组3级（ISW-α）`／`HOK-X 模组1级`。**带了代号就用代号**（同一模式可能有多条线，
+    如 岁的界园志异 的 α「特勤证章」与 β「新起点」，只有完整代号唯一）；没带代号时按模块名
+    （`…特限模组「新起点」3级`）或 MODE_ALIAS 兜底。
     """
     elite = ELITE_RE.search(text)
     pot = POT_RE.search(text)
     mods: list[tuple[str, int]] = []
     for m in MODULE_RE.finditer(text):
         if m.group(1):
-            mods.append((m.group(1), int(m.group(2))))
+            mods.append((m.group(3) or m.group(1), int(m.group(2))))
         elif m.group(4):
-            mods.append((f"name:{m.group(4)}", int(m.group(5))))
-        else:
-            mods.append((MODE_ALIAS.get(m.group(3), m.group(3)), int(m.group(5))))
+            key = m.group(7) or (f"name:{m.group(5)}" if m.group(5) else MODE_ALIAS.get(m.group(4), m.group(4)))
+            mods.append((key, int(m.group(6))))
+        elif m.group(8):
+            mods.append((m.group(8), int(m.group(9))))
     return {"stage": STAGE_OF.get(elite.group(1), "e2") if elite else "e2",
             "pot": int(pot.group(1)) if pot else None,
             "mods": list(dict.fromkeys(mods))}
 
 
 def resolve_line(op: str, key: str) -> str:
-    """把 mods 的键解析成 stats.json 里的模组线代号；`name:…` 键按模块名解析。"""
+    """把 mods 的键解析成 stats.json 里的模组线（`module_of` 同时认线名与完整代号）；`name:…` 键按模块名解析。"""
     if not key.startswith("name:"):
         return key
     want = key[5:]
@@ -176,13 +180,22 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
     if op not in stats:
         return out
 
-    # ① 面板不符：条件 + 每个成绩块标签各是一套口径，逐个比对
+    # ① 面板不符：条件 +「计算」块的面板组成式（逐情形一条，主来源）+ 带档位的成绩块标签（兼容）各是一套口径
     declared = {"条件": parse_config(str(member.get("condition", "")))}
     for block in member.get("remark", []):
-        if isinstance(block, dict) and block.get("label"):
-            cfg = parse_config(block["label"])
-            if cfg["pot"] or cfg["mods"] or ELITE_RE.search(block["label"]):
-                declared[str(block["label"])[:BLOCK_SHORT]] = cfg
+        if not isinstance(block, dict):
+            continue
+        label = str(block.get("label", ""))
+        if label.startswith("计算"):
+            for item in block.get("items", []):
+                txt = str(item.get("label", "") or "") + str(item.get("text", "") or "")
+                if PANEL_RE.search(txt):
+                    declared[f"计算·{txt[:BLOCK_SHORT]}"] = parse_config(txt)
+            continue
+        if label:
+            cfg = parse_config(label)
+            if cfg["pot"] or cfg["mods"] or ELITE_RE.search(label):
+                declared[label[:BLOCK_SHORT]] = cfg
     known: dict[int, list[str]] = {}
     for name, cfg in declared.items():
         cfgs = [cfg]

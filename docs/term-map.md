@@ -15,7 +15,10 @@
 | **S1–S11** | `reverify.py lint` 的**巡检编号**：S1 三处同值、S2 片段含值、S3 旧值残留、S4 跨区块陈旧、S5 审计↔产物、S6 并列值需 pending_rule、S7 标记归零、S8 回填往返、S9 批注与过程语残留、S10 自立文本（互引扫描）、S11 整数帧合规 | 「lint 缺陷 0（S1–S11 全绿）」 | `reverify.py` 的 `lint()`；报告 `_reverify/reports/lint.md` |
 | **V′** | **自立文本判据**：产出链（成员行条件/备注、替换对、notes/potential_note）不得出现条目 id、「见/另见/同上/同 -N/同格 -N/同干员另一条」类指称、分文件名；重复内容各写全 | 「按 V′ 清改 notes」 | `_reverify/rules.md` §3.1 红线 6；`docs/calc-rules.md` §4.6；`docs/concept.md`「备注撰写」 |
 | **G1–G6** | 「（待验证）」复算的**分组号**：按分文件批次把 115 条分六组（G1＝01 决战歼灭、G2＝02 次数对策、G3/G4/G5＝03 吃拐一轮秒三段、G6＝05 插拔容错） | 「G2 组产物」「六组代理并行」 | `_reverify/slices/G*.jsonl`（输入）、`_reverify/parts/G*.jsonl`（产物）；分组清单见 `_reverify/reports/extract.md` |
-| **P01–P12** | **TAG 代号**（分文件编号）：P01 决战歼灭、P02 次数对策、P03 吃拐一轮秒、P04 远程消耗、P05 插拔容错、P06 初动增加、P07 充电、P08 拐杖、P09 保人、P10 大力推拉、P11 阻挡数5、P12 阵容组合 | 条目 id 形如 `P03-天空盒-1`（P03 TAG／干员／该干员在该 TAG 下的第 N 处） | 各 `material_datas/tag_pipeline/player_tags/NN-*.md`；TAG 定义 `docs/player-tags-specify.md` |
+| **P01–P13** | **TAG 代号**（分文件编号）：P01 决战歼灭、P02 次数对策、P03 吃拐一轮秒、P04 远程消耗、P05 插拔容错、P06 初动增加、P07 充电、P08 拐杖、P09 保人、**P13 高档控制**、P12 阵容组合（原 P10 大力推拉、P11 阻挡数5 已降为 P13 的子 TAG） | 条目 id 形如 `P03-天空盒-1`（P03 TAG／干员／该干员在该 TAG 下的第 N 处） | 各 `material_datas/tag_pipeline/player_tags/NN-*.md`；TAG 定义 `docs/player-tags-specify.md` |
+| **高档控制 / 长效控制** | P13 的父 TAG 名／其三子 TAG 之一：高档控制下辖「大力推拉」「阻挡数5」「**长效控制**」；**长效控制**判「**等效剥夺时长**」——控制效果真正阻止敌人行动的时间，≥15 秒即纳入（需折算时按木桩敌人攻击间隔 2.5 秒、不计其无冷却的首击） | 「珊比 3技能 传送带 60 秒 → 长效控制」 | `13-高档控制.md`；`docs/rulings.md`「子 TAG 群「高档控制」」 |
+| **模组代号 / 线名** | **模组代号**＝游戏内模组代码（`HOK-X`／`SIE-Y`／`CCR-Δ`／`ISW-α`／`RA-α`／`SO-α`／`SO-β`），即 `stats.json` 的 `modules[].code`；**线名**＝其末段字母（`X`／`Y`／`Δ`／`α`／`β`）。产物统一写「中文线名（代号）」 | 「Δ模组3级（CCR-Δ）」「集成战略特限模组3级（ISW-α）」 | `material_datas/tag_pipeline/stats.json`；`docs/concept.md`「内部代号」；`docs/rulings.md`「模组代号进产物」 |
+| **打单溅射 / 打多溅射 / 真群攻** | 三种输出形态的**命名区分**（不含门槛）：**打单溅射**＝一次只攻击单个目标、但具溅射能力（如 艾丽妮3）；**打多溅射**＝同时攻击 >1 个目标且带溅射（如 维什戴尔2）；**真群攻**＝同时命中攻击范围内所有敌人（如 圣聆初雪）。前两者属「非真群攻」，演算场景按「单木桩」 | 「艾丽妮属打单溅射」 | `docs/rulings.md`「单木桩场景与随机索敌」；`01-决战歼灭.md` 的「打一溅射型」门槛（另条） |
 | **A–I 类** | **官方设定 TAG** 的模块字母（`A-*`…`I-*`）：分模块的官方 TAG 定义与成员文件 | 「D-快速再部署」 | `material_datas/tag_pipeline/official_tags/[A-I]-*.md`；合并稿 `docs/official-tags-members.md` |
 
 ## 二、计算符号与游戏缩写
