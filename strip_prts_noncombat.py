@@ -235,6 +235,23 @@ ACCEPTED = {
     ("待裁定.md", "195"),
     ("待裁定.md", "196"),
     ("待裁定.md", "197"),
+    # 01-决战歼灭.md 号角「不可对空」排除行、02-次数对策.md 复奏/提丰「多段伤害」边界行：
+    # 本轮在这三行的引用**紧前方**改写了文字（号角按「过载只覆盖后半程」订正窗口计法、
+    # 复奏/提丰按「该动作的攻击间隔÷单动作段数≤0.667」补注）——引用本身（`号角/号角.md:17,96,…`、
+    # `复奏/复奏.md:94,105`、`提丰/提丰.md:132,134`）未动、仍指向同一处原文。审计的键分词会把引用前的
+    # 散文并入键名，键随文字改动而变、致误报「失效」——与下方「模组代号进产物」条目同类（引用未失效的显式放行）。
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "17"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "33"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "40"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "57"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "96"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "132"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "155"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "181"),
+    ("material_datas/tag_pipeline/player_tags/01-决战歼灭.md", "195"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "94"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "105"),
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "134"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.

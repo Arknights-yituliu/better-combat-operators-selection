@@ -8,7 +8,7 @@
 - 本项目为明日方舟干员筛选系统生产数据。已有两类 TAG：
   - **官方定义类 TAG**：`docs/official-tags-members.md`（TAG 数与关系数以该文档 §3 为准），机读字典在 `material_datas/tag_pipeline/`（`catalog.json`＝脚本唯一读取的字典；`merged.json`／`final_lists.tsv` 由 `official_tags/_merge_official_to_docs.py --sync-dicts` 同步；`deterministic.json` 为基础属性快照；维护层 `official_tags/`）。
   - **玩家体感类 TAG**：`docs/player-tags-specify.md`（开发者拟定的正式玩家 TAG，即本次任务的定义来源），名单结果见 `docs/player-tags-members.md`；线索来源＝PRTS 原文复核。
-- 玩家 TAG 共 12 个（分文件 `NN-*.md`）：决战歼灭、次数对策、吃拐一轮秒、远程消耗、插拔容错、初动增加、充电、拐杖、保人、**高档控制（原「大力推拉」「阻挡数5」已降为其子 TAG，另含「长效控制」）**、阵容组合。
+- 玩家 TAG 共 12 个（分文件 `NN-*.md`）：决战歼灭、次数对策、吃拐一轮秒、远程消耗、插拔容错、初动增加、充电、拐杖、保人、**高档控制（原「大力推拉」「阻挡数5」已降为其子 TAG，另含「长效控制」「远距控制」）**、阵容组合。
 
 ## 1. 数据源（判定以 PRTS 原文为准）
 
