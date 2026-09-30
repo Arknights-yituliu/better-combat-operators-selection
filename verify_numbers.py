@@ -5,7 +5,7 @@
 
 1. **面板不符**：文本里的 `面板NNN` 与「条件声明的档位」复算值对不上——顺带给出「哪个档位组合才凑得出 NNN」。
 2. **档位未取满**：条件点名的模组档低于该模组有增益（攻击／攻速）的最高档。
-3. **恒等式**：`面板N×M%≈V`（V 应≈N×M÷100）与 `总伤÷15≈DPS`。
+3. **恒等式**：`面板N×M%≈V`（V 应≈N×M÷100）与 `全时长总伤÷持续秒数≈DPS`。
 4. **因子覆盖**：该干员的天赋／技能／模组／召唤物名有哪些从未在条目里出现（供人判「计入／未计入＋理由」）。
 5. **代号残留**：范围代号、`S1/S2/S3`、`表 2A`、`路径⑤`、复算规则号等内部代号（写法规范见 docs/concept.md）。
 
@@ -31,6 +31,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 # 不构成帮助，见 docs/rulings.md「模组取档」），裁定为「不取」者登记在此——报告里转为「已复核」栏，
 # 不再混进待修清单。每加一条即一次显式裁定。
 REVIEWED_TIERS: dict[tuple[str, str], str] = {
+    ("高档控制", "提丰"): "集成战略特限模组取 2 级——箭雨（8 次）与 0.1 秒晕眩自 2 级即具备，3 级只提高箭雨伤害（90%→110%）、控制不变，不取 3 级（docs/rulings.md「子 TAG『远距控制』」）",
     ("吃拐一轮秒", "机械师"): "集成战略特限模组 1→3 级只加固定攻击／防御／屏障与召唤物持续时间（本条窗口 7.5 秒、持续时间不构成约束），不改倍率／段数／窗口，不取",
     ("吃拐一轮秒", "归溟幽灵鲨"): "特限模组 2／3 级只加替身形态（非技能期）的每秒法术伤害、替换时技力与固定攻击，不改 25 次×322% 的判据，不取",
     ("吃拐一轮秒", "怒潮凛冬"): "X 模组 3 级只提升特性溅射伤害（PRTS 备注明写不对特性主目标生效）与固定攻击，不改按主目标计的倍率，不取",
@@ -79,7 +80,7 @@ TOL = 0.01                     # 相对容差（文本里的 ≈ 值经过分步
 
 PANEL_RE = re.compile(r"面板(\d+)")
 IDENT_RE = re.compile(r"面板(\d+)×([\d.]+)%≈(\d+)")
-DPS_RE = re.compile(r"总伤 ≈(\d+)、平均 DPS ≈(\d+)/秒")
+DPS_RE = re.compile(r"全技能持续 ([\d.]+) 秒总伤 ≈(\d+)(?:（[^）]*）)?、平均 DPS ≈(\d+)/秒")
 ELITE_RE = re.compile(r"精英([012])")
 POT_RE = re.compile(r"潜能(\d)")
 # 模组线：X／Y／Δ 中文线名（线与「模组」间可有空格）；模式限定模组按产物写法「集成战略特限模组 3级」等
@@ -234,10 +235,12 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
         want = float(base) * float(rate) / 100
         if abs(want - int(value)) > max(2.0, want * TOL):
             out.append(f"{who}：{base}×{rate}%≈{value} 不成立（应≈{want:.0f}）")
-    for total, dps in DPS_RE.findall(text):
-        want = int(total) / 15
+    for dur, total, dps in DPS_RE.findall(text):
+        want = int(total) / float(dur)
         if abs(want - int(dps)) > max(2.0, want * TOL):
-            out.append(f"{who}：总伤 {total} ÷ 15 ≈ {int(dps)} 不成立（应≈{want:.0f}）")
+            out.append(f"{who}：总伤 {total} ÷ {dur} ≈ {int(dps)} 不成立（应≈{want:.0f}）")
+    if "15 秒窗口总伤" in text:
+        out.append(f"{who}：成绩句仍为旧式「15 秒窗口总伤」，未迁移全时长口径")
 
     # ④ 代号残留
     found = {m.group(0).strip() for m in CODEX_RE.finditer(text)}
