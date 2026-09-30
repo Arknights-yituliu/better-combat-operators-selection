@@ -1,5 +1,5 @@
 {
-  "version": "v9",
+  "version": "v10",
   "updated": "2026-09-30",
   "operators": [
     {
@@ -54691,9 +54691,9 @@
       "name": "高档控制",
       "source": "player",
       "recommended": [
-        "温蒂",
         "酒神",
-        "珊比"
+        "望",
+        "黍"
       ],
       "members": [
         {
