@@ -156,7 +156,7 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
             if key not in ("operator", "condition", "remark", "prtsUrl"):
                 add("warn", "M12", f"{pbase}.{key}", pplc + [key], plabel, f"规范之外的字段「{key}」")
     for key in mem:
-        if key not in ("combo", "condition", "remark", "beneficiaries", "providers"):
+        if key not in ("combo", "condition", "remark", "beneficiaries", "providers", "source"):
             add("warn", "M12", f"{base}.{key}", mplc + [key], clabel, f"规范之外的字段「{key}」")
 
 
@@ -398,7 +398,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                     add("warn", "M11", f"tags[{ti}].members[{mi}].prtsUrl", mplc + ["prtsUrl"], label + " · " + mname,
                         "prtsUrl 的干员名与 operator 不一致（注意 percent 编码）")
             for key in mem:
-                if key not in ("operator", "condition", "remark", "subTags", "prtsUrl"):
+                if key not in ("operator", "condition", "remark", "subTags", "prtsUrl", "source"):
                     add("warn", "M12", f"tags[{ti}].members[{mi}].{key}", mplc + [key], label + " · " + (mname or ""),
                         f"规范之外的字段「{key}」")
         # 成员顺序（阵容组合按组合分组，跳过）

@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v9"
+VERSION = "v12"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -625,10 +625,13 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
-    elif tag_no == "13":          # 高档控制：子表标题即子 TAG（大力推拉／阻挡数5／长效控制）
+    elif tag_no == "13":          # 高档控制：子表标题即子 TAG（大力推拉／阻挡数5／长效控制／远距控制／硬控／软控）
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
+        if h4 and h3.strip().startswith("远距控制"):  # 远距控制之下再分「独立达成／需配合」
+            if h4.strip():
+                add("远距控制", h4.strip())
     elif tag_no == "03":
         for v in re.split(r"[、＋+]", cells[header.index("子 TAG")]):
             if v.strip():
@@ -716,6 +719,8 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
                 member["remark"] = blocks
             if subs:
                 member["subTags"] = subs
+            if "ArkDPS" in remark:  # 显示成绩引用了外部帧模型/用法分支（口径见 docs/calc-rules.md §4.10）
+                member["source"] = {"model": "ArkDPS", "url": "https://ark-dps.com/zh/", "author": "ArkDPS 原作者"}
             member["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
             per_tag[tag_no].append(member)  # 一行成员表 = 一条成员；同一末端子 TAG 不重复即可重名
             seen_ops.append(op)

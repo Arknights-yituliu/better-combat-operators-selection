@@ -59,6 +59,23 @@ REF_EXCLUDE = {"docs/player-tags-members.md"}
 ACCEPTED = {
     # 根目录《待裁定.md》每轮整体重写（其条目随裁定折入后移除），旧版里引用过的 11-阻挡数5 例证（`珊比.md:33`）随重写消失——属流程性的整文件替换。
     ("待裁定.md", "33"),
+    # 第九批：13-高档控制.md 的边界记录在引用紧前方改写了散文（灵知由「另见待裁」改为「已纳入」），
+    # 引用本身未变、仍指向同一处原文——属「键分词误报」，逐条放行；凛御银灰／灵知 的原「待裁」
+    # 引用随该块移除、已转入成员表新行，同属有意为之的整块替换。
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "85"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "86"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "87"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "88"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "89"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "90"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "91"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "92"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "93"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "94"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "113"),
+    ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "61"),
+    # 根《待裁定.md》第九批整体重写：旧版号角行引用的 号角/号角.md:155 随重写消失。
+    ("待裁定.md", "155"),
     # 11-阻挡数5.md 三行（珊比／酒神／余）的备注原内联了证据，按「证据只写进依据列」
     # 移到依据列后改用全路径写法（`珊比/珊比.md:…`），原短路径写法（`珊比.md:121`）随之消失——
     # 属有意为之的写法统一，非漏改。
