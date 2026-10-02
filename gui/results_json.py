@@ -156,7 +156,7 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
             if key not in ("operator", "condition", "remark", "prtsUrl"):
                 add("warn", "M12", f"{pbase}.{key}", pplc + [key], plabel, f"规范之外的字段「{key}」")
     for key in mem:
-        if key not in ("combo", "condition", "remark", "beneficiaries", "providers", "source"):
+        if key not in ("combo", "condition", "remark", "beneficiaries", "providers", "source", "subTags"):
             add("warn", "M12", f"{base}.{key}", mplc + [key], clabel, f"规范之外的字段「{key}」")
 
 
@@ -280,7 +280,9 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
     ids: dict[str, int] = {}
     prev_cat = ""
     seen_player = False
-    stats = {"operators": len(raw_ops), "tags": len(raw_tags), "members": 0, "official": 0, "player": 0, "recommended": 0}
+    stats = {"operators": len(raw_ops), "tags": len(raw_tags), "members": 0, "official": 0, "player": 0,
+             "recommended": 0, "recommendedFallback": 0,
+             "recommendedBySub": 0, "recommendedFallbackBySub": 0}
     for ti, tag in enumerate(raw_tags):
         plc = ["tags", ti]
         if not isinstance(tag, dict):
@@ -325,7 +327,8 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
             if "recommended" not in tag:
                 add("warn", "G9", f"tags[{ti}].recommended", plc + ["recommended"], label, "玩家 TAG 缺少 recommended（无荐时也应为空数组）")
         for key in tag:
-            if key not in ("id", "name", "source", "category", "recommended", "members"):
+            if key not in ("id", "name", "source", "category", "recommended", "recommendedFallback",
+                           "recommendedBySub", "recommendedFallbackBySub", "members"):
                 add("warn", "G11", f"tags[{ti}].{key}", plc + [key], label, f"规范之外的字段「{key}」")
         members = tag.get("members")
         if not isinstance(members, list):
@@ -423,6 +426,48 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                 for k, x in enumerate(rec):
                     if x not in seen:
                         add("error", "R1", f"tags[{ti}].recommended[{k}]", plc + ["recommended", k], label,
+                            f"荐「{x}」不是本 TAG 的成员")
+        rec_fb = tag.get("recommendedFallback")
+        if rec_fb is not None:
+            if not (isinstance(rec_fb, list) and all(isinstance(x, str) for x in rec_fb)):
+                add("error", "G12", f"tags[{ti}].recommendedFallback", plc + ["recommendedFallback"], label,
+                    "recommendedFallback 应为字符串数组")
+            else:
+                stats["recommendedFallback"] += len(rec_fb)
+                dup = {x for x in rec_fb if rec_fb.count(x) > 1}
+                for x in sorted(dup):
+                    add("error", "R3", f"tags[{ti}].recommendedFallback", plc + ["recommendedFallback"], label,
+                        f"兜底荐重复：{x}")
+                for k, x in enumerate(rec_fb):
+                    if x not in seen:
+                        add("error", "R4", f"tags[{ti}].recommendedFallback[{k}]", plc + ["recommendedFallback", k],
+                            label, f"兜底荐「{x}」不是本 TAG 的成员")
+        for fld, base_code in (("recommendedBySub", "G13"), ("recommendedFallbackBySub", "G14")):
+            subs = tag.get(fld)
+            if subs is None:
+                continue
+            if not isinstance(subs, list):
+                add("error", base_code, f"tags[{ti}].{fld}", plc + [fld], label, f"{fld} 应为数组")
+                continue
+            for si, s in enumerate(subs):
+                spath, sloc = f"tags[{ti}].{fld}[{si}]", plc + [fld, si]
+                if not isinstance(s, dict):
+                    add("error", base_code, spath, sloc, label, f"{fld} 元素应为对象")
+                    continue
+                for key in s:
+                    if key not in ("group", "value", "names"):
+                        add("warn", "G11", f"{spath}.{key}", sloc + [key], label, f"规范之外的字段「{key}」")
+                names_l = s.get("names")
+                if not isinstance(names_l, list) or not all(isinstance(x, str) for x in names_l):
+                    add("error", base_code, f"{spath}.names", sloc + ["names"], label, "names 应为字符串数组")
+                    continue
+                stats[fld] += len(names_l)
+                dup = {x for x in names_l if names_l.count(x) > 1}
+                for x in sorted(dup):
+                    add("error", "R5", f"{spath}.names", sloc + ["names"], label, f"荐重复：{x}")
+                for k, x in enumerate(names_l):
+                    if x not in seen:
+                        add("error", "R6", f"{spath}.names[{k}]", sloc + ["names", k], label,
                             f"荐「{x}」不是本 TAG 的成员")
 
     # ---- 未被任何 TAG 引用的干员 ----

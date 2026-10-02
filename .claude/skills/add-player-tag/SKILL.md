@@ -19,6 +19,8 @@ A vague definition ("像 XX 那样的干员") is not a 评定标准. **Never gue
 
 Ask with the AskUserQuestion tool when the question is choice-shaped, plain text otherwise. One round of questions is the minimum; if an answer is still vague, say exactly which part is unclear and ask again.
 
+If the developer gives only a few examples or vague wording, first run `.claude/skills/solidify-criteria/SKILL.md`（回源枚举样例 → 逐条裁定 → 提炼可量化标准 → 样例回归验证）, then come back to the member work below.
+
 ## Offer the stub option
 
 Every time the criteria are not yet clear, offer this as an explicit choice:

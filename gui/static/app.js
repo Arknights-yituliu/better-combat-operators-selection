@@ -21,7 +21,7 @@ let DATA = null;
 const IDX = {byId:new Map(), tagBlocks:new Map(), tree:[]};
 const ST = {
   tab: "zhen",
-  zhen: {tag: "__all__", q: "", openOp: null},
+  zhen: {tag: "__all__", q: "", openOp: null, scope: null},
   ind: {targets: [], browse: null, browseOpen: {}, openOp: null, q: "", pq: "", tq: "",
         collapsed: {}, stage: [], busy: false},
 };
@@ -103,6 +103,11 @@ function blkFull(b) { const l = blkLabel(b); return b.tagName + (l ? " · " + l 
 
 // ---------------------------------------------------------------- 荐 页
 
+function currentScope(t) {
+  const list = t.rec_scopes || [{scope: null, ops: t.recommend || []}];
+  const want = ST.zhen.scope || null;
+  return list.find(s => (s.scope || null) === want) || list[0];
+}
 function viewOps() {
   if (ST.zhen.tag === "__all__") {
     const names = [...new Set(DATA.player_tags.flatMap(t => t.blocks.flatMap(b => b.rows.map(r => r.op))))];
@@ -110,13 +115,33 @@ function viewOps() {
     return names.map(op => ({op, rec: false, rows: allRowsOf(op)}));
   }
   const t = tagOf(ST.zhen.tag);
+  // 有子作用域而 TAG 级为空时，自动切到第一个有内容的子作用域（荐自偏移入子 TAG 后的正常状态）
+  let sc = currentScope(t);
+  if (!sc.ops.length && !(ST.zhen.scope || null)) {
+    const alt = (t.rec_scopes || []).find(s => s.scope && s.ops.length);
+    if (alt) { ST.zhen.scope = alt.scope; sc = alt; }
+  }
   // 有荐/无荐两组，各自按实装时间倒序（同日按拼音序）；无日期者排组尾
   const dates = new Map((DATA.roster || []).map(p => [p.name, p.date || ""]));
   const byLaunch = (a, b) => (dates.get(b) || "").localeCompare(dates.get(a) || "") || a.localeCompare(b, "zh");
-  const recs = [...t.recommend].sort(byLaunch).map(op => ({op, rec: true, rows: allRowsOf(op)}));
+  const recs = [...sc.ops].sort(byLaunch).map(op => ({op, rec: true, rows: allRowsOf(op)}));
   const members = [...new Set(t.blocks.flatMap(b => b.rows.map(r => r.op)))]
-    .filter(op => !t.recommend.includes(op)).sort(byLaunch).map(op => ({op, rec: false, rows: allRowsOf(op)}));
+    .filter(op => !sc.ops.includes(op)).sort(byLaunch).map(op => ({op, rec: false, rows: allRowsOf(op)}));
   return recs.concat(members);
+}
+function scopeBar(t) {
+  const list = (t.rec_scopes || []).filter(s => s.scope || t.num !== "12");
+  if (list.length <= 1) return null;
+  const bar = document.createElement("div");
+  bar.className = "scopebar";
+  for (const s of list) {
+    const chip = document.createElement("span");
+    chip.className = "scopechip" + ((s.scope || null) === (ST.zhen.scope || null) ? " on" : "");
+    chip.textContent = (s.scope || "TAG 级") + (s.ops.length ? "（" + s.ops.length + "）" : "");
+    chip.onclick = () => { ST.zhen.scope = s.scope; renderOps(); renderTags(); };
+    bar.appendChild(chip);
+  }
+  return bar;
 }
 function allRowsOf(op) {
   const out = [];
@@ -135,11 +160,11 @@ function renderTags() {
     col.appendChild(el);
   };
   const total = new Set(DATA.player_tags.flatMap(t => t.blocks.flatMap(b => b.rows.map(r => r.op)))).size;
-  mk('<span>全部干员</span>', ST.zhen.tag === "__all__", () => { ST.zhen.tag = "__all__"; renderAll(); }, total);
+  mk('<span>全部干员</span>', ST.zhen.tag === "__all__", () => { ST.zhen.tag = "__all__"; ST.zhen.scope = null; renderAll(); }, total);
   for (const t of DATA.player_tags) {
     const n = new Set(t.blocks.flatMap(b => b.rows.map(r => r.op))).size;
     mk('<span class="num">' + t.num + '</span><span>' + esc(t.name) + "</span>",
-       ST.zhen.tag === t.name, () => { ST.zhen.tag = t.name; renderAll(); },
+       ST.zhen.tag === t.name, () => { ST.zhen.tag = t.name; ST.zhen.scope = null; renderAll(); },
        n + (t.recommend.length ? " · 荐" + t.recommend.length : ""));
   }
 }
@@ -148,6 +173,10 @@ function renderOps() {
   list.innerHTML = "";
   const t12 = ST.zhen.tag === "__all__" ? null : tagOf(ST.zhen.tag);
   if (t12 && t12.num === "12") return renderCombos(t12, list);
+  if (t12) {
+    const bar = scopeBar(t12);
+    if (bar) list.appendChild(bar);
+  }
   const all = viewOps();
   const items = all.filter(it => matches(it.op, ST.zhen.q));
   document.getElementById("cnt").textContent = items.length + " / " + all.length + " 人";
@@ -174,17 +203,26 @@ function renderOps() {
   }
 }
 function comboNameOf(b) {
-  const m = /A\d+\.\s*(.+)/.exec(String((b && b.label) || ""));
+  const m = /[AB]\d+\.\s*(.+)/.exec(String((b && b.label) || ""));
   return m ? m[1].trim() : String((b && b.label) || "");
 }
 function renderCombos(t, list) {
-  // 阵容组合：按组合分组——组头＝组合级荐（左键加/右键取消），组内行＝单干员荐；两者独立、可混排
-  const rec = t.recommend || [];
+  // 阵容组合：按子 TAG 分类（势力/用法）查看与编辑——组头＝组合级荐（左键加/右键取消），组内行＝单干员荐
+  const scopes = (t.rec_scopes || []).filter(s => s.scope);
+  if (!scopes.some(s => s.scope === (ST.zhen.scope || ""))) {
+    const alt = scopes.find(s => s.ops.length) || scopes[0];
+    if (alt) ST.zhen.scope = alt.scope;
+  }
+  const bar = scopeBar(t);
+  if (bar) list.appendChild(bar);
+  const rec = currentScope(t).ops || [];
   const q = ST.zhen.q;
+  const letter = ST.zhen.scope === "用法" ? "B" : (ST.zhen.scope === "势力" ? "A" : null);
   const dates = new Map((DATA.roster || []).map(p => [p.name, p.date || ""]));
   const byLaunch = (a, b) => (dates.get(b) || "").localeCompare(dates.get(a) || "") || a.localeCompare(b, "zh");
   let groups = 0;
-  for (const b of t.blocks) {
+  const blocks = t.blocks.filter(b => !letter || String(b.label || "").startsWith(letter));
+  for (const b of blocks) {
     const combo = comboNameOf(b);
     const ops = [...new Set(b.rows.map(r => r.op))];
     const nameHit = matches(combo, q);
@@ -213,23 +251,38 @@ function renderCombos(t, list) {
       list.appendChild(el);
     }
   }
-  document.getElementById("cnt").textContent = groups + " / " + t.blocks.length + " 组";
+  document.getElementById("cnt").textContent = groups + " / " + blocks.length + " 组";
+}
+function scopeSuffix() {
+  return ST.zhen.scope ? "（" + ST.zhen.scope + "）" : "";
+}
+function applyRecResponse(j) {
+  DATA.recommend = j.recommend;
+  const t = ST.zhen.tag === "__all__" ? null : tagOf(ST.zhen.tag);
+  if (!t) return;
+  const prev = (t.rec_scopes || [{scope: null}]).map(s => s.scope || null);
+  const scopes = [...new Set(prev.concat([ST.zhen.scope || null]))];
+  t.rec_scopes = scopes.map(sc => ({
+    scope: sc,
+    ops: (j.recommend[sc ? (t.name + "/" + sc) : t.name] || []).slice(),
+  }));
+  const union = [];
+  for (const s of t.rec_scopes) for (const op of s.ops) if (!union.includes(op)) union.push(op);
+  t.recommend = union;
 }
 async function addComboRec(combo) {
   try {
-    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "add", op: combo});
-    DATA.recommend = j.recommend;
-    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
-    toast(j.noop ? ("「" + combo + "」组合已是荐") : ("已设荐：组合「" + combo + "」"));
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, scope: ST.zhen.scope || undefined, action: "add", op: combo});
+    applyRecResponse(j);
+    toast(j.noop ? ("「" + combo + "」组合已是荐") : ("已设荐：组合「" + combo + "」" + scopeSuffix()));
     renderTags(); renderOps();
   } catch (e) { toast(e.message, true); }
 }
 async function removeComboRec(combo) {
   try {
-    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "remove", op: combo});
-    DATA.recommend = j.recommend;
-    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
-    toast(j.noop ? ("「" + combo + "」组合本就没有荐") : ("已取消荐：组合「" + combo + "」"));
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, scope: ST.zhen.scope || undefined, action: "remove", op: combo});
+    applyRecResponse(j);
+    toast(j.noop ? ("「" + combo + "」组合本就没有荐") : ("已取消荐：组合「" + combo + "」" + scopeSuffix()));
     renderTags(); renderOps();
   } catch (e) { toast(e.message, true); }
 }
@@ -249,20 +302,18 @@ function renderDetail() {
 async function addRec(op) {
   if (ST.zhen.tag === "__all__") { toast("请先在左侧选择一个 TAG，再加荐"); return; }
   try {
-    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "add", op});
-    DATA.recommend = j.recommend;
-    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
-    toast(j.noop ? ("「" + ST.zhen.tag + "」已是荐：" + op) : ("已设荐：" + op + " →「" + ST.zhen.tag + "」"));
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, scope: ST.zhen.scope || undefined, action: "add", op});
+    applyRecResponse(j);
+    toast(j.noop ? ("已是荐：" + op) : ("已设荐：" + op + " →「" + ST.zhen.tag + "」" + scopeSuffix()));
     renderTags(); renderOps(); renderDetail();
   } catch (e) { toast(e.message, true); }
 }
 async function removeRec(op) {
   if (ST.zhen.tag === "__all__") { toast("请先在左侧选择一个 TAG，再取消荐"); return; }
   try {
-    const j = await api("/api/recommend", {tag: ST.zhen.tag, action: "remove", op});
-    DATA.recommend = j.recommend;
-    tagOf(ST.zhen.tag).recommend = j.recommend[ST.zhen.tag] || [];
-    toast(j.noop ? ("「" + ST.zhen.tag + "」本就没有荐：" + op) : ("已取消荐：" + op));
+    const j = await api("/api/recommend", {tag: ST.zhen.tag, scope: ST.zhen.scope || undefined, action: "remove", op});
+    applyRecResponse(j);
+    toast(j.noop ? ("本就没有荐：" + op) : ("已取消荐：" + op + scopeSuffix()));
     renderTags(); renderOps(); renderDetail();
   } catch (e) { toast(e.message, true); }
 }

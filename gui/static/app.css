@@ -447,3 +447,9 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* 荐页作用域切换：有子 TAG 的顶级 TAG（荐已下沉到子 TAG） */
+.scopebar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 2px; }
+.scopechip { padding: 2px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; font-size: 12px; cursor: pointer; opacity: .78; }
+.scopechip:hover { opacity: 1; }
+.scopechip.on { background: rgba(120,170,255,.25); border-color: rgba(120,170,255,.6); opacity: 1; }

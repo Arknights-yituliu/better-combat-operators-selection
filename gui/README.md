@@ -87,7 +87,8 @@ Notes and failure modes:
   keeps `recommend.py check` clean.
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
   prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
-* 阵容组合 (P12) is edited **per combo**: the 荐 tab groups the rows by combo — the group header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Combos are listed in file order (A1…A14); providers within a combo by release date.
+* 阵容组合 (P12) is edited **per category (势力／用法)**: the scope bar switches the view; the combo header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Providers within a combo by release date.
+* 荐 scoping: for player TAGs **with sub-TAGs**, a scope bar switches between the TAG-level list and each sub-TAG's list; entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
 * 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
 * The CLI equivalent is `recommend.py list|add|remove|check`; both write the same `_recommend.json`.
 

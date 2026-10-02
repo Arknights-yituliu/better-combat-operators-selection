@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v12"
+VERSION = "v13"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -271,7 +271,8 @@ def lint_text(tag: str, op: str, cond: str, remark: str) -> None:
 
 # ---------------------------------------------------------------- 阵容组合（P12）组合级元数据
 
-COMBO_NAME_RE = re.compile(r"A\d+\.\s*(.+)")
+COMBO_NAME_RE = re.compile(r"([AB])(\d+)\.\s*(.+)$")
+COMBO_CATEGORY = {"A": "势力", "B": "用法"}
 COMBO_BULLET_RE = re.compile(r"^- \*\*(触发条件|组合整体机制|可用受益干员)\*\*：(.*)$")
 
 
@@ -288,15 +289,18 @@ def parse_names(text: str) -> list[str]:
 
 
 def read_combo_meta(path: pathlib.Path) -> dict[str, dict]:
-    """阵容组合：`### A<N>. 组合名` 段里固定三条 bullet → 组合级 condition/remark/beneficiaries。"""
+    """阵容组合：`### A<N>. 组合名`（势力）/ `### B<N>. 组合名`（用法）段里固定三条 bullet
+    → 组合级 condition/remark/beneficiaries，并记子 TAG 分类（A→势力、B→用法）。"""
     out: dict[str, dict] = {}
     cur = ""
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.startswith("### "):
             m = COMBO_NAME_RE.match(line[4:].strip())
-            cur = m.group(1).strip() if m else ""
+            cur = m.group(3).strip() if m else ""
             if cur:
                 out.setdefault(cur, {})
+                if m:
+                    out[cur]["subtag"] = COMBO_CATEGORY.get(m.group(1), "")
             continue
         if line.startswith("## "):
             cur = ""
@@ -316,6 +320,44 @@ def read_combo_meta(path: pathlib.Path) -> dict[str, dict]:
             if names:
                 out[cur]["beneficiaries"] = names
     return out
+
+
+ARKDPS_SOURCE_URL = "https://ark-dps.com/zh/"
+
+# 显示成绩采用了 ArkDPS 帧模型/用法分支的成员行（按「分文件编号＋干员名」显式登记）。
+# 正文不再行内标注引用，来源字段据此写入；新增此类行时须在此登记（口径见 docs/calc-rules.md §4.10）。
+ARKDPS_MEMBER_ROWS = {
+    ("01", "斩业星熊"),
+    ("01", "司霆惊蛰"),
+    ("01", "荒芜拉普兰德"),
+    ("01", "玛恩纳"),
+    ("01", "卡涅利安"),
+}
+
+ARKDPS_DETAILS = {
+    "帧模型与用法分支": ("可攻击时长、取整帧与帧级时点采用站点帧模型（按站点公式实际含有的项：动画帧、取整帧、阶段/有效时长等；"
+                          "四舍五入(可攻击时长 ÷ 间隔)）；多情形成绩的情形名采用站点用法分支名；"
+                          "间隔、面板、潜能与条件均按我方，评定标准与达标判定不引用站点。"),
+    "组合公式与默认数据": ("组合数值按站点组合公式逐字代入；采用站点默认数据（默认面板、木桩敌人 0 防/0 抗、单目标），"
+                            "不使用本项目其它 TAG 的取档口径。"),
+    "算法框架与用法分支": "采用站点算法框架与用法分支；面板与判定仍按我方。",
+}
+
+
+def arkdps_source(remark: str, default_parts: str = "算法框架与用法分支") -> dict:
+    """外部计算工具来源字段（口径见 docs/calc-rules.md §4.10、docs/output-standard.md §4.2）。
+
+    model＝工具名；url＝官网；author＝作者（极夜星辰）；parts＝本条引用了站点的哪一部分；
+    detail＝该引用部分的详细说明（消费端仅在详情卡片末尾展示）。
+    """
+    if "帧模型与用法分支" in remark:
+        parts = "帧模型与用法分支"
+    elif "组合公式" in remark:
+        parts = "组合公式与默认数据"
+    else:
+        parts = default_parts
+    return {"model": "ArkDPS", "url": ARKDPS_SOURCE_URL, "author": "极夜星辰",
+            "parts": parts, "detail": ARKDPS_DETAILS.get(parts, ARKDPS_DETAILS["算法框架与用法分支"])}
 
 
 def read_tables(path: pathlib.Path):
@@ -673,11 +715,56 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
     return remark, subs or []
 
 
+def collect_sub_scopes(members: list[dict]) -> list[tuple[str, str]]:
+    """成员的 subTags → [(group, value)]（按出现顺序、value 去重）。"""
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for m in members:
+        for s in m.get("subTags", []):
+            v = s.get("value")
+            if v and v not in seen:
+                seen.add(v)
+                out.append((s.get("group") or "子 TAG", v))
+    return out
+
+
+def rec_fields(tag_name: str, members: list[dict],
+               rec_map: dict[str, list[str]], fb_map: dict[str, list[str]]) -> dict:
+    """荐字段：有子 TAG 的顶级 TAG → recommendedBySub（荐下沉到子 TAG）；
+    无子 TAG 的维持 TAG 级 recommended/recommendedFallback。"""
+    scopes = collect_sub_scopes(members)
+    out: dict = {}
+    if not scopes:
+        out["recommended"] = list(rec_map.get(tag_name, []))
+        out["recommendedFallback"] = list(fb_map.get(tag_name, []))
+        return out
+    by: list[dict] = []
+    fb: list[dict] = []
+    for group, value in scopes:
+        names = rec_map.get(f"{tag_name}/{value}", [])
+        if names:
+            by.append({"group": group, "value": value, "names": list(names)})
+        fnames = fb_map.get(f"{tag_name}/{value}", [])
+        if fnames:
+            fb.append({"group": group, "value": value, "names": list(fnames)})
+    out["recommended"] = list(rec_map.get(tag_name, []))  # 裸 TAG 键（如有）：兼容字段
+    out["recommendedFallback"] = list(fb_map.get(tag_name, []))
+    if by:
+        out["recommendedBySub"] = by
+    if fb:
+        out["recommendedFallbackBySub"] = fb
+    return out
+
+
 def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
     recommend = {}
     rec_file = PIPE / "player_tags" / "_recommend.json"
     if rec_file.exists():
         recommend = json.loads(rec_file.read_text(encoding="utf-8"))
+    recommend_fallback = {}
+    rec_fb_file = PIPE / "player_tags" / "_recommend_fallback.json"
+    if rec_fb_file.exists():
+        recommend_fallback = json.loads(rec_fb_file.read_text(encoding="utf-8"))
     combo_meta = read_combo_meta(PLAYER_DOC)
     tags, seen_ops = [], []
     tag_no = last_h2 = ""
@@ -700,7 +787,7 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
             cond, remark = clean[ci], clean[ni]
             if tag_no == "12":  # 阵容组合：成员行 = 组合的提供者（组合名取自子表标题）
                 cm = COMBO_NAME_RE.match(h3.strip())
-                combo = cm.group(1).strip() if cm else ""
+                combo = cm.group(3).strip() if cm else ""
                 entry = combos.setdefault(combo, {"combo": combo, "providers": []})
                 lint_text("阵容组合/" + combo, op, cond, remark)
                 prov = {"operator": op, "condition": cond}
@@ -719,8 +806,9 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
                 member["remark"] = blocks
             if subs:
                 member["subTags"] = subs
-            if "ArkDPS" in remark:  # 显示成绩引用了外部帧模型/用法分支（口径见 docs/calc-rules.md §4.10）
-                member["source"] = {"model": "ArkDPS", "url": "https://ark-dps.com/zh/", "author": "ArkDPS 原作者"}
+            if "ArkDPS" in remark or (tag_no, op) in ARKDPS_MEMBER_ROWS:
+                # 显示成绩引用了外部帧模型/用法分支（口径见 docs/calc-rules.md §4.10）
+                member["source"] = arkdps_source(remark, default_parts="帧模型与用法分支")
             member["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
             per_tag[tag_no].append(member)  # 一行成员表 = 一条成员；同一末端子 TAG 不重复即可重名
             seen_ops.append(op)
@@ -738,14 +826,20 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
                     item["remark"] = blocks
                 if meta.get("beneficiaries"):
                     item["beneficiaries"] = meta["beneficiaries"]
+                if meta.get("subtag"):
+                    item["subTags"] = [{"group": "子 TAG", "value": meta["subtag"]}]
+                if meta.get("subtag") == "用法":  # 「用法」组合均取自站点组合公式，卡片末尾统一标注来源
+                    item["source"] = arkdps_source(remark, default_parts="组合公式与默认数据")
                 item["providers"] = entry["providers"]
                 members.append(item)
         else:
             members = per_tag[t["no"]]
             members.sort(key=lambda m: launch_date(m["operator"]) or "", reverse=True)
-        tags.append({"id": f"P{t['no']}", "name": t["name"], "source": "player",
-                     "recommended": [x for x in recommend.get(t["name"], [])],
-                     "members": members})
+        rec = rec_fields(t["name"], members, recommend, recommend_fallback)
+        item = {"id": f"P{t['no']}", "name": t["name"], "source": "player"}
+        item.update(rec)
+        item["members"] = members
+        tags.append(item)
     return tags, list(dict.fromkeys(seen_ops))
 
 

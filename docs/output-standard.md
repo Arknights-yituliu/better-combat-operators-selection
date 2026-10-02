@@ -97,6 +97,9 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | source | string | 是 | `"official"`（官方设定类）或 `"player"`（玩家体感类）；UI 可分源筛选、可互相引用 |
 | category | string | 官方类必填 | 类别名：`A 控制·异常`、`B 伤害类型`、`C 生存与增益`、`D 部署与编队`、`E 技力与技能资源`、`F 治疗与支援`、`G 召唤物`、`H 攻击行为特征`、`I 全场光环`（取自 `docs/official-tags-members.md` §3 总览，省略括号补充） |
 | recommended | array | 仅玩家类 | **荐**名单（§6）：元素为干员名；无荐时为空数组 `[]`。官方类省略该字段 |
+| recommendedFallback | array | 仅玩家类 | **兜底荐**名单（§6）：`recommended` 为空数组时由 UI 展示；无兜底荐时为空数组 `[]`。官方类省略该字段 |
+| recommendedBySub | array | 仅玩家类（有子 TAG 的 TAG） | **按子 TAG 的荐**（§6）：元素 `{group, value, names}`；无时省略。无子 TAG 的 TAG 与官方类省略该字段 |
+| recommendedFallbackBySub | array | 同上 | 按子 TAG 的**兜底荐**（§6）：元素同上；无时省略 |
 | members | array | 是 | 成员（TAG×干员关系），见 4.2 |
 
 - 排序：`tags` 数组顺序＝UI 展示顺序——官方类按 `docs/official-tags-members.md` §4 顺序（A→I），玩家类按 `player_tags/_merge_to_docs.py` 的 `TAGS` 顺序（决战歼灭、次数对策、吃拐一轮秒、远程消耗、插拔容错、初动增加、充电、拐杖、保人、**高档控制**、阵容组合）。
@@ -115,7 +118,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
   "subTags": [
     { "group": "子 TAG", "value": "屏障·护盾" }
   ],
-  "source": { "model": "ArkDPS", "url": "https://ark-dps.com/zh/", "author": "ArkDPS 原作者" },
+  "source": { "model": "ArkDPS", "url": "https://ark-dps.com/zh/", "author": "极夜星辰", "parts": "帧模型与用法分支", "detail": "可攻击时长与取整帧采用站点帧模型；情形名采用站点用法分支名；间隔、面板与判定按我方" },
   "prtsUrl": "https://prts.wiki/w/%E6%9E%97#技能"
 }
 ```
@@ -126,7 +129,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | condition | string | 是 | **硬性达成条件**（精英化／技能／专精／模组与等级／模式限定／目标限制）；精英 0·1 级即具备者写 `"无"`；`；` 分隔各条要求、`／` 表「或」 |
 | remark | array | 否 | **信息加工后的备注**（数值、持续时间、隐藏机制、特殊用法、战术帮助），块数组，结构见下；无内容时省略该字段（模组隐藏机制查 `docs/module-hidden-mechanics.md`） |
 | subTags | array | 否 | 子 TAG／分组（支持两级嵌套，可被筛选，多选取交集），元素为 `{group, value, detail?}`，见 4.3；无分组时省略 |
-| source | object | 否 | **外部计算工具来源**：显示成绩采用了 ArkDPS 的帧模型／算法框架／用法分支时给出 `{model, url, author}`（口径见 `docs/calc-rules.md` §4.10）；未采用者省略。消费端详情卡片据此展示「数据来源」 |
+| source | object | 否 | **外部计算工具来源**：显示成绩采用了 ArkDPS 的帧模型／算法框架／用法分支时给出 `{model, url, author, parts, detail}`——`model` 工具名、`url` 官网、`author` 作者（极夜星辰）、`parts` 本条引用的部分（如「帧模型与用法分支」「组合公式与默认数据」）、`detail` 该部分的详细说明（口径见 `docs/calc-rules.md` §4.10）；未采用者省略。消费端**仅在详情卡片末尾**据此展示一条「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：{parts}——{detail}」 |
 | prtsUrl | string | 是 | 该 TAG 下点击卡片的 PRTS 跳转地址，见 §5 |
 
 **`remark` 的块结构**（撰写写法与块序见 `docs/concept.md`「备注分块」，撰写侧不手写本结构）：
@@ -161,7 +164,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | beneficiaries | array | 否 | **受益者名单**（展示用，不参与干员维度筛选），元素为干员名；不可枚举的全阵营组合省略该字段、范围写进备注 |
 | providers | array | 是 | **提供者明细**，至少一名；元素为 `{operator, condition, remark?, prtsUrl}`，逐项同「成员」字段规则 |
 
-- 组合条目不带 `subTags`；唯一性以组合为界——**组合名在同一 TAG 内唯一、组合内提供者不重复；同一提供者可出现在多个组合**。
+- 组合条目的 `subTags` 为子 TAG 分类（`子 TAG`＝`势力`／`用法`，见 §4.3）；唯一性以组合为界——**组合名在同一 TAG 内唯一、组合内提供者不重复；同一提供者可出现在多个组合**。
 - 同一干员可属多个 TAG（多对多，属其他 TAG 不构成排除理由）；**唯一性以末端子 TAG（组＋值）为界——同一干员可在同一 TAG 的不同末端子 TAG 下各出现一条（如 次数对策 的机械师同时命中「多段伤害」「间隔伤害」；官方 闪避 下「物理闪避」与「可给予他人」是两个不同末端），同一末端子 TAG 内不得重复**；无子 TAG 的 TAG 视为只有一个末端（即 TAG 自身）。
 - 名单文档（`docs/official-tags-members.md`、`docs/player-tags-members.md`）的成员表含「编号」列（charId，文档展示用）；本文件的成员仍按 `operator` 名引用 `operators[].name`，编号只在 `operators[]` 存一份。
 - 条件／备注的写法与成绩项（总攻/总伤、平均 DPS、等效每秒段数）沿用 `docs/concept.md`「结果展示」，备注的分块与分条见同文「备注分块」；**官方类**另按 `docs/official-tags-members.md` §1：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注以游戏内原文引用为证据。
@@ -188,10 +191,11 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | 充电 | 子 TAG（可选） | `补弹` |
 | 拐杖 | 增益类型；生效方式 | 增益类型：`攻击力(加算)`、`攻击力(倍率)`、`攻击速度`、`易伤(脆弱)`、`伤害提升(友方)`、`附加伤害(友方)`；生效方式：`在场`、`编入`、`携带`、`部署时`、`技能开启时`、`技能期间`、`触发时`（detail：`造成治疗时`、`击倒敌人时`、`装置升级时`、`吟唱后`） |
 | 保人 | 子 TAG | `治疗·减免·防御·法抗·庇护`、`屏障·护盾`、`闪避·迷彩`、`元素损伤防护`、`免死·锁血·伤害转移`、`嘲讽·吸引火力·指定承伤` |
+| 阵容组合 | 子 TAG | `势力`（各阵营/小队联动组合）、`用法`（ArkDPS 上有组合计算、且参与者已被玩家体感 TAG 收录的玩家用法组合） |
 
 - 同一 `group` 可出现多次（如「聚爆＋连射」、拐杖的多条生效方式）；`detail` 仅在「触发时」一档使用；同一组值不重复；无分组 TAG（决战歼灭、初动增加）省略 `subTags`。
 - **嵌套**：`subTags` 的元素是「父节点 → 子节点」的一条边。子 TAG 之下再分组时（`docs/player-tags-specify.md`：两级嵌套），把上一级的 `value` 用作下一级的 `group` 续写——如 远程消耗「表 2」下再分 2A/2B：`{"group": "子 TAG", "value": "远程部署型召唤物与装置"}` ＋ `{"group": "远程部署型召唤物与装置", "value": "陷阱师"}`。末端＝链上没有下级的那个值。
-- **筛选语义**：末端子 TAG 即可筛选项。**多选取交集**——同一 TAG 下勾选多个子项时，干员须**逐项命中**：对每个已选子项，该干员在该 TAG 下都存在某条条目带有该子项（可分散在不同条目上）；不勾任何子项 ＝ 该 TAG 不限子项。「阵容组合」（P12）的子项＝组合名，多选时为「展示所选的那几个组合」（并集语义），为本条的例外。
+- **筛选语义**：末端子 TAG 即可筛选项。**多选取交集**——同一 TAG 下勾选多个子项时，干员须**逐项命中**：对每个已选子项，该干员在该 TAG 下都存在某条条目带有该子项（可分散在不同条目上）；不勾任何子项 ＝ 该 TAG 不限子项。「阵容组合」（P12）的子项＝子 TAG（`势力`／`用法`）与组合名；多选时按「逐项命中」过滤组合（子 TAG 取组合的 `subTags`，组合名取组合名），为本条的 P12 专用读法。
 - 备注中的结构性前缀在写入 `subTags` 后不再保留：官方类「子 TAG：…。」、玩家类 插拔容错 的「救急路径：…」与 充电 的「子 TAG：补弹」；剥离完这些前缀后，余下文本才按「备注分块」解析为 `remark` 的块数组。其余备注原文保留（含官方「抗削弱」的作用范围注记，如 `作用范围/仅自身`，属备注内容、不作 `detail`）。
 - 官方类的子 TAG 同样写入本字段。**同一 TAG 可有多个子 TAG 组**：组名不写在行内，由「取值 → 组名」的取值闭集判定，与前缀先后无关（闪避 同时有「闪避类型」「作用范围」两组，成员行写作 `子 TAG：物理闪避、法术闪避。子 TAG：可给予他人。…`）。单层分组用 `{"group": "子 TAG", "value": "…"}`；例：全场光环 的 `伤害光环`／`削弱光环`／`增益光环`／`治疗光环`／`增伤光环`，抗削弱 的 `下限保护`／`上限提高`，帧级结算 的 `帧级判定`／`帧伤`，闪避 的 `物理闪避`／`法术闪避`／`全伤害闪避`（组名「闪避类型」），以及 护盾（按层抵挡）／屏障（吸收值）／免死·复活·替身／闪避／伤害减免·减伤／庇护（物法减伤）／迷彩／抵抗／嘲讽·吸引攻击／降低被攻击优先级 的 `仅自身`／`可给予他人`（组名「作用范围」；两者互斥——能作用于其他我方单位即记 `可给予他人`，判定以效果实际可及为准）。
 
@@ -214,27 +218,34 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 - 锚点用 PRTS 章节名原文（如 `#技能`），浏览器会自动编码，与 `#%E6%8A%80%E8%83%BD` 等价；可用锚点即干员页的 `#特性`／`#天赋`／`#技能`／`#模组`／`#召唤物信息` 五个章节。
 - 锚点按「能力来源」判定，来源以该关系的「条件／备注」文本为准（条件为主判据，备注主句作补充）；判定不确定时一律用干员主页（宁可不锚定，不可跳错）。目前由生成脚本按此规则自动判定，锚不准的条目可在面板中改。
 
-## 6. 荐（recommended）
+## 6. 荐（recommended / recommendedBySub）
 
-- **定义**：人工指定的「该 TAG 下推荐用」干员名单，用于 UI 在该 TAG 下优先展示／加推荐角标。一个干员可以只在部分 TAG 下有荐（在 A TAG 有、B TAG 没有）。
-- **位置**：玩家体感 TAG 的 `recommended` 字段（官方类 TAG 暂无此字段）；数组顺序不含展示优先级语义（按加入顺序存储），无荐时为空数组。
-- **约束**：荐必须是该 TAG 的成员；同一 TAG 内不重复（由工具强制校验，避免笔误产生悬空引用）。
+- **定义**：**荐**＝人工指定的名单，默认指定「该范围内推荐新手优先培养」的干员；当某范围**没有值得新手优先培养的干员**时，转为指定「该范围下综合实力较强」的干员（写入兜底文件）。两份名单均人工指定，程序只负责读取与渲染，不计算、不生成任何名单。
+- **作用域**：**有子 TAG 的顶级 TAG，荐下沉到子 TAG**——按子 TAG 分别指定与展示（便于玩家知道干员因何被荐）；没有子 TAG 的顶级 TAG 用 TAG 级名单。
+- **位置**：无子 TAG 的玩家 TAG 用 `recommended` / `recommendedFallback`（字符串数组，无名单时为空数组 `[]`）；有子 TAG 的玩家 TAG 用 `recommendedBySub` / `recommendedFallbackBySub`（数组，元素 `{group, value, names}`，`value` 为该 TAG 的子 TAG 名；无名单时省略字段），此时 `recommended`/`recommendedFallback` 仅保留裸 TAG 键的兼容值（现为空数组）。官方类 TAG 省略以上字段。
+- **读取规则**：每个子 TAG 的「有效荐名单」＝该子 TAG 的 `names` 非空时用它、为空时用 `recommendedFallbackBySub` 中同名子 TAG 的 `names`；顶级 TAG 的荐＝其全部子 TAG 有效名单的并集（勾选子 TAG 时只取所选子 TAG 的名单取交集）；未下沉的 TAG 按 `recommended` 非空用它、为空用 `recommendedFallback`。同时选中多个玩家体感 TAG 时仍取**交集**（每个 TAG 都要有荐才显示）。
+- **约束**：两份名单的元素都必须是该作用域的成员（干员或组合名）；同一作用域内不重复（由工具强制校验，避免笔误产生悬空引用）。
 - **阵容组合（P12）**：`recommended` 元素可为**组合名**（须为该 TAG 的组合条目名）或该组合内的**提供者干员名**，二者可混排且**互相独立**——为组合加荐不等于为其提供者加荐，反之亦然；UI 以组合为列表容器、在组容器与组员元素上分别展示荐标识（组荐与组员荐不是覆盖关系）。
-- **指定方式**：荐的最终名单由开发者人工指定（AI 可提出建议，不直接写入）。
-- **维护工具**：`recommend.py`（命令行）与 `recommend_gui.py`（本地网页面板），源文件 `material_datas/tag_pipeline/player_tags/_recommend.json`。
+- **指定方式**：两份名单均由开发者人工指定（AI 可提出建议，不直接写入）。
+- **维护工具**：`recommend.py`（命令行）与 `recommend_gui.py`（本地网页面板；当前面板只维护「荐」，兜底荐用 `recommend.py --fallback` 维护），源文件 `material_datas/tag_pipeline/player_tags/_recommend.json` 与 `_recommend_fallback.json`。
 
 ```bash
-python recommend.py                     # 列出 12 个玩家 TAG 及当前荐数量
-python recommend.py list 充电           # 查看「充电」的荐
+python recommend.py                     # 列出 11 个玩家 TAG 及当前荐（含子作用域）
+python recommend.py list 充电           # 查看某作用域的荐
+python recommend.py list 高档控制/纯御天花板
 python recommend.py add 充电 白铁       # 添加荐（可一次多个）
+python recommend.py add 高档控制/纯御天花板 蛇屠箱
 python recommend.py remove 充电 白铁    # 移除荐
-python recommend.py check               # 校验荐名单（TAG／成员是否仍然有效）
+python recommend.py check               # 校验两份名单（TAG／子值／成员是否仍然有效）
+python recommend.py --fallback list 充电           # 查看兜底荐
+python recommend.py --fallback add 充电 白铁       # 添加兜底荐
+python recommend.py --fallback remove 充电 白铁    # 移除兜底荐
 
-python recommend_gui.py                 # 网页面板两个页签：「荐」页按 TAG 筛选，左键加荐 / 右键取消荐；
-                                        #   「人工归纳」页摘取干员并入 TAG（扩展/移动/移除）并编辑「条件」「备注」
+python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与子作用域切换编辑（左键加荐 / 右键取消）；
+                                        #   「人工归纳」页摘取干员并入 TAG 并编辑「条件」「备注」
 ```
 
-- 荐只维护在 `_recommend.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` 字段，重新生成不会丢失。
+- 两份名单只维护在 `_recommend.json` / `_recommend_fallback.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` / `recommendedFallback` 字段，重新生成不会丢失。
 - 面板中「荐」页只负责增删荐（点「详情」在右栏查看干员信息卡片）；「条件」「备注」在「人工归纳」页维护（回写分文件对应行，保存后自动重新合并名单文档）。「人工归纳」页还可增删成员行：扩展＝新行条件/备注留空，移动＝把源行的条件/备注/依据带到新行并删除源行，移除＝直接删除该行；改动官方分文件时同步重算条目头「（N 人 · 首现 日期）」。
 
 ## 7. 数据来源、生成与发布
@@ -336,6 +347,7 @@ python recommend_gui.py                 # 网页面板两个页签：「荐」�
       "name": "充电",
       "source": "player",
       "recommended": ["白铁"],
+      "recommendedFallback": [],
       "members": [
         {
           "operator": "白铁",
@@ -366,6 +378,7 @@ python recommend_gui.py                 # 网页面板两个页签：「荐」�
       "name": "阵容组合",
       "source": "player",
       "recommended": [],
+      "recommendedFallback": [],
       "members": [
         {
           "combo": "深海猎人",

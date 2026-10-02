@@ -148,6 +148,7 @@ Read only what the task needs; the two member docs and the two results JSONs are
 - 开发者的裁定与开放问题落在各分文件自身的 `## 待开发者确认` 与评定标准/边界与排除记录里 — read the target file's 评定标准 and 边界与排除记录 before changing any player TAG.
 - Player-TAG work uses parallel agents: one agent per TAG writes an evidence-bearing part file under `player_tags/`, following `_brief.md`; the merge script consolidates them into `docs/player-tags-members.md` (stripping the 依据 column). Keep evidence in the part files.
 - Adding a new TAG: follow `.claude/skills/add-player-tag/SKILL.md` — make the 评定标准 fully unambiguous with the developer before any member work, unless they explicitly choose the "先创建此TAG，评定标准后续更新" stub option.
+- 评定标准只给了几个例子／模糊表述（「相当高」「较强」）时：follow `.claude/skills/solidify-criteria/SKILL.md` — 回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证；对外释义（tooltip 等）同步更新。
 - New operator released (developer gives a PRTS link or description): follow `.claude/skills/add-new-operator/SKILL.md` — crawl into `material_datas/PRTS/`（含攻击范围）, judge every TAG (official + player), ask the developer about notable mechanics no TAG covers, then update the member docs (`docs/official-tags-members.md` + part files → merged doc) only — never generate `results/operator-tags.json`.
 - Version update (new operator **plus** new modules on existing operators, incremental): follow `.claude/skills/update-version/SKILL.md` — refresh only the changed operators, fold new modules into the affected rows (模组档位), and run the cross-operator impact checklist (新阵营成员/使能者/对外挂点…); never a full-table rescan.
 

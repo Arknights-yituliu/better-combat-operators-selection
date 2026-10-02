@@ -27,9 +27,12 @@ def run_check() -> int:
     p_rows = sum(len(b["rows"]) for t in model["player_tags"] for b in t["blocks"])
     p_blocks = sum(len(t["blocks"]) for t in model["player_tags"])
     print(f"玩家体感 TAG {len(model['player_tags'])} 个／子表 {p_blocks} 张／成员行 {p_rows} 条；"
-          f"荐 {sum(len(v) for v in model['recommend'].values())} 条")
+          f"荐 {sum(len(v) for v in model['recommend'].values())} 条"
+          f"（{len([k for k in model['recommend'] if model['recommend'][k]])} 个作用域键）")
     for t in model["player_tags"]:
-        print(f"  {t['num']} {t['name']}：子表 {len(t['blocks'])} 张 / 行 {sum(len(b['rows']) for b in t['blocks'])} / 荐 {len(t['recommend'])}")
+        scoped = [s for s in t.get("rec_scopes", []) if s.get("scope")]
+        detail = f"（子作用域 {len([s for s in scoped if s['ops']])} 个）" if scoped else ""
+        print(f"  {t['num']} {t['name']}：子表 {len(t['blocks'])} 张 / 行 {sum(len(b['rows']) for b in t['blocks'])} / 荐 {len(t['recommend'])}{detail}")
         for b in t["blocks"]:
             for r in b["rows"]:
                 if not r["op"]:
@@ -87,7 +90,9 @@ def run_check() -> int:
     print(f"「编号」列：{n_cid} 行与 char_ids.json 全量比对，{len(bad_cid)} 处不一致")
 
     for s in model["stale"]:
-        print(f"  [悬空荐] {s['tag']} -> {s['op']}")
+        kind = s.get("kind", "op")
+        label = "悬空子作用域" if kind == "scope" else "悬空荐"
+        print(f"  [{label}] {s['tag']} -> {s['op']}")
     for t in model["unknown_tags"]:
         print(f"  [未知 TAG] {t}")
 
