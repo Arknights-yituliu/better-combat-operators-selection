@@ -320,6 +320,10 @@ ACCEPTED = {
     ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "132"),
     ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "133"),
     ("material_datas/tag_pipeline/player_tags/13-高档控制.md", "134"),
+    # DoT 跳数循环修复轮（2026-10-03／10-05）：02-次数对策.md 的望「棋子」条目在引用紧前方补写「首击」说明
+    # （≈6.5 次 → ＝7 次（施加一击无伤害、另计 1 次首击）），引用本身未变、仍指向同一处原文——属「键分词误报」，放行。
+    # （同轮早前登记的 白雪 15／103、谜图 107、归溟幽灵鲨 61／62／64／66／67 因口径回改已不再触发，一并移除。）
+    ("material_datas/tag_pipeline/player_tags/02-次数对策.md", "96"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
