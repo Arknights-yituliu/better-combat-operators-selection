@@ -34,7 +34,7 @@ def main() -> int:
         print(f"未找到 {CONFIG}；请复制 local.example.json 为 local.json 并填写 frontend_results_dir")
         return 1
     try:
-        cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
+        cfg = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
     except ValueError as exc:
         print(f"local.json 不是合法 JSON：{exc}")
         return 1
