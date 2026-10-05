@@ -1,4 +1,0 @@
-version v2
-updated 2026-09-19
-marker_count 115
-literal_count 115

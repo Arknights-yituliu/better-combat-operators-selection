@@ -1,26 +1,26 @@
 # 代称映射表（term-map）
 
 > 用途：登记本仓库 AI 输出与文档中使用的一切**自创代称、缩写、自编号**（规则号、冲突号、TAG 代号、分组号、公式符号、文件简称等），逐条写明**含义、用法与查阅位置**。开发者可凭本表读懂任何一条交付文本或产物，无需先读其它文件。
-> 维护纪律（CLAUDE.md「AI 协作铁律」第 1 条）：**创建任何新的代称／自创词时必须同步登记本表**；未登记的代称不得在交付文本中使用。
+> 维护纪律（AGENTS.md「AI 协作铁律」第 1 条）：**创建任何新的代称／自创词时必须同步登记本表**；未登记的代称不得在交付文本中使用。
 > 注意：本表登记的是**代称**而非游戏机制术语；游戏机制术语（过载、元素损伤、屏障、灼燃损伤等）以 `docs/glossary.md` 为准，命中「用词像机制」的判断先查术语表。
 
 ## 一、任务与编号系统
 
 | 代称 | 含义 | 用法示例 | 查阅位置 |
 |---|---|---|---|
-| **R1–R27** | 复算**规则号**：整套数值计算规则逐条编号（R1 实际间隔公式、R2 攻速来源、R3 攻速夹逼、R4 帧长与整数帧、R5 攻击次数取整、R6 周期跳数、R7 面板与双档、R8 倍率、R9 乘区顺序、R10 弹药与倾泻、R11 群攻×目标数、R12 概率期望、R13 格数、R14 过载、R15 取整背景、R16 潜能、R17 附带伤害计段、R18 过载分段模型、R19 条件与模组选择、R20 双情形呈现、R21 召唤物并入、R22 开技瞬间族、R23 帧伤、R24 成绩项、R25 默认敌人（木桩口径）、R26 比值类判据的同额基线扣除、R27 慢热·超额提升） | 「按 R4 取整帧」「R16 计入潜能」「R25 木桩口径」 | 作业副本 `_reverify/rules.md` §1；规则正本 `docs/calc-rules.md` §4 |
+| **R1–R27** | 复算**规则号**：整套数值计算规则逐条编号（R1 实际间隔公式、R2 攻速来源、R3 攻速夹逼、R4 帧长与整数帧、R5 攻击次数取整、R6 周期跳数、R7 面板与双档、R8 倍率、R9 乘区顺序、R10 弹药与倾泻、R11 群攻×目标数、R12 概率期望、R13 格数、R14 过载、R15 取整背景、R16 潜能、R17 附带伤害计段、R18 过载分段模型、R19 条件与模组选择、R20 双情形呈现、R21 召唤物并入、R22 开技瞬间族、R23 帧伤、R24 成绩项、R25 默认敌人（木桩口径）、R26 比值类判据的同额基线扣除、R27 慢热·超额提升） | 「按 R4 取整帧」「R16 计入潜能」「R25 木桩口径」 | 作业副本 `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §1；规则正本 `docs/calc-rules.md` §4 |
 | **同额基线** | 比值类判据（如插拔容错路径⑤ 的「≥ 不开启技能时的 3 倍」）中，两个对照组**等额出现、且不随技能开关变化**的伤害项——它在比值里两侧同时扣除，只比技能自身贡献 | 「按同额基线扣除后 4680%÷1000%≈4.68」 | `docs/rulings.md`「比值类判据：同额基线两侧同时扣除」；`docs/calc-rules.md` §4.5；R26 |
 | **特限线／通用线** | 同一干员的两类模组：**特限线**＝模式限定模组（特限证章／特勤证章），**通用线**＝普通 X／Y／Δ 模组。持特限证章者的两条线**分别计算**、UI 分别展示且特限线优先 | 「特限线与通用线分别计算」 | `docs/rulings.md`「特限模组与通用模组：分别计算、特限优先展示」；`docs/ui-render-rules.md` §6.3 |
-| **C1–C10**（冲突号） | 复算中发现的**规则冲突／待裁定项**编号：C1 帧长（已裁）、C2 段数取整并列（已并入 R5/R15）、C3 格数索引（已裁）、C4 P05 路径⑤窗口（已裁）、C5 条件阶段措辞、C6/C7（早期项，已折入规则）、C8 召唤物并入、C9 开技瞬间族、C10 单段间隔除数 | 「规则待裁定：C10」 | `_reverify/rules.md` §2；`docs/calc-rules.md` §5。**警告**：`docs/calc-rules.md` §2 映射表另有 A/B/C/D 开头的**行内序号**（如表 C 的 C1–C9），与冲突号字母相同但分属不同表——引用冲突号时带「§5」前缀 |
-| **S1–S11** | `reverify.py lint` 的**巡检编号**：S1 三处同值、S2 片段含值、S3 旧值残留、S4 跨区块陈旧、S5 审计↔产物、S6 并列值需 pending_rule、S7 标记归零、S8 回填往返、S9 批注与过程语残留、S10 自立文本（互引扫描）、S11 整数帧合规 | 「lint 缺陷 0（S1–S11 全绿）」 | `reverify.py` 的 `lint()`；报告 `_reverify/reports/lint.md` |
-| **V′** | **自立文本判据**：产出链（成员行条件/备注、替换对、notes/potential_note）不得出现条目 id、「见/另见/同上/同 -N/同格 -N/同干员另一条」类指称、分文件名；重复内容各写全 | 「按 V′ 清改 notes」 | `_reverify/rules.md` §3.1 红线 6；`docs/calc-rules.md` §4.6；`docs/concept.md`「备注撰写」 |
-| **G1–G6** | 「（待验证）」复算的**分组号**：按分文件批次把 115 条分六组（G1＝01 决战歼灭、G2＝02 次数对策、G3/G4/G5＝03 吃拐一轮秒三段、G6＝05 插拔容错） | 「G2 组产物」「六组代理并行」 | `_reverify/slices/G*.jsonl`（输入）、`_reverify/parts/G*.jsonl`（产物）；分组清单见 `_reverify/reports/extract.md` |
-| **P01–P13** | **TAG 代号**（分文件编号）：P01 决战歼灭、P02 次数对策、P03 吃拐一轮秒、P04 远程消耗、P05 插拔容错、P06 初动增加、P07 充电、P08 拐杖、P09 保人、**P13 高档控制**、P12 阵容组合（原 P10 大力推拉、P11 阻挡数5 已降为 P13 的子 TAG） | 条目 id 形如 `P03-天空盒-1`（P03 TAG／干员／该干员在该 TAG 下的第 N 处） | 各 `material_datas/tag_pipeline/player_tags/NN-*.md`；TAG 定义 `docs/player-tags-specify.md` |
+| **C1–C10**（冲突号） | 复算中发现的**规则冲突／待裁定项**编号：C1 帧长（已裁）、C2 段数取整并列（已并入 R5/R15）、C3 格数索引（已裁）、C4 P05 路径⑤窗口（已裁）、C5 条件阶段措辞、C6/C7（早期项，已折入规则）、C8 召唤物并入、C9 开技瞬间族、C10 单段间隔除数 | 「规则待裁定：C10」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §2；`docs/calc-rules.md` §5。**警告**：`docs/calc-rules.md` §2 映射表另有 A/B/C/D 开头的**行内序号**（如表 C 的 C1–C9），与冲突号字母相同但分属不同表——引用冲突号时带「§5」前缀 |
+| **S1–S11** | `.claude/skills/reverify-numbers/scripts/reverify.py lint` 的**巡检编号**：S1 三处同值、S2 片段含值、S3 旧值残留、S4 跨区块陈旧、S5 审计↔产物、S6 并列值需 pending_rule、S7 标记归零、S8 回填往返、S9 批注与过程语残留、S10 自立文本（互引扫描）、S11 整数帧合规 | 「lint 缺陷 0（S1–S11 全绿）」 | `.claude/skills/reverify-numbers/scripts/reverify.py` 的 `lint()`；报告 `agent_workspace/tag_pipeline/player_tags/_reverify/reports/lint.md` |
+| **V′** | **自立文本判据**：产出链（成员行条件/备注、替换对、notes/potential_note）不得出现条目 id、「见/另见/同上/同 -N/同格 -N/同干员另一条」类指称、分文件名；重复内容各写全 | 「按 V′ 清改 notes」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.1 红线 6；`docs/calc-rules.md` §4.6；`docs/concept.md`「备注撰写」 |
+| **G1–G6** | 「（待验证）」复算的**分组号**：按分文件批次把 115 条分六组（G1＝01 决战歼灭、G2＝02 次数对策、G3/G4/G5＝03 吃拐一轮秒三段、G6＝05 插拔容错） | 「G2 组产物」「六组代理并行」 | `agent_workspace/tag_pipeline/player_tags/_reverify/slices/G*.jsonl`（输入）、`agent_workspace/tag_pipeline/player_tags/_reverify/parts/G*.jsonl`（产物）；分组清单见 `agent_workspace/tag_pipeline/player_tags/_reverify/reports/extract.md` |
+| **P01–P13** | **TAG 代号**（分文件编号）：P01 决战歼灭、P02 次数对策、P03 吃拐一轮秒、P04 远程消耗、P05 插拔容错、P06 初动增加、P07 充电、P08 拐杖、P09 保人、**P13 高档控制**、P12 阵容组合（原 P10 大力推拉、P11 阻挡数5 已降为 P13 的子 TAG） | 条目 id 形如 `P03-天空盒-1`（P03 TAG／干员／该干员在该 TAG 下的第 N 处） | 各 `agent_workspace/tag_pipeline/player_tags/NN-*.md`；TAG 定义 `docs/player-tags-specify.md` |
 | **高档控制 / 长效控制 / 远距控制** | P13 的父 TAG 名／其子 TAG：高档控制下辖「大力推拉」「阻挡数5」「**长效控制**」「**远距控制**」「**硬控**」「**软控**」六个子 TAG；**长效控制**判「**等效剥夺时长**」——控制效果真正阻止敌人行动的时间，≥15 秒即纳入（需折算时按木桩敌人攻击间隔 2.5 秒、不计其无冷却的首击）；**远距控制**判控制效果的**可达距离**——能以自身机制（含召唤物／装置）对**自身 6 格以外**（格数索引 ≥7）的敌人施加控制效果者纳入，控制取广读（状态类＋位置类），不限强度与时长，其下再分「**独立达成**」（仅自身含召唤物可办到）／「**需配合**」（需其他我方单位配合）；**硬控**＝可使敌人移动速度至少-100% 且无法普通攻击、无法释放主动技能者（晕眩／冻结／浮空／沉睡）；**软控**＝其余异常状态与位移，「阻挡」亦计作软控 | 「珊比 3技能 传送带 60 秒 → 长效控制」「莫斯提马 Y模组3级第二天赋 攻击范围外减速 → 远距控制·独立达成」「凛御银灰 左侧干员部署施放范围寒冷 → 远距控制·需配合；软控」 | `13-高档控制.md`；`docs/rulings.md`「高档控制：硬控／软控子 TAG」「远距控制的「独立达成／需配合」两级」；异常效果定义与硬软控对照见 `docs/abnormal-effects.md` |
-| **模组代号 / 线名** | **模组代号**＝游戏内模组代码（`HOK-X`／`SIE-Y`／`CCR-Δ`／`ISW-α`／`RA-α`／`SO-α`／`SO-β`），即 `stats.json` 的 `modules[].code`；**线名**＝其末段字母（`X`／`Y`／`Δ`／`α`／`β`）。产物统一写「中文线名（代号）」 | 「Δ模组3级（CCR-Δ）」「集成战略特限模组3级（ISW-α）」 | `material_datas/tag_pipeline/stats.json`；`docs/concept.md`「内部代号」；`docs/rulings.md`「模组代号进产物」 |
+| **模组代号 / 线名** | **模组代号**＝游戏内模组代码（`HOK-X`／`SIE-Y`／`CCR-Δ`／`ISW-α`／`RA-α`／`SO-α`／`SO-β`），即 `stats.json` 的 `modules[].code`；**线名**＝其末段字母（`X`／`Y`／`Δ`／`α`／`β`）。产物统一写「中文线名（代号）」 | 「Δ模组3级（CCR-Δ）」「集成战略特限模组3级（ISW-α）」 | `agent_workspace/tag_pipeline/stats.json`；`docs/concept.md`「内部代号」；`docs/rulings.md`「模组代号进产物」 |
 | **ArkDPS 来源标注** | 显示成绩采用了外部计算工具 **ArkDPS**（作者：极夜星辰；ark-dps.com）的**帧模型／算法框架／用法分支**时，**不在成绩／说明正文行内注明**；结果 JSON 记 `source` 字段（`author`＝极夜星辰、`parts`＝引用部分、`detail`＝详细说明），消费端仅在详情卡片末尾展示「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：{parts}——{detail}」；**评定标准与达标判定仍按我方**，站点没有的干员／技能维持我方口径 | 「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：帧模型与用法分支——…」 | `docs/rulings.md`「显示成绩的混合口径」「外部数据来源标注」；`docs/calc-rules.md` §4.10；`docs/output-standard.md` §4.2 |
 | **打单溅射 / 打多溅射 / 真群攻** | 三种输出形态的**命名区分**（不含门槛）：**打单溅射**＝一次只攻击单个目标、但具溅射能力（如 艾丽妮3）；**打多溅射**＝同时攻击 >1 个目标且带溅射（如 维什戴尔2）；**真群攻**＝同时命中攻击范围内所有敌人（如 圣聆初雪）。前两者属「非真群攻」，演算场景按「单木桩」 | 「艾丽妮属打单溅射」 | `docs/rulings.md`「单木桩场景与随机索敌」；`01-决战歼灭.md` 的「打一溅射型」门槛（另条） |
-| **A–I 类** | **官方设定 TAG** 的模块字母（`A-*`…`I-*`）：分模块的官方 TAG 定义与成员文件 | 「D-快速再部署」 | `material_datas/tag_pipeline/official_tags/[A-I]-*.md`；合并稿 `docs/official-tags-members.md` |
+| **A–I 类** | **官方设定 TAG** 的模块字母（`A-*`…`I-*`）：分模块的官方 TAG 定义与成员文件 | 「D-快速再部署」 | `agent_workspace/tag_pipeline/official_tags/[A-I]-*.md`；合并稿 `docs/official-tags-members.md` |
 
 ## 二、计算符号与游戏缩写
 
@@ -31,65 +31,65 @@
 | **s%** | 段倍率槽位（「造成相当于攻击力 X% 的伤害」的 X%） | `s%＝230%` | `docs/calc-rules.md` §1.4／§2.2 A7 |
 | **S / T / T₀** | 攻速总和 S（`clamp(S,10,600)`）、实际攻击间隔 T、基础/改写后间隔 T₀ | `T ＝ T₀ × 100 ÷ S` | `docs/calc-rules.md` §4.2 |
 | **N_target / m_seg / n** | 目标数 n_target、每段倍率 m_seg、计数 n（次数/段数/跳数） | `总倍率 ＝ Σ(m_seg × n_seg) × N_target` | `docs/calc-rules.md` §1.4 |
-| **帧 / 整帧 / 帧数** | 游戏时钟单位：1 帧＝1/30 秒≈0.033 秒、2 帧＝0.067 秒（最多 3 位小数、四舍五入）；**实际间隔以整帧存在**：`帧数＝round(未量化秒值×30)`、`实际间隔＝帧数÷30`（最多 3 位小数） | 「0.78 秒＝23.4 帧→23 帧→0.767 秒」 | `_reverify/rules.md` R4；`docs/calc-rules.md` §4.2／§4.3 |
+| **帧 / 整帧 / 帧数** | 游戏时钟单位：1 帧＝1/30 秒≈0.033 秒、2 帧＝0.067 秒（最多 3 位小数、四舍五入）；**实际间隔以整帧存在**：`帧数＝round(未量化秒值×30)`、`实际间隔＝帧数÷30`（最多 3 位小数） | 「0.78 秒＝23.4 帧→23 帧→0.767 秒」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` R4；`docs/calc-rules.md` §4.2／§4.3 |
 | **E0 / E1 / E2** | **精英化阶段**：精英0／精英1／精英2 | 「E2 满级面板」 | 各干员 PRTS 页 `## 属性` 表头 |
 | **潜N** | **潜能等级 N**（潜1 为默认基准） | 「5潜（攻击速度+8）」 | 各干员 PRTS 页 `## 潜能` |
 | **专一/专二/专三** | **技能专精等级** 1/2/3；**Rank Ⅲ** 指专精三数值行（技能数值一律取专三） | 「Rank Ⅲ 250%」 | 各干员 PRTS 页 `## 技能` |
 | **S1/S2/S3** | **技能 1／技能 2／技能 3** | 「司霆惊蛰 S3」 | 各干员 PRTS 页 `## 技能` |
 | **X模组 / Y模组 / Δ模组** | 干员**模组类型**（同一干员的不同模组线，按游戏内模组代码的字母称呼）；档位写作「X模组3级」 | 「Y模组3级（攻击力+15%）」 | 各干员 PRTS 页 `## 模组` |
 | **ISW-α / RA-α / SO-α / SO-β** | **模式限定模组**代号：ISW-α＝集成战略特限、RA-α＝生息演算特限、SO-α／SO-β＝【岁的界园志异】特限 | 「佩佩 RA-α1级」 | 各干员 PRTS 页 `## 模组`；专项审计 `_mode-limited-module-audit.md` |
-| **攻击范围代号**（3-10、6-1、4-6 等） | PRTS 攻击范围网格的**代号**（形如 `列-行`／编号-序号），用于定位某干员某阶段的攻击范围形状 | 「精英2 范围代号 4-6」 | 各干员目录 `攻击范围.md`；`_range_codes.json`；爬取工具 `crawl_ranges.py` |
+| **攻击范围代号**（3-10、6-1、4-6 等） | PRTS 攻击范围网格的**代号**（形如 `列-行`／编号-序号），用于定位某干员某阶段的攻击范围形状 | 「精英2 范围代号 4-6」 | 各干员目录 `攻击范围.md`；`_range_codes.json`；爬取工具 `crawlers/crawl_ranges.py` |
 | **打数 / 对单 / 对群 / 真群攻** | 同时可攻击目标数；「对单」＝单体结算、「对群」＝可同时覆盖多目标、「真群攻」＝同时攻击范围内所有敌人 | 「打一溅射需半径 ≥2.5」 | `docs/glossary.md`；各 `NN-*.md` 评定标准 |
 
 ## 三、流程与产物别名
 
 | 代称 | 含义 | 用法示例 | 查阅位置 |
 |---|---|---|---|
-| **条目 / 条目 id** | 结果 JSON 中一处「（待验证）」的复算单位；id 形如 `P03-天空盒-1` | 「清 C1 pending」 | `_reverify/items.jsonl` |
+| **条目 / 条目 id** | 结果 JSON 中一处「（待验证）」的复算单位；id 形如 `P03-天空盒-1` | 「清 C1 pending」 | `agent_workspace/tag_pipeline/player_tags/_reverify/items.jsonl` |
 | **成员行** | 分文件成员表的一行（干员｜编号｜条件｜备注｜依据） | 「成员行备注」 | 各 `NN-*.md` 成员表 |
 | **条件 / 备注 / 依据（列）** | 成员行三列：硬性达成条件／加工信息（数值、机制、用法）／PRTS `文件:行号` 证据 | 「条件写模组档位」 | 撰写规则 `docs/concept.md`「结果展示」 |
-| **`｜`（块分隔符）** | 备注单元格内的**块**分隔符（全角竖线 U+FF5C）。源单元格只能单行，故用它在同一行内切块；ASCII `\|` 会破坏表格结构、禁用。结果 JSON 里不存在该字符——生成时已解析成块数组 | 「`成绩 最高档（…）：2技能：…｜计算：…`」 | `docs/concept.md`「备注分块」；`generate_results.py` `parse_blocks()` |
+| **`｜`（块分隔符）** | 备注单元格内的**块**分隔符（全角竖线 U+FF5C）。源单元格只能单行，故用它在同一行内切块；ASCII `\|` 会破坏表格结构、禁用。结果 JSON 里不存在该字符——生成时已解析成块数组 | 「`成绩 最高档（…）：2技能：…｜计算：…`」 | `docs/concept.md`「备注分块」；`tools/generate_results.py` `parse_blocks()` |
 | **块 / 条** | 备注的两级结构：**块**由 `｜` 分隔（成绩／能力／计算／说明）、**条**由 `；` 分隔；两层共用 `标签：正文` 句法。结果 JSON 写作 `remark: [{label?, items:[{label?, text}]}]` | 「一个能力一块、一个维度一条」 | `docs/concept.md`「备注分块」；`docs/output-standard.md` §4.2 |
 | **块类** | 由块标签判定的四类渲染样式：**成绩**（标签以 `成绩` 开头，可带情形名）、**能力**（其余标签）、**计算**（标签为 `计算`，前端默认折叠）、**说明**（标签为 `说明`） | 「计算块默认折叠」 | `docs/ui-render-rules.md` §6 |
 | **条标签 / 维度词** | 条首的分类标签，渲染为左列键：成绩块与计算块内是技能名（`2技能`），能力块内是维度词（`持续`／`范围`／`伤害`／`打数`／`其它`）——取代旧写法里的 `★持续`／`★范围` 类标记 | 「范围：攻击范围扩大（15 格）」 | `docs/concept.md`「备注分块」 |
-| **裁定台账 / `docs/rulings.md`** | 开发者对**判断类问题**的裁定逐条留痕：裁定／理由／适用范围／折入位置。折入正本后**不删**——「这个问题已经回答过」以它为准；与正本冲突时以正本为准并回改台账 | 「先查台账，别问第二遍」 | `docs/rulings.md`；流程见 `CLAUDE.md` 铁律 2 |
+| **裁定台账 / `docs/rulings.md`** | 开发者对**判断类问题**的裁定逐条留痕：裁定／理由／适用范围／折入位置。折入正本后**不删**——「这个问题已经回答过」以它为准；与正本冲突时以正本为准并回改台账 | 「先查台账，别问第二遍」 | `docs/rulings.md`；流程见 `AGENTS.md` 铁律 2 |
 | **作业记忆包 / `docs/agent-primer.md`** | 新会话与新派发子代理开工前必读：游戏常识（解锁关系——专精需精英2＋技能 7 级、模组解锁需精英2，这两条语料里查不到）、仓库作业常识、**反面清单**、子代理派发清单与产出格式 | 「派子代理前先读 primer」 | `docs/agent-primer.md`；代理定义 `.claude/agents/tag-rewrite.md` |
 | **`handoff` 技能（转交）** | 会话转交：上下文将满或新窗口接手时的开箱文件——开工必读顺序、三条硬纪律、现场约定（踩过的坑）、校验套件、**状态快照**（有时效，以仓库文件为准）、未完成目标 | 「按 handoff 接手」 | `.claude/skills/handoff/SKILL.md` |
 | **`tag-rewrite` 代理** | 项目级子代理类型：把「记忆包＋裁定台账＋写法规范＋自查口径」固化进 system prompt，派 TAG 改写/复算类子代理时用它（替代每次手写 brief） | 「用 tag-rewrite 派活」 | `.claude/agents/tag-rewrite.md` |
-| **文本 lint** | `generate_results.py` 按分块规范检查源单元格的检查器（`★` 分类标记、`备注：` 前缀、裸 `S2`、块序等），只报告不阻断；其报告即**存量待重排清单** | 「文本 lint：169 条待重排」 | `generate_results.py` `lint_text()`／`TEXT_PROBLEMS` |
-| **分块重排审计** | `audit_text_migration.py`：对比 HEAD 与工作区，查重排行是否丢数字、丢依据、留禁用符号；有意改动的数字登记在其 `ACCEPTED`（键＝`文件名｜干员`，值＝放行令牌＋理由），每加一条即一次显式裁定 | 「数字丢失 0；已放行 16 条」 | `audit_text_migration.py` |
-| **属性层 / `stats.json`** | `prts_stats.py` 从 PRTS 语料抽出的机读属性：每干员的 `atk`（E0-1/E0/E1/E2 满级）、`trust`（信赖上限）、`pot`（潜能2–6 效果原文）、`modules`（代号／线名／名字／各档固定属性）。落盘 `material_datas/tag_pipeline/stats.json`；`panel_of(干员, 阶段, 潜能档, 模组线, 档位)` 给面板与组成式 | 「面板855＝精英2满级671＋满信赖+90＋潜能4攻击+27＋Δ模组3级攻击+67」 | `prts_stats.py`；`docs/calc-rules.md` §4.1 |
-| **面板组成式** | `计算` 块首条写的面板拆解（阶段满级＋满信赖＋潜能档攻击＋模组档位攻击），使读者与 `verify_numbers.py` 都能复算；标签按**提供加成的档位**写（`潜能4攻击+27`，不写「潜能5攻击+27」） | 「面板893＝精英2满级785＋满信赖+40＋潜能4攻击+34＋Y模组3级攻击+34」 | `prts_stats.py` `panel_of()`；`docs/concept.md`「备注分块」 |
-| **数值校准** | `verify_numbers.py`：对着 `stats.json` 复算产物里的数字，报五类——面板与声明档位不符、模组档位未取满、恒等式不成立、产物含内部代号、因子未被点到（该干员的天赋／模组／召唤物名从未出现） | 「数值可疑 0 条」 | `verify_numbers.py` |
-| **因子覆盖清单** | `verify_numbers.py` 对玩家 TAG 数值条目列出「该干员的天赋／模组／召唤物名从未在条目里出现」的名单，供写手逐项判「计入／未计入＋理由」（不是产物要求） | 「未提及 天赋：「天穹间的舞步」」 | 同上 |
+| **文本 lint** | `tools/generate_results.py` 按分块规范检查源单元格的检查器（`★` 分类标记、`备注：` 前缀、裸 `S2`、块序等），只报告不阻断；其报告即**存量待重排清单** | 「文本 lint：169 条待重排」 | `tools/generate_results.py` `lint_text()`／`TEXT_PROBLEMS` |
+| **分块重排审计** | `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py`：对比 HEAD 与工作区，查重排行是否丢数字、丢依据、留禁用符号；有意改动的数字登记在其 `ACCEPTED`（键＝`文件名｜干员`，值＝放行令牌＋理由），每加一条即一次显式裁定 | 「数字丢失 0；已放行 16 条」 | `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` |
+| **属性层 / `stats.json`** | `tools/prts_stats.py` 从 PRTS 语料抽出的机读属性：每干员的 `atk`（E0-1/E0/E1/E2 满级）、`trust`（信赖上限）、`pot`（潜能2–6 效果原文）、`modules`（代号／线名／名字／各档固定属性）。落盘 `agent_workspace/tag_pipeline/stats.json`；`panel_of(干员, 阶段, 潜能档, 模组线, 档位)` 给面板与组成式 | 「面板855＝精英2满级671＋满信赖+90＋潜能4攻击+27＋Δ模组3级攻击+67」 | `tools/prts_stats.py`；`docs/calc-rules.md` §4.1 |
+| **面板组成式** | `计算` 块首条写的面板拆解（阶段满级＋满信赖＋潜能档攻击＋模组档位攻击），使读者与 `tools/verify_numbers.py` 都能复算；标签按**提供加成的档位**写（`潜能4攻击+27`，不写「潜能5攻击+27」） | 「面板893＝精英2满级785＋满信赖+40＋潜能4攻击+34＋Y模组3级攻击+34」 | `tools/prts_stats.py` `panel_of()`；`docs/concept.md`「备注分块」 |
+| **数值校准** | `tools/verify_numbers.py`：对着 `stats.json` 复算产物里的数字，报五类——面板与声明档位不符、模组档位未取满、恒等式不成立、产物含内部代号、因子未被点到（该干员的天赋／模组／召唤物名从未出现） | 「数值可疑 0 条」 | `tools/verify_numbers.py` |
+| **因子覆盖清单** | `tools/verify_numbers.py` 对玩家 TAG 数值条目列出「该干员的天赋／模组／召唤物名从未在条目里出现」的名单，供写手逐项判「计入／未计入＋理由」（不是产物要求） | 「未提及 天赋：「天穹间的舞步」」 | 同上 |
 | **特限模组 / 特限证章 / 特勤证章** | 模式限定模组在**产物文本**里的写法：`集成战略特限模组 3级`／`生息演算特限模组`／`岁的界园志异特限模组`；语料里写作「`<干员>特限证章`」（SO-α 线在 机械师／电弧 处写作「`<干员>特勤证章`」，同属此类）；分文件依据列仍用代号 `ISW-α`／`RA-α`／`SO-α`／`SO-β`。**取档优先序**：持有者优先按其数值计算，无者默认各模组增伤条件均满足并取更高者 | 「集成战略特限模组 3级（仅集成战略可用）」 | `docs/concept.md`「备注分块」；`docs/rulings.md`「模式限定模组（特限证章）的优先序」；本表 §2 的代号条 |
 | **木桩口径（默认敌人）** | 一切倍率与伤害演算的**默认敌人假设**：0 防御力、0 法术抗性、0 闪避／免伤概率、无其它任何减伤手段。据此，作用于敌方防/抗**数值**的效果（减防、降抗、穿透）不计入，作用于**承伤倍率**的增伤（脆弱、通缉）照计；只作用于敌人属性、不取消状态类前提 | 「按木桩口径未计入」 | `docs/rulings.md`「默认敌人：纯木桩」；`docs/calc-rules.md` §1.2「计算前提」、§4.5 |
-| **片段 / 替换对（对 1、对 2…）** | 复算产物中的最小替换单元：`old_fragment→new_fragment`（对 1）与 `extra_edits`（对 2、3、4）；合计 ≤4 对 | 「第 2 对旧片段未命中」 | `_reverify/rules.md` §3.3 |
+| **片段 / 替换对（对 1、对 2…）** | 复算产物中的最小替换单元：`old_fragment→new_fragment`（对 1）与 `extra_edits`（对 2、3、4）；合计 ≤4 对 | 「第 2 对旧片段未命中」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.3 |
 | **notes / potential_note** | 条目工作注记：不确定点与需人工确认处／潜能其它属性加成的计入说明 | 「notes 清互引」 | 同上 §3.3 字段语义 |
-| **回填 / apply** | 把复核文件的替换对写回分文件（`reverify.py apply`，先 `--dry-run`） | 「回填仍待整体复核」 | `reverify.py` `apply_backfill()` |
-| **折入 / 清痕** | 把开发者裁定并入源文件后，从文本中移除一切修改史痕迹（日期、轮次、「已修正」等） | 「裁定折入、清痕后交付」 | CLAUDE.md「评定标准 writing rules」 |
-| **落库** | 开发者用词：把其给出的裁定写入相应的文档——即铁律 2 的四步（折入正本 → 登记台账 → 放行表 → 重建《待裁定》） | 「上述均需要落库」 | `CLAUDE.md` 铁律 2；本表 |
-| **《待验证复算.md》** | 根目录**复核文件**（由 parts 渲染）：115 条的复算值／结论／回填行，供开发者整体复核 | 「复核文件显示 0 错误」 | `reverify.py report` 生成 |
-| **《待裁定.md》** | 根目录**裁定文件**：所有待开发者裁定的内容集中于此、每条自包含；裁定完成后整体移除（CLAUDE.md 铁律 2） | 「名单影响清单见《待裁定.md》」 | 根目录（临时文件） |
-| **_reverify/** | 复算工作区目录（`material_datas/tag_pipeline/player_tags/_reverify/`） | 「parts 产物」 | 其下各文件 |
-| **items.jsonl / slices/ / parts/** | 复算三件套：待复算条目清单／分组输入切片／分组产物（`G*.jsonl`；`G*.audit.jsonl` 因素审计；`G*.report.md` 组报告） | 「G2 组 10 条」 | `_reverify/` 下 |
-| **_rules/** | `material_datas/PRTS/_rules/`：PRTS 机制页快照（游戏数据基础、作战机制、属性、就近取整等），是官方公式类引用的出处 | 「`_rules/游戏数据基础.md:960-979`」 | 由 `reverify.py fetch-rules` 抓取 |
-| **剥离 / `strip_noncombat`** | 移除 PRTS 语料中与作战无关的内容：模组剧情（PRTS 每段发两份——`全文阅读` 与 `关闭全文`，后者与前者逐字节相同）、模组解锁任务、解锁与升级材料、`精英化材料`／`技能升级材料`／`后勤技能` 三节。实现为 `crawl_prts.py` 的 `plan_strip()`＋`render_strip()`，爬虫每次写盘前调用；历史语料用 `strip_prts_noncombat.py` 回填 | 「剥离后行号整体平移」 | `crawl_prts.py`；`strip_prts_noncombat.py` |
-| **审计 / `--audit`** | 取每条 `文件:行号` 引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值。报三类：失效（漏改，须 0）／未解析（解析不到但文件名属 PRTS 语料，须 0）／指向已删行（需人工过一遍原文）。判据必须是这个——「新旧行号处文本一致」对正确与漏改的引用同时成立，只能用来越界检查 | 「审计 0 失效 0 未解析」 | `strip_prts_noncombat.py --audit`；`--fix-stale` 补正 |
+| **回填 / apply** | 把复核文件的替换对写回分文件（`.claude/skills/reverify-numbers/scripts/reverify.py apply`，先 `--dry-run`） | 「回填仍待整体复核」 | `.claude/skills/reverify-numbers/scripts/reverify.py` `apply_backfill()` |
+| **折入 / 清痕** | 把开发者裁定并入源文件后，从文本中移除一切修改史痕迹（日期、轮次、「已修正」等） | 「裁定折入、清痕后交付」 | AGENTS.md「评定标准 writing rules」 |
+| **落库** | 开发者用词：把其给出的裁定写入相应的文档——即铁律 2 的四步（折入正本 → 登记台账 → 放行表 → 重建《待裁定》） | 「上述均需要落库」 | `AGENTS.md` 铁律 2；本表 |
+| **《待验证复算.md》** | `agent_workspace/workdocs/待验证复算.md` **复核文件**（由 parts 渲染）：115 条的复算值／结论／回填行，供开发者整体复核 | 「复核文件显示 0 错误」 | `.claude/skills/reverify-numbers/scripts/reverify.py report` 生成 |
+| **《待裁定.md》** | `agent_workspace/workdocs/待裁定.md` **裁定文件**：所有待开发者裁定的内容集中于此、每条自包含；裁定完成后整体移除（AGENTS.md 铁律 2） | 「名单影响清单见《待裁定.md》」 | `agent_workspace/workdocs/`（临时文件） |
+| **agent_workspace/tag_pipeline/player_tags/_reverify/** | 复算工作区目录（`agent_workspace/tag_pipeline/player_tags/_reverify/`） | 「parts 产物」 | 其下各文件 |
+| **items.jsonl / slices/ / parts/** | 复算三件套：待复算条目清单／分组输入切片／分组产物（`G*.jsonl`；`G*.audit.jsonl` 因素审计；`G*.report.md` 组报告） | 「G2 组 10 条」 | `agent_workspace/tag_pipeline/player_tags/_reverify/` 下 |
+| **_rules/** | `material_datas/PRTS/_rules/`：PRTS 机制页快照（游戏数据基础、作战机制、属性、就近取整等），是官方公式类引用的出处 | 「`_rules/游戏数据基础.md:960-979`」 | 由 `.claude/skills/reverify-numbers/scripts/reverify.py fetch-rules` 抓取 |
+| **剥离 / `strip_noncombat`** | 移除 PRTS 语料中与作战无关的内容：模组剧情（PRTS 每段发两份——`全文阅读` 与 `关闭全文`，后者与前者逐字节相同）、模组解锁任务、解锁与升级材料、`精英化材料`／`技能升级材料`／`后勤技能` 三节。实现为 `crawlers/crawl_prts.py` 的 `plan_strip()`＋`render_strip()`，爬虫每次写盘前调用；历史语料用 `crawlers/strip_prts_noncombat.py` 回填 | 「剥离后行号整体平移」 | `crawlers/crawl_prts.py`；`crawlers/strip_prts_noncombat.py` |
+| **审计 / `--audit`** | 取每条 `文件:行号` 引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值。报三类：失效（漏改，须 0）／未解析（解析不到但文件名属 PRTS 语料，须 0）／指向已删行（需人工过一遍原文）。判据必须是这个——「新旧行号处文本一致」对正确与漏改的引用同时成立，只能用来越界检查 | 「审计 0 失效 0 未解析」 | `crawlers/strip_prts_noncombat.py --audit`；`--fix-stale` 补正 |
 | **`**模组等级N**`** | 剥离后语料里标记模组档位的行（N＝1／2／3），取代原 `模组等级_N.png` 图标行；模组数值与效果行的档位归属据此判读 | 「`**模组等级3**` 生命 +200」 | 各干员 PRTS 页 `## 模组` |
-| **隐藏机制汇编 / `module-hidden-mechanics.md`** | `docs/module-hidden-mechanics.md`：从 `docs/temp.txt`（PRTS《模组》页表格快照）解析出的各模组效果格「※」条文（含按干员、按类别两套索引；跨模组重复的通用注释单列一节） | 「查 提丰 的模组隐藏机制」 | 由 `module_notes.py --emit` 生成（勿手改） |
-| **分文件 / 合并文档 / 结果 JSON** | 分文件＝各 `player_tags/NN-*.md`；合并文档＝`docs/player-tags-members.md`；结果 JSON＝`results/operator-tags.json`（最终产物） | 「改分文件→重跑合并与生成」 | 链路见 CLAUDE.md「数据流」 |
-| **_brief.md** | `player_tags/_brief.md`：玩家 TAG 分文件的**作业规范**（共享评定标准） | 「依据 `_brief.md` §2.3」 | `material_datas/tag_pipeline/player_tags/_brief.md` |
-| **_recalc_brief.md** | 本轮整数帧重算的**小组代理作业说明**（临时件） | 「按 brief 改写 steps」 | `_reverify/parts/_recalc_brief.md` |
+| **隐藏机制汇编 / `module-hidden-mechanics.md`** | `docs/module-hidden-mechanics.md`：从 `docs/temp.txt`（PRTS《模组》页表格快照）解析出的各模组效果格「※」条文（含按干员、按类别两套索引；跨模组重复的通用注释单列一节） | 「查 提丰 的模组隐藏机制」 | 由 `tools/module_notes.py --emit` 生成（勿手改） |
+| **分文件 / 合并文档 / 结果 JSON** | 分文件＝各 `player_tags/NN-*.md`；合并文档＝`docs/player-tags-members.md`；结果 JSON＝`results/operator-tags.json`（最终产物） | 「改分文件→重跑合并与生成」 | 链路见 AGENTS.md「数据流」 |
+| **_brief.md** | `player_tags/_brief.md`：玩家 TAG 分文件的**作业规范**（共享评定标准） | 「依据 `_brief.md` §2.3」 | `agent_workspace/tag_pipeline/player_tags/_brief.md` |
+| **_recalc_brief.md** | 本轮整数帧重算的**小组代理作业说明**（临时件） | 「按 brief 改写 steps」 | `agent_workspace/tag_pipeline/player_tags/_reverify/parts/_recalc_brief.md` |
 | **「（待验证）」/「[待考]」** | 标注词：前者曾标 AI 推算值供逐条复核——规则定稿后**推算值不再标注**（见 `docs/concept.md`）；后者标证据不足、待考据项，并路由到「待开发者确认」节 | 「去标记后的新片段」 | `docs/concept.md`；各分文件 |
-| **待开发者确认 / 待裁定** | 分文件内的待裁小节（现集中到《待裁定.md》随交付）／条目 `conclusion=待裁定` | 「`pending_rule`＝C10」 | 各 `NN-*.md`；`_reverify/rules.md` §3.1 红线 5 |
+| **待开发者确认 / 待裁定** | 分文件内的待裁小节（现集中到《待裁定.md》随交付）／条目 `conclusion=待裁定` | 「`pending_rule`＝C10」 | 各 `NN-*.md`；`agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.1 红线 5 |
 
 ## 四、TAG 内部用语
 
 | 代称 | 含义 | 用法示例 | 查阅位置 |
 |---|---|---|---|
 | **子 TAG** | 一个 TAG 下的分档：如 P02 的「多段伤害／间隔伤害」、P03 的「聚爆／连射」 | 「连射·次数档」 | 各 `NN-*.md` 评定标准 |
-| **作用范围** | 官方生存类 TAG 的**子 TAG 组名**：判定该效果能否作用于其他我方单位；取值闭集 `仅自身`（只能作用于自身及其召唤物/替身/装置）、`可给予他人`（能作用于其他我方单位），**两者互斥**——能作用于他人者一律记 `可给予他人`，不论是否同时能作用于自身 | 「闪避·作用范围／可给予他人」 | 各 `material_datas/tag_pipeline/official_tags/C-*.md` 的评定标准；`docs/output-standard.md` §4.3；`generate_results.py` 的取值闭集表 |
+| **作用范围** | 官方生存类 TAG 的**子 TAG 组名**：判定该效果能否作用于其他我方单位；取值闭集 `仅自身`（只能作用于自身及其召唤物/替身/装置）、`可给予他人`（能作用于其他我方单位），**两者互斥**——能作用于他人者一律记 `可给予他人`，不论是否同时能作用于自身 | 「闪避·作用范围／可给予他人」 | 各 `agent_workspace/tag_pipeline/official_tags/C-*.md` 的评定标准；`docs/output-standard.md` §4.3；`tools/generate_results.py` 的取值闭集表 |
 | **表 1 / 表 2（2A・2B）/ 表 3** | P04 远程消耗的三张子表：表 1＝A 超远距离打击（含借用友方位置/射程）；表 2＝B 远程部署型召唤物与装置（2A 召唤师/装置型召唤物、2B 陷阱师）；表 3＝C 全场／无距离限制的触发式伤害 | 「已入 表 2A」 | `04-远程消耗.md` 成员表与各节标题 |
 | **路径①–⑥** | P05 插拔容错的六条**救急路径**：①低再部署循环 ②部署即生效 ③不占部署位/撤退收益 ④初动为满的落地点火 ⑤远位蓄力 ⑥能够实现重部署 | 「路径⑤ 比值」 | `05-插拔容错.md` 评定标准 |
 | **单段间隔 / 结算间隔** | 单个攻击动作内相邻两段伤害之间的间隔／周期性伤害两次结算之间的间隔 | 「单段伤害之间的间隔 ≤2 帧」 | `02-次数对策.md` |
@@ -97,6 +97,6 @@
 | **配合型** | 远距控制判据中的纳入类型：以自身机制（含召唤物／装置）但**需其他我方单位**站位／开技／充能触发（或承运、引爆）才能作用于 6 格以外者——配合前提写进条件；配合方自身是否具备远距控制不作要求 | 「配合型按可达距离纳入」 | `13-高档控制.md` 远距控制评定标准与边界；`docs/rulings.md`「子 TAG『远距控制』」 |
 | **倾泻 / 弹药倾泻 / 轮数 / 跳数 / 间隔槽** | 关闭技能时发射剩余弹药的机制；弹药制折算轮数＝弹药÷每次消耗；周期性伤害的结算次数＝跳数；「间隔槽」＝持续÷实际间隔得到的攻击节拍数 | 「倾泻按每 2 帧 1 枚」 | `03-吃拐一轮秒.md`；`docs/glossary.md` |
 | **总部署位 ≤1 / 双档成绩 / 帧伤** | 决战歼灭专属标准：干员达成 TAG 要求所占的**总部署位 ≤1**（本体＋承载物部署占用数合计）；**双档成绩**＝条件允许的低阶段与最高档两套成绩并列（成绩依赖面板时）；**帧伤**＝伤害以帧为粒度产生（如「移动创伤」每 2 帧按移动距离结算），按固定 2 帧间隔计入次数 | 「不满足总部署位 ≤1」「帧伤按 2 帧计」 | `01-决战歼灭.md` 纳入第 6 条；`rules.md` R7／R23；`docs/calc-rules.md` §4.1／§4.8 |
-| **动作模型 / 命中数** | 一个攻击动作内部的结构（几段、几次判定）；命中数＝一击实际产生的伤害实例数 | 「按各自的动作模型计段」 | `_reverify/rules.md` R18／R17 |
-| **主值 / 并列值** | 条目的主结论数值／按未决项并列的备选数值（两者都写清、不静默取一套） | 「主值 15 秒窗口、并列技能自身窗口」 | `_reverify/rules.md` §3.1 红线 3 |
+| **动作模型 / 命中数** | 一个攻击动作内部的结构（几段、几次判定）；命中数＝一击实际产生的伤害实例数 | 「按各自的动作模型计段」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` R18／R17 |
+| **主值 / 并列值** | 条目的主结论数值／按未决项并列的备选数值（两者都写清、不静默取一套） | 「主值 15 秒窗口、并列技能自身窗口」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.1 红线 3 |
 | **门槛 / 达线 / 翻转 / 越限 / 恰达线** | TAG 数值门槛；满足门槛；门槛两侧结论相反；超出窗口/上限；恰好等于门槛 | 「两读法未翻转」 | 各 `NN-*.md` 评定标准与 `docs/player-tags-specify.md` |

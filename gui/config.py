@@ -10,7 +10,7 @@ import sys
 
 PKG = pathlib.Path(__file__).resolve().parent
 ROOT = PKG.parent
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools"))
 import recommend as rec  # noqa: E402  （复用 TAG 扫描 / 荐读写）
 PARTS = rec.PARTS
 OFFICIAL_DIR = PARTS.parent / "official_tags"
@@ -29,7 +29,7 @@ H2_STOP = rec.STOP_MARKS
 KNOWN_COLS = {"干员", "编号", "子 TAG", "条件", "备注", "依据"}
 
 # 干员名 → charId：成员表「编号」列的唯一来源（插入新行时按干员名自动填充）
-CHAR_IDS_FILE = ROOT / "material_datas" / "tag_pipeline" / "char_ids.json"
+CHAR_IDS_FILE = ROOT / "agent_workspace" / "tag_pipeline" / "char_ids.json"
 try:
     CHAR_IDS: dict[str, str] = json.loads(CHAR_IDS_FILE.read_text(encoding="utf-8"))
 except (OSError, ValueError):

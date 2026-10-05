@@ -167,7 +167,7 @@
 
 ### 5.5 玩家 TAG 悬浮说明（tooltip）
 
-- **数据文件**：`src/static/json/combat/player-tags-explain.json`（源项目 `results/player-tags-explain.json`，源文件 `docs/player-tags-explain.md`，生成脚本 `explain_to_json.py`）。结构＝`tags[{id,name,text}]` ＋ `subs[{tagId,group,value,text}]`。
+- **数据文件**：`src/static/json/combat/player-tags-explain.json`（源项目 `results/player-tags-explain.json`，源文件 `docs/player-tags-explain.md`，生成脚本 `tools/explain_to_json.py`）。结构＝`tags[{id,name,text}]` ＋ `subs[{tagId,group,value,text}]`。
 - **挂载位置**：筛选面板内的**玩家体感 TAG 与子 TAG chips**（候选列表、已选列表、子 TAG 面板；P12 的「势力/用法」分类 chips 同样有说明，组合名 chips 不挂）。官方设定 TAG 不挂。
 - **取用键**：顶级按 `tagId`；子项按 `tagId|group|value`。找不到文案时显示占位（前端当前为「（暂无说明）」）。
 - **内容要求**：人话版说明、不使用源项目内部词汇，游戏术语随文解释（撰写规范见源文件头部注释）；源项目新增/改动 TAG 或子 TAG 时，必须同步更新该源文件并重跑生成脚本（覆盖校验会列出缺失/多余项）。
@@ -244,12 +244,12 @@
 | 5 | `P12` 这个 id 专用于阵容组合维度 | 是 | 该 id 有专门分支（互斥选择、组合区、组荐/组员荐） |
 | 6 | `source` 取值 `official` / `player` | 是 | 分组与荐资格都依赖它 |
 | 7 | 官方 TAG 无 `recommended` | 是 | 前端按空数组处理，官方 TAG 天然不产生荐 |
-| 8 | `recommended` 元素必须是该 TAG 的成员名或组合名 | 由 `output-standard.md` §6 与 `recommend.py` 校验 | 悬空引用只会静默失效（不报错、不显示） |
+| 8 | `recommended` 元素必须是该 TAG 的成员名或组合名 | 由 `output-standard.md` §6 与 `tools/recommend.py` 校验 | 悬空引用只会静默失效（不报错、不显示） |
 | 9 | `rarity` 为 1–6 的整数 | 是 | 非法值按 6 处理 |
 | 10 | 组合条目自身没有 `prtsUrl` | 是（14/14） | 前端不给组合条目渲染外链；若以后补上，需要同步加渲染 |
 | 11 | `subTags` 的 `group` / `value` 是任意字符串 | 现状 8 个组名（作用范围 / 闪避类型 / 子 TAG / 远程部署型召唤物与装置 / 救急路径 / 承载方式 / 增益类型 / 生效方式） | 前端只做 `{group,value}` 去重与精确匹配，不解释其含义，新增组名无需改动 |
 | 12 | 同一 TAG 内同一干员可以有多条条目 | 是（偶有干员在同一 TAG 下存在多条） | 前端聚合为条目数组并列展示，不会被覆盖 |
-| 13 | `remark` 是块数组，每块 `items` 非空 | 是（由 `generate_results.py` 解析保证） | 前端按 `remark.map(...)` 渲染；若退回字符串，函数内置了「单块单条」的降级分支；`items` 为空的块会渲染成空标题 |
+| 13 | `remark` 是块数组，每块 `items` 非空 | 是（由 `tools/generate_results.py` 解析保证） | 前端按 `remark.map(...)` 渲染；若退回字符串，函数内置了「单块单条」的降级分支；`items` 为空的块会渲染成空标题 |
 
 ---
 

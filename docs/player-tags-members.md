@@ -2,7 +2,7 @@
 
 > 编写：2026-09-13。数据基础：`material_datas/PRTS/`（431 名干员，2026-09-08 抓取，含召唤物页）。
 > 本文件是 `docs/player-tags-specify.md`（玩家体感 TAG 定义）的判定结果：每个 TAG 下的干员名单、条件与备注。
-> 与 `docs/official-tags-members.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `material_datas/tag_pipeline/player_tags/` 各分文件。
+> 与 `docs/official-tags-members.md`（官方定义类 TAG）互补；逐条 `文件:行号` 证据见 `agent_workspace/tag_pipeline/player_tags/` 各分文件。
 
 ## 0. 通用评定标准
 
@@ -1692,7 +1692,7 @@
 ### 纯御天花板
 
 - 门槛为「技能开启后自身最终防御 ≥2000」：最终防御＝（精英2 满级＋满信赖＋有效潜能最高档＋条件点名模组档固定属性＋固定值增益）×（1＋百分比增益之和）；来源含技能／天赋／特性／特性追加／模组，层数类按满层计。
-- 同口径未达线（示例）：泡泡 ≈1944（（基础防御720＋潜能4 25＋模组65）×（1＋120%＋20%））；其余候选（星熊、雷蛇、涤火杰西卡、泥岩、可颂、余、折桠、露托、娜斯提、宴等）逐名复核均未达 2000，原始数据与估算见 `_out/纯御-候选扫描.md`、`_out/纯御-精算数据.md`。
+- 同口径未达线（示例）：泡泡 ≈1944（（基础防御720＋潜能4 25＋模组65）×（1＋120%＋20%））；其余候选（星熊、雷蛇、涤火杰西卡、泥岩、可颂、余、折桠、露托、娜斯提、宴等）逐名复核均未达 2000，原始数据与估算见 `agent_workspace/_out/纯御-候选扫描.md`、`agent_workspace/_out/纯御-精算数据.md`。
 - 机制不计：物理减伤（洋灰「图纸校正」）、庇护（森蚺「勇冠三军」）、屏障／护盾（信仰搅拌机「架盾送客仪礼」、珊比第二天赋附带的屏障）、闪避（可颂「奇迹力场」）与法术抗性等均不是「防御」数值，不折算、不作入表依据；只给友方加防的（年3、涤火杰西卡第一天赋给身后单位等）不作自身入表依据。
 
 ## 12｜阵容组合
@@ -2105,6 +2105,6 @@
 
 ## 附录 C：产物与复现
 
-- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`material_datas/tag_pipeline/player_tags/01..12-*.md`。
-- 共享作业评定标准：`material_datas/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。
-- 官方类 TAG 数据：`docs/official-tags-members.md`、`material_datas/tag_pipeline/{final_lists.tsv,merged.json}`。
+- 分 TAG 判定文件（含逐条 `文件:行号` 证据）：`agent_workspace/tag_pipeline/player_tags/01..12-*.md`。
+- 共享作业评定标准：`agent_workspace/tag_pipeline/player_tags/_brief.md`；实装时间表：`_launch_dates.json`；合并脚本：`_merge_to_docs.py`。
+- 官方类 TAG 数据：`docs/official-tags-members.md`、`agent_workspace/tag_pipeline/{final_lists.tsv,merged.json}`。

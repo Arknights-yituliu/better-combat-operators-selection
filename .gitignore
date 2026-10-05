@@ -1,6 +1,7 @@
 # Editor files
 .idea
 .vscode
+.claude/settings.local.json
 
 # Environment files
 .venv
@@ -9,5 +10,25 @@
 __pycache__/
 *.py[cod]
 
-# Scratch batch output for _apply_batch.py (tag-rewrite sub-agent productions)
+# Agent scratch batches and working files (local only)
 _out/
+agent_workspace/workdocs/
+agent_workspace/handoff/
+agent_workspace/tag_pipeline/player_tags/_reverify/items.jsonl
+agent_workspace/tag_pipeline/player_tags/_reverify/parts/
+agent_workspace/tag_pipeline/player_tags/_reverify/slices/
+agent_workspace/tag_pipeline/player_tags/_reverify/reports/
+
+# Private corpora (local only)
+material_datas/videos/
+
+# Local paths for each developer
+local.json
+
+# Local snapshots / background notes kept out of the public repo
+docs/temp.txt
+information_records/
+
+# OS files
+.DS_Store
+Thumbs.db

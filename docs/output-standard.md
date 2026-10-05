@@ -65,7 +65,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | name | string | 干员名（成员表的引用键）。形态名保留原文括号，如 `阿米娅(近卫)`、`阿米娅(医疗)`、`Mon3tr` |
-| charId | string | 干员编号（如 `char_1035_wisdel`）。来源：资源项目 `character_table.json`（`char_*` 条目）；阿米娅(近卫)/(医疗) 等形态条目取自 `char_patch_table.json` 的 `patchChars`；重名条目取 `isNonObtainable=False` 者（如 暮落→`char_4025_aprot2`）。映射缓存：`material_datas/tag_pipeline/char_ids.json` |
+| charId | string | 干员编号（如 `char_1035_wisdel`）。来源：资源项目 `character_table.json`（`char_*` 条目）；阿米娅(近卫)/(医疗) 等形态条目取自 `char_patch_table.json` 的 `patchChars`；重名条目取 `isNonObtainable=False` 者（如 暮落→`char_4025_aprot2`）。映射缓存：`agent_workspace/tag_pipeline/char_ids.json` |
 | rarity | int | 稀有度 1–6（PRTS 干员信息里的「稀有度」是 0 基字段，此处取其值 +1，即星级） |
 | class | string | 职业（先锋／近卫／狙击／重装／医疗／辅助／术师／特种） |
 | branch | string | 分支（如 工匠、策士、处决者） |
@@ -73,7 +73,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | releaseDate | string | 实装时间 `yyyy-MM-dd`（PRTS「获得方式」表的上线时间） |
 | prtsUrl | string | 干员主页 URL（干员名 percent 编码，不带锚点） |
 
-- 数据来源：`material_datas/PRTS/<干员>/<干员>.md`（稀有度·职业＝干员信息，稀有度取原始字段 +1；分支＝特性表；势力＝属性表；实装时间＝获得方式表；实装时间缓存见 `material_datas/tag_pipeline/player_tags/_launch_dates.json`）。
+- 数据来源：`material_datas/PRTS/<干员>/<干员>.md`（稀有度·职业＝干员信息，稀有度取原始字段 +1；分支＝特性表；势力＝属性表；实装时间＝获得方式表；实装时间缓存见 `agent_workspace/tag_pipeline/player_tags/_launch_dates.json`）。
 - 数组顺序按实装时间倒序；UI 不应依赖该顺序。
 
 ## 4. TAG 与成员
@@ -92,7 +92,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| id | string | 是 | 稳定标识。官方类＝TAG 字典 id（`A_stun`、`D_zone`…）；玩家类＝`P01`–`P13`（与 `material_datas/tag_pipeline/player_tags/NN-*.md` 编号一致；**`P10`／`P11` 已退役**——原「大力推拉」「阻挡数5」并入 `P13`「高档控制」作其子 TAG，**退役 id 不得复用**）。**一经发布不得复用或更改**；TAG 改名时保留原 id |
+| id | string | 是 | 稳定标识。官方类＝TAG 字典 id（`A_stun`、`D_zone`…）；玩家类＝`P01`–`P13`（与 `agent_workspace/tag_pipeline/player_tags/NN-*.md` 编号一致；**`P10`／`P11` 已退役**——原「大力推拉」「阻挡数5」并入 `P13`「高档控制」作其子 TAG，**退役 id 不得复用**）。**一经发布不得复用或更改**；TAG 改名时保留原 id |
 | name | string | 是 | TAG 名称（与名单文档一致，如 `阻挡数5`、`待部署区支援`） |
 | source | string | 是 | `"official"`（官方设定类）或 `"player"`（玩家体感类）；UI 可分源筛选、可互相引用 |
 | category | string | 官方类必填 | 类别名：`A 控制·异常`、`B 伤害类型`、`C 生存与增益`、`D 部署与编队`、`E 技力与技能资源`、`F 治疗与支援`、`G 召唤物`、`H 攻击行为特征`、`I 全场光环`（取自 `docs/official-tags-members.md` §3 总览，省略括号补充） |
@@ -103,7 +103,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | members | array | 是 | 成员（TAG×干员关系），见 4.2 |
 
 - 排序：`tags` 数组顺序＝UI 展示顺序——官方类按 `docs/official-tags-members.md` §4 顺序（A→I），玩家类按 `player_tags/_merge_to_docs.py` 的 `TAGS` 顺序（决战歼灭、次数对策、吃拐一轮秒、远程消耗、插拔容错、初动增加、充电、拐杖、保人、**高档控制**、阵容组合）。
-- 官方类 id 以 TAG 字典（`material_datas/tag_pipeline/catalog.json`）为准；`merged.json`／`final_lists.tsv` 由 `_merge_official_to_docs.py --sync-dicts` 从分模块同步（维护方式见 §7 末），逐 TAG 的计数、首现、名单一律以 `docs/official-tags-members.md` §4 为准。
+- 官方类 id 以 TAG 字典（`agent_workspace/tag_pipeline/catalog.json`）为准；`merged.json`／`final_lists.tsv` 由 `_merge_official_to_docs.py --sync-dicts` 从分模块同步（维护方式见 §7 末），逐 TAG 的计数、首现、名单一律以 `docs/official-tags-members.md` §4 为准。
 
 ### 4.2 成员（TAG×干员关系）
 
@@ -227,19 +227,19 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 - **约束**：两份名单的元素都必须是该作用域的成员（干员或组合名）；同一作用域内不重复（由工具强制校验，避免笔误产生悬空引用）。
 - **阵容组合（P12）**：`recommended` 元素可为**组合名**（须为该 TAG 的组合条目名）或该组合内的**提供者干员名**，二者可混排且**互相独立**——为组合加荐不等于为其提供者加荐，反之亦然；UI 以组合为列表容器、在组容器与组员元素上分别展示荐标识（组荐与组员荐不是覆盖关系）。
 - **指定方式**：两份名单均由开发者人工指定（AI 可提出建议，不直接写入）。
-- **维护工具**：`recommend.py`（命令行）与 `recommend_gui.py`（本地网页面板；当前面板只维护「荐」，兜底荐用 `recommend.py --fallback` 维护），源文件 `material_datas/tag_pipeline/player_tags/_recommend.json` 与 `_recommend_fallback.json`。
+- **维护工具**：`tools/recommend.py`（命令行）与 `recommend_gui.py`（本地网页面板；当前面板只维护「荐」，兜底荐用 `tools/recommend.py --fallback` 维护），源文件 `agent_workspace/tag_pipeline/player_tags/_recommend.json` 与 `_recommend_fallback.json`。
 
 ```bash
-python recommend.py                     # 列出 11 个玩家 TAG 及当前荐（含子作用域）
-python recommend.py list 充电           # 查看某作用域的荐
-python recommend.py list 高档控制/纯御天花板
-python recommend.py add 充电 白铁       # 添加荐（可一次多个）
-python recommend.py add 高档控制/纯御天花板 蛇屠箱
-python recommend.py remove 充电 白铁    # 移除荐
-python recommend.py check               # 校验两份名单（TAG／子值／成员是否仍然有效）
-python recommend.py --fallback list 充电           # 查看兜底荐
-python recommend.py --fallback add 充电 白铁       # 添加兜底荐
-python recommend.py --fallback remove 充电 白铁    # 移除兜底荐
+python tools/recommend.py                     # 列出 11 个玩家 TAG 及当前荐（含子作用域）
+python tools/recommend.py list 充电           # 查看某作用域的荐
+python tools/recommend.py list 高档控制/纯御天花板
+python tools/recommend.py add 充电 白铁       # 添加荐（可一次多个）
+python tools/recommend.py add 高档控制/纯御天花板 蛇屠箱
+python tools/recommend.py remove 充电 白铁    # 移除荐
+python tools/recommend.py check               # 校验两份名单（TAG／子值／成员是否仍然有效）
+python tools/recommend.py --fallback list 充电           # 查看兜底荐
+python tools/recommend.py --fallback add 充电 白铁       # 添加兜底荐
+python tools/recommend.py --fallback remove 充电 白铁    # 移除兜底荐
 
 python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与子作用域切换编辑（左键加荐 / 右键取消）；
                                         #   「人工归纳」页摘取干员并入 TAG 并编辑「条件」「备注」
@@ -252,20 +252,20 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 
 | JSON 部分 | 来源 |
 |---|---|
-| `operators` | `material_datas/PRTS/<干员>/<干员>.md`（含 `_launch_dates.json` 的实装时间）＋ `material_datas/tag_pipeline/char_ids.json`（charId 映射） |
-| 官方类 `tags` | `docs/official-tags-members.md`（79 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `material_datas/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`material_datas/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
-| 玩家类 `tags` | `docs/player-tags-members.md`（由其分文件 `material_datas/tag_pipeline/player_tags/NN-*.md` 合并生成） |
-| `recommended` | `material_datas/tag_pipeline/player_tags/_recommend.json`（`recommend.py` 维护） |
-| `subTags` | 玩家类＝各分文件成员表的分组（「子 TAG」列／子表标题／「救急路径：」等行内标记）；官方类＝备注开头的「子 TAG：…。」（可连续多个前缀＝多个组），组名按 `generate_results.py` 的取值闭集表判定：闪避（闪避类型／作用范围）、全场光环、抗削弱、帧级结算，以及 护盾（按层抵挡）／屏障（吸收值）／免死·复活·替身／伤害减免·减伤／庇护（物法减伤）／迷彩／抵抗／嘲讽·吸引攻击／降低被攻击优先级 的「作用范围」组 |
+| `operators` | `material_datas/PRTS/<干员>/<干员>.md`（含 `_launch_dates.json` 的实装时间）＋ `agent_workspace/tag_pipeline/char_ids.json`（charId 映射） |
+| 官方类 `tags` | `docs/official-tags-members.md`（79 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `agent_workspace/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`agent_workspace/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
+| 玩家类 `tags` | `docs/player-tags-members.md`（由其分文件 `agent_workspace/tag_pipeline/player_tags/NN-*.md` 合并生成） |
+| `recommended` | `agent_workspace/tag_pipeline/player_tags/_recommend.json`（`tools/recommend.py` 维护） |
+| `subTags` | 玩家类＝各分文件成员表的分组（「子 TAG」列／子表标题／「救急路径：」等行内标记）；官方类＝备注开头的「子 TAG：…。」（可连续多个前缀＝多个组），组名按 `tools/generate_results.py` 的取值闭集表判定：闪避（闪避类型／作用范围）、全场光环、抗削弱、帧级结算，以及 护盾（按层抵挡）／屏障（吸收值）／免死·复活·替身／伤害减免·减伤／庇护（物法减伤）／迷彩／抵抗／嘲讽·吸引攻击／降低被攻击优先级 的「作用范围」组 |
 | `prtsUrl` | 按 §5 规则生成（干员名编码＋锚点） |
 
-**机读字典与一致性**：`catalog.json` 是脚本唯一读取的 TAG 字典（手写维护，name 必须与分模块条目标题逐字一致）；`merged.json`（干员→TAG id，id 按 catalog 顺序）与 `final_lists.tsv`（TAG→成员）由 `material_datas/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts` 从分模块重建，改 TAG 结构后需重跑；`deterministic.json` 为基础属性快照，不随 TAG 变化。各处的 TAG 数／关系数一律以 `docs/official-tags-members.md` §3 为准，其它文档不另行记数。
+**机读字典与一致性**：`catalog.json` 是脚本唯一读取的 TAG 字典（手写维护，name 必须与分模块条目标题逐字一致）；`merged.json`（干员→TAG id，id 按 catalog 顺序）与 `final_lists.tsv`（TAG→成员）由 `agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts` 从分模块重建，改 TAG 结构后需重跑；`deterministic.json` 为基础属性快照，不随 TAG 变化。各处的 TAG 数／关系数一律以 `docs/official-tags-members.md` §3 为准，其它文档不另行记数。
 
-1. 生成脚本：`generate_results.py`（根目录）。读两份名单文档＋字典／charId 映射／实装时间／荐文件，按本规范合成 `results/operator-tags.json`（CRLF、2 空格缩进、`ensure_ascii=False`）；`--check` 只生成到内存并跑规范校验，`--report` 另打印逐 TAG 计数。同一次运行另写出**辅助名单** `docs/untagged-operators.md`（`docs/operators.txt` 全量 − `operators[]`，即未进任何成员表的干员）。
+1. 生成脚本：`tools/generate_results.py`。读两份名单文档＋字典／charId 映射／实装时间／荐文件，按本规范合成 `results/operator-tags.json`（CRLF、2 空格缩进、`ensure_ascii=False`）；`--check` 只生成到内存并跑规范校验，`--report` 另打印逐 TAG 计数。同一次运行另写出**辅助名单** `docs/untagged-operators.md`（`docs/operators.txt` 全量 − `operators[]`，即未进任何成员表的干员）。
 2. 生成时顺带做文本规范化（不改变含义）：去 markdown 强调标记与 `文件:行号` 证据；生产文档路径引用改写为产品表述（`08-拐杖.md` → `「拐杖」TAG`、`_brief.md` §x → 删除、PRTS 素材路径 → 删除）；备注开头的结构性前缀（「子 TAG：…。」「救急路径：…」，可连续多个）折入 `subTags` 后不再保留；`remark` 按 `｜`（块）与 `；`（条）解析为 §4.2 的块数组。
 3. 文本 lint：生成时按 `docs/concept.md`「备注分块」的禁用项检查源单元格（`★` 分类标记、`备注：`／`PRTS 备注：` 等前缀、`（下详）` 类悬空引用、`S2` 类简写、UI 指令文字），`--check` 逐条列出、不阻断写出——报告即存量待重排清单。
 
-发布流程：`.venv/Scripts/python.exe -X utf8 generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
+发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
 
 **手工编辑**：`recommend_gui.py` 的「结果 JSON」页可把 `results/` 下的 json 载入内存编辑（结构化卡片 + 源码视图共用一份数据，编辑期间不写盘），再由「保存…」选择覆盖已有文件或新建自定义文件名；保存前按本规范列出问题（可定位，但不阻断保存，仅内容不是合法 JSON 时拒绝写盘），内容有变化时按 §1 更新 `version`／`updated`。该页只编辑、不生成初版。
 
@@ -408,4 +408,4 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 }
 ```
 
-> 示例说明：官方类「条件／备注」按 §7 前置工作补录（本示例中 待部署区支援 为策士分支特性，精英 0·1 级即具备，故 `condition` 为「无」；逐条备注待补）；玩家类条件／备注节选自 `material_datas/tag_pipeline/player_tags/07-充电.md`；「阵容组合」组合条目节选自 `12-阵容组合.md`（`members` 元素即组合条目，见 §4.2）。
+> 示例说明：官方类「条件／备注」按 §7 前置工作补录（本示例中 待部署区支援 为策士分支特性，精英 0·1 级即具备，故 `condition` 为「无」；逐条备注待补）；玩家类条件／备注节选自 `agent_workspace/tag_pipeline/player_tags/07-充电.md`；「阵容组合」组合条目节选自 `12-阵容组合.md`（`members` 元素即组合条目，见 §4.2）。

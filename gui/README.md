@@ -13,7 +13,7 @@ the 荐 lists, the member tables of every TAG (both TAG systems), and the final
 
 | Tab | Chinese | What you do there | Writes to disk |
 |---|---|---|---|
-| Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `material_datas/tag_pipeline/player_tags/_recommend.json` (immediately) |
+| Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `agent_workspace/tag_pipeline/player_tags/_recommend.json` (immediately) |
 | Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
 | Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options | only when you press **保存…** |
 
@@ -27,13 +27,16 @@ files — this guide only explains the tool.
 
 ```bash
 # from the repository root
+start_gui.bat                 # Windows: double-click or run; uses .venv when present
+./start_gui.sh                # macOS/Linux equivalent
 .venv/Scripts/python.exe -X utf8 recommend_gui.py                 # start + open the browser
 .venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
 .venv/Scripts/python.exe -X utf8 recommend_gui.py --check         # read-only self-test, no server
 .venv/Scripts/python.exe -X utf8 -m gui                           # identical (implementation lives in gui/)
 ```
 
-* Python 3.11+ and the repository's `.venv`. **No** third-party packages.
+* Python 3.11+. The panel itself needs **no** third-party packages; the crawlers' dependencies are in `requirements.txt`.
+* `start_gui.bat` / `start_gui.sh` pick the interpreter for you (`.venv` first, then system Python).
 * `-X utf8` matters on Windows: without it the console mangles CJK output.
 * The server binds `127.0.0.1` only (never exposed to the network) and picks an ephemeral port if
   the requested one is busy — the actual URL is printed at startup.
@@ -84,13 +87,13 @@ order in `_recommend.json` has no meaning.
 Notes and failure modes:
 
 * Only members of the TAG's main tables can become 荐 (the panel refuses otherwise) — that is what
-  keeps `recommend.py check` clean.
+  keeps `tools/recommend.py check` clean.
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
   prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
 * 阵容组合 (P12) is edited **per category (势力／用法)**: the scope bar switches the view; the combo header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Providers within a combo by release date.
 * 荐 scoping: for player TAGs **with sub-TAGs**, a scope bar switches between the TAG-level list and each sub-TAG's list; entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
 * 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
-* The CLI equivalent is `recommend.py list|add|remove|check`; both write the same `_recommend.json`.
+* The CLI equivalent is `tools/recommend.py list|add|remove|check`; both write the same `_recommend.json`.
 
 ---
 
@@ -169,7 +172,7 @@ Click an operator row to expand it. The card shows the operator's basic info fro
 record **within the currently selected scope**:
 
 * `编号` — read-only charId (`char_1035_wisdel`), shown next to the operator's basic info. It is the
-  member row's 编号 cell, falling back to `material_datas/tag_pipeline/char_ids.json` while a table
+  member row's 编号 cell, falling back to `agent_workspace/tag_pipeline/char_ids.json` while a table
   has not been given the column yet; inserts fill it in automatically, and there is no editor.
 * 条件 / 备注 — click to edit. Clearing 备注 deletes the key; an empty 条件 is flagged in amber
   until you fill it in.
@@ -187,9 +190,9 @@ break the table) and must stay on one line: pasted newlines are collapsed to spa
 
 | File | When |
 |---|---|
-| `material_datas/tag_pipeline/player_tags/NN-*.md` | member inserted / deleted / moved, or a cell edited |
-| `material_datas/tag_pipeline/official_tags/[A-I]-*.md` | same; the entry header `（N 人 · 首现 日期）` is recomputed from the table |
-| `material_datas/tag_pipeline/player_tags/_recommend.json` | a 荐 became invalid because its member row left the TAG |
+| `agent_workspace/tag_pipeline/player_tags/NN-*.md` | member inserted / deleted / moved, or a cell edited |
+| `agent_workspace/tag_pipeline/official_tags/[A-I]-*.md` | same; the entry header `（N 人 · 首现 日期）` is recomputed from the table |
+| `agent_workspace/tag_pipeline/player_tags/_recommend.json` | a 荐 became invalid because its member row left the TAG |
 | `docs/player-tags-members.md`, `docs/official-tags-members.md` | regenerated by the merge scripts (never edit these by hand) |
 
 Inserting into an official table writes **exactly four cells** (`干员｜编号｜条件｜备注`, one per column
@@ -306,7 +309,7 @@ the file it will touch, and the repository is the undo history.
 
 ```
 gui/
-  config.py      paths + sys.path bootstrap (imports the sibling recommend.py / merge script),
+  config.py      paths + sys.path bootstrap (imports the sibling tools/recommend.py / merge script),
                  CHAR_IDS (char_ids.json → 「编号」列取值)
   errors.py      UserError(msg, code) — anything raised here is shown to the user as-is
   md.py          cell helpers, atomic write, and the line-addressed Doc model

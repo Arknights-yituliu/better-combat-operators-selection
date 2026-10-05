@@ -15,9 +15,9 @@
       保存可选「覆盖已有文件」或「新建自定义文件名」，写盘前按规范列出问题但不阻断。
 
 写入的文件（前两页即时落盘，「结果 JSON」页仅在点保存时写）：
-    material_datas/tag_pipeline/player_tags/_recommend.json   （荐）
-    material_datas/tag_pipeline/player_tags/NN-*.md           （成员行增删、条件/备注）
-    material_datas/tag_pipeline/official_tags/[A-I]-*.md      （成员行增删、条件/备注、条目头人数重算）
+    agent_workspace/tag_pipeline/player_tags/_recommend.json   （荐）
+    agent_workspace/tag_pipeline/player_tags/NN-*.md           （成员行增删、条件/备注）
+    agent_workspace/tag_pipeline/official_tags/[A-I]-*.md      （成员行增删、条件/备注、条目头人数重算）
     results/*.json                                             （结果 JSON 页保存）
     docs/player-tags-members.md、docs/official-tags-members.md 由合并脚本重新生成（只读）。
 

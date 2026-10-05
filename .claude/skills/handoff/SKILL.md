@@ -2,23 +2,29 @@
 name: handoff
 description: >-
   会话转交：把当前工作完整交给一个新窗口。用于上下文将满需要承接、或新会话接手本仓库正在进行中的任务。
-  内容＝开工必读顺序 ＋ 截至转交时的状态快照 ＋ 未完成的目标与待裁定项 ＋ 现场约定（踩过的坑）。
+  状态快照写在 agent_workspace/handoff/state.md（本地，不进库）；本技能讲开工顺序、现场约定与校验套件。
   触发词：转交、接手、handoff、上下文将满、新窗口继续。
-  注意：本 skill 的「状态快照」一节有时效——它记的是转交那一刻的进度；与仓库文件冲突之处，一律以文件为准。
+  注意：状态快照有时效——它记的是转交那一刻的进度；与仓库文件冲突之处，一律以文件为准。
 ---
 
 # 转交（handoff）
 
-## 0. 一句话现状
+## 0. 状态快照写在哪儿、写什么
 
-本仓库（明日方舟干员 TAG 数据生产线）**本轮（2026-10-02 起）全量交付已完成，待开发者终审**（终审稿＝根目录 `待裁定.md`）。内容：① 新 skill **`solidify-criteria`（评定标准固化）**；② 第十批遗留收官——**玛恩纳3（5 分支）／卡涅利安3（蓄力·不蓄力）／荒芜拉普兰德3（单人）** 按站点公式弹窗原文（`_out/_arkdps_dialog.js` 的 rawFormula）重算折入 P01；覆盖修正（`main.js` 名字条目 **103**，旧「100 名／56 名无块」含误报，真无块 54 名）；③ **P13 新增第 7 子 TAG「纯御天花板」**（技能开启后自身最终防御 ≥2000、全部来源计满、只自身；8 名：珊比／信仰搅拌机／洋灰／极光／森蚺／年／拜松／蛇屠箱；备注写技能开启后的阻挡数）；④ **P12 结构改造**：原有组合归「**势力**」子 TAG、新增「**用法**」子 TAG（B1 余3·火墙灼燃联动＝荒芜拉普兰德/烛煌/澄闪；B2 酒神3·神经损伤联动＝真言）；⑤ **荐两层名单**（新增 `recommendedFallback`＋`recommend.py --fallback`；前端先荐后兜底、悬浮文案区分）；⑥ **前端三改**（荐兜底渲染、**ArkDPS 引用高亮直达链接**、玩家 TAG／子 TAG 的 Vuetify v-tooltip 通俗说明）＋ **tooltip 数据 60 条**（`docs/player-tags-explain.md` → `results/player-tags-explain.json` → 前端）。**补充轮（开发者五条新要求）已实施**：P12 子面板只保留「势力/用法」分类 chips；**荐下沉到子 TAG**（数据键 `TAG/子值`、产物 `recommendedBySub`/`recommendedFallbackBySub`、GUI 荐页作用域切换栏、前端按子 TAG 取用并显示「TAG · 子 TAG」标签；迁移表 `_out/荐下沉迁移表.md`——105 条/33 键，待终审圈减多归属）；「用法」卡片写全全部涉及干员＋**ArkDPS 默认数据**口径数值（B1：余＋荒芜≈**228330**／烛煌≈**110522**／澄闪≈**102082**（FUN-Y）；B2：酒神＋真言≈**224285**——四组已与站点默认显示逐一对上：公式 `取中位数(…,5,100)` 为上下限截断，木桩法抗 0 时「-20」被截掉，**字面代入＝站点值**；核验见 `_out/用法数值-字面读法核验-2026-10-02.md`，复算脚本 `_out/_combo_calc_v3.py`）；tooltip 改深色底高对比。产物 **v13**（400 干员／90 TAG／**1824** 条关系，md5 `c181fe98e5479e9fac795878a9c6cc87`；说明 JSON md5 `43c48c89fe53af017cdd6c0344348397`）已同步前端；六件套全绿；**工作区未提交**。终审回复后按四步折入（裁定 `rulings.md` 登记等待回复）。归档：`_out/本轮决策与执行状态-2026-10-02.md`、`_out/评定标准固化-纯御天花板-记录.md`、`_out/荐下沉迁移表.md`。**追加轮（2026-10-03，2026-10-05 复核修正）DoT 跳数修复已落盘待验收**：**施加型 DoT 的「尾击」计入**——按 [间隔]-[伤害] 循环、跳数＝⌊覆盖时长÷结算间隔⌋（整倍时即 T/i）⇒ −1 口径作废、跳数整体回改；另落库**隐藏机制「首击」**——施加一击无伤害者另计 1 次首击（望 1 技能 6.5 秒＝7 跳、酒神召唤物 12→13）。隐德来希 2 技能＝48＋12＝**60 段**（5 段/秒）；白雪恢复入表；产物 **v14**（400 干员／90 TAG／**1824** 条关系，md5 `64abb92c051af85653f6752c6c763354`）已同步前端；六件套全绿；裁定已登记 `docs/rulings.md` 八；记录 `_out/待裁定-DoT跳数循环-记录.md`。（上段的 v13 交付内容已提交于 `31285fb`；根目录 `待裁定.md` 仍为 v13 终审稿、其 md5 引用已被本轮取代。）
+- 位置：`agent_workspace/handoff/state.md`（本地，`.gitignore` 已排除；接手者开工先读它）。
+- 写法：转交者在交付前更新，建议含四节——
+  1. **一句话现状**：当前产物版本、md5、是否已同步消费端；
+  2. **未完成的目标**：接手后的第一件事、待裁定／待验收项；
+  3. **遗留清单**：`agent_workspace/_out/` 里不可删的临时工具与记录；
+  4. **时效说明**：写清转交时点。
+- 本技能其余各节是长期有效的作业约定，不随轮次变化。
 
 ## 1. 开工必读（按此顺序，别跳）
 
-1. `CLAUDE.md`（会话自动加载，讲仓库结构与铁律）。
+1. `AGENTS.md`（会话自动加载，讲仓库结构与铁律）。
 2. `docs/agent-primer.md` —— 作业记忆包（解锁关系、**2★及以下无专精**、作业常识、反面清单）。
 3. `docs/rulings.md` —— **裁定台账**（近期：**「六、第九批裁定」**：慢热组A 读法／棘刺累积／结城理·望／硬控·软控子 TAG／远距「独立达成·需配合」与四项纳入排除／潜能对吃拐无帮助／03 死芒·烛煌·蓝毒·号角／模组代号清理范围；**「七、第十批裁定」**：显示成绩混合口径／外部来源标注／执行顺序与样例／《异常效果》落库）。**判断类问题先查它**。
-4. 根目录 `待裁定.md` —— 第十批 D1–D8 已回复落定、**无待决项**；本轮新裁定（纯御门槛/来源/对象/阻挡数写法、+余→P12「用法」、荐两层名单口径）逐字归档在 `_out/本轮决策与执行状态-2026-10-02.md`，**尚待按四步折入 `docs/rulings.md` 正本**。
+4. `agent_workspace/workdocs/待裁定.md` —— 第十批 D1–D8 已回复落定、**无待决项**；本轮新裁定（纯御门槛/来源/对象/阻挡数写法、+余→P12「用法」、荐两层名单口径）逐字归档在 `agent_workspace/_out/本轮决策与执行状态-2026-10-02.md`，**尚待按四步折入 `docs/rulings.md` 正本**。
 5. `docs/scan-protocol.md` —— **不漏扫流程正本**（名单文件＋逐人决断＋复核代理），一切扫描类作业先读它。
 6. 任务涉及的文件：`player_tags/NN-*.md`、`official_tags/[A-I]-*.md`、`docs/calc-rules.md`、`docs/concept.md`、`docs/ui-render-rules.md`、`docs/output-standard.md`、`docs/module-hidden-mechanics.md`（模组「※」隐藏机制汇编）、`docs/abnormal-effects.md`（PRTS《异常效果》落库：异常效果/组合/统一检查分类/硬软控对照）。
 
@@ -30,75 +36,49 @@ description: >-
 
 ## 3. 现场约定（踩过的坑，直接照办）
 
-- **回填分文件一律用 `_apply_batch.py`**（按表头定位列、以 HEAD 重建整行）：键＝干员名，同名多行写 `干员名（子表名）`（须与该表上方最近的小节标题匹配；`（2技能）` 这类非标题标签不会命中）；`--keep-prefix` 保留 `救急路径：`／`子 TAG：` 前缀——**若代理产出文本已自带该前缀，回填后会重复，须事后去重**（`^(救急路径：…；)(救急路径：…)` 与 `^\*\*…\*\*；` 两种形态都要处理）。回填前先 `--dry-run` 核全键命中。
-- **子 TAG 列与成员增删不由回填脚本管**；被移除行带走的 `文件:行号` 要登记 `strip_prts_noncombat.ACCEPTED`。**新增行**：`_apply_batch` 不能插行——按实装倒序用脚本插整行（沿 `_out/_p13_insert.py` 的「找下一行锚点」法）。
+- **回填分文件一律用 `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py`**（按表头定位列、以 HEAD 重建整行）：键＝干员名，同名多行写 `干员名（子表名）`（须与该表上方最近的小节标题匹配；`（2技能）` 这类非标题标签不会命中）；`--keep-prefix` 保留 `救急路径：`／`子 TAG：` 前缀——**若代理产出文本已自带该前缀，回填后会重复，须事后去重**（`^(救急路径：…；)(救急路径：…)` 与 `^\*\*…\*\*；` 两种形态都要处理）。回填前先 `--dry-run` 核全键命中。
+- **子 TAG 列与成员增删不由回填脚本管**；被移除行带走的 `文件:行号` 要登记 `strip_prts_noncombat.ACCEPTED`。**新增行**：`_apply_batch` 不能插行——按实装倒序用脚本插整行（沿 `agent_workspace/_out/_p13_insert.py` 的「找下一行锚点」法）。
 - **`audit_text_migration.ACCEPTED` 同名键必须合并**（令牌取并集、理由相接），批量登记后跑一次去重；**依据列只可加、不可改同一 token**（`文件.md:1,2` 与 `文件.md:1` 是两个 token，改写会报「依据丢失」——**要整段保留旧 token、另起一段写新行号**，如 `…:130,155,182；仇白/仇白.md:132`）。
 - **两线呈现写法**：成绩块情形名＝模式名（`集成战略特限`／`生息演算特限`／`岁的界园志异特限`）或 `通用线`，特限排前；「最低可满足档」排最前；某线无贡献则只写贡献线＋说明。
 - **倍率与面板解耦**：写数值前先问「这是倍率还是绝对值」——固定点数／召唤物伤害只进绝对值（总伤／DPS／每秒），倍率只写百分比结构。
-- **派 TAG 改写类子代理**：用 `.claude/agents/tag-rewrite` 代理类型；产出写 `_out/*.json`（**顶层包 `{"Pnn": …}`**）；prompt 里点名「纯固定攻击的更高档不取」「两线呈现格式」「倍率解耦」三条，否则会被读反。**写手自查替代不了独立复核**（本轮两批复核各抓出实质算错：噤声限域基准、落雷基准回退、三件套不自洽、同池连乘——复核代理要给「可复算的更正值」）。
+- **派 TAG 改写类子代理**：用 `.claude/agents/tag-rewrite` 代理类型；产出写 `agent_workspace/_out/*.json`（**顶层包 `{"Pnn": …}`**）；prompt 里点名「纯固定攻击的更高档不取」「两线呈现格式」「倍率解耦」三条，否则会被读反。**写手自查替代不了独立复核**（本轮两批复核各抓出实质算错：噤声限域基准、落雷基准回退、三件套不自洽、同池连乘——复核代理要给「可复算的更正值」）。
 - **外部计算工具（ArkDPS）的引用与标注**（第十批裁定改写原「站点/外部对照信息不入产物」）：**显示成绩**在「站点∩我方」交集内采用「我方基础数据 × 站点算法框架/帧模型/用法分支」（帧模型＝可攻击时长含前后摇、`四舍五入(可攻击时长÷间隔)`；间隔用我方；面板/潜能/条件全用我方；站点默认数值不用）；行内成绩块括注「（帧模型与用法分支参考 ArkDPS（作者：极夜星辰，ark-dps.com））」、结果 JSON 记 `source` 字段（author＝极夜星辰、parts＝引用部分）、详情卡片展示「数据来源：ArkDPS（作者：极夜星辰）｜引用部分：…」；**评定标准与达标判定仍按我方**（交集内达标同源、站点没有的按我方口径）。相对判据（慢热超额/比值/距离/时长/控制）不重算。规则见 `docs/calc-rules.md` §4.10；对照方法（三支 JS：FormulaDialog/formula-snippet/main）见记忆 [[arkdps-site-formula-materials]]。**其余内部代号（范围代号、S1/S2/S3、表 2A、路径⑤）仍不入产物。**
-- **ArkDPS 公式的 `取中位数(x,5,100)` 是上下限截断**：木桩 0 法抗下 `100-(法抗-20)=120` 被封顶为 100（乘区 1.0），故「字面读法」与站点默认显示是同一个值；复算以 `_out/_combo_calc_v3.py` 为准（v1/v2 把截断当普通减法、且漏烛煌 X3 天赋/特性，已作废）。澄闪 +余 行站点默认是 **FUN-Y** 线（攻速+7）。
+- **ArkDPS 公式的 `取中位数(x,5,100)` 是上下限截断**：木桩 0 法抗下 `100-(法抗-20)=120` 被封顶为 100（乘区 1.0），故「字面读法」与站点默认显示是同一个值；复算以 `agent_workspace/_out/_combo_calc_v3.py` 为准（v1/v2 把截断当普通减法、且漏烛煌 X3 天赋/特性，已作废）。澄闪 +余 行站点默认是 **FUN-Y** 线（攻速+7）。
 - **前端 ArkDPS 高亮必须单次替换；引用标识只在卡片末尾**：`linkifyArkdps` 把「ArkDPS」与「ark-dps.com」放在**同一轮** replace——分两轮会把第一轮写入 href 的域名再包一次链接、产出嵌套锚点残片（`…ark-dps.com/zh/" target="_blank"…`）。**成绩／说明正文不写引用**；引用描述集中在**详情卡片末尾**的引用块「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：{parts}——{detail}」（操作员卡聚合本卡全部带 `source` 条目、组合卡用组合来源）。`source`＝`{model, url, author, parts, detail}`；生成器按「用法」子 TAG 与 `ARKDPS_MEMBER_ROWS` 显式行清单写 source（新增此类行须登记）。
-- **禁止「成功记忆」，一切数据回源重读（第十批教训）**：引用/抽取站点或语料数据时**必须回到源文件**用**括号配对/逐对象**方式解析（**禁用邻近窗口与跨块搜索**），并逐条与 `material_datas/PRTS` 语料比对名称；不得凭上一轮产出的印象复述。**已发生实例**：首轮窗口抽取把 **麒麟R夜刀3「空中回旋乱舞」的「巨型敌人」分支泄漏到仇白**（仇白三个技能均无分支）——凡「某干员×某分支」类数据，落盘前必须做**至少一次独立回源抽检**（抽 2–3 名核到源文）。**覆盖修正（本轮）**：`_out/_arkdps_main.js` 名字条目实为 **103**（旧「只含 100 名」有误——`[A-Z]{2}\d{2}` 正则会漏掉 `USS0`／`REX1` 等 3 字母代号）；**`_out/_arkdps_dialog.js`（公式弹窗 chunk）含 102 个干员块的逐技能 `rawFormula`**（玛恩纳 5 档、卡涅利安蓄力档、荒芜拉普兰德／烛煌的 +余组合等），抽取方法见 `_out/_extract_dialog.py`（括号配对、跳字符串），输出 `_out/dialog_formulas.json`。
-- **防御类数值行文不用「面板NNN」**：`verify_numbers.py` 把 `面板(\d+)` 一律按攻击面板校准（DEF 不在其域）；纯御等防御行写「基础防御NNN＝…」，否则报「面板与任何已声明口径都对不上」。
+- **禁止「成功记忆」，一切数据回源重读（第十批教训）**：引用/抽取站点或语料数据时**必须回到源文件**用**括号配对/逐对象**方式解析（**禁用邻近窗口与跨块搜索**），并逐条与 `material_datas/PRTS` 语料比对名称；不得凭上一轮产出的印象复述。**已发生实例**：首轮窗口抽取把 **麒麟R夜刀3「空中回旋乱舞」的「巨型敌人」分支泄漏到仇白**（仇白三个技能均无分支）——凡「某干员×某分支」类数据，落盘前必须做**至少一次独立回源抽检**（抽 2–3 名核到源文）。**覆盖修正（本轮）**：`agent_workspace/_out/_arkdps_main.js` 名字条目实为 **103**（旧「只含 100 名」有误——`[A-Z]{2}\d{2}` 正则会漏掉 `USS0`／`REX1` 等 3 字母代号）；**`agent_workspace/_out/_arkdps_dialog.js`（公式弹窗 chunk）含 102 个干员块的逐技能 `rawFormula`**（玛恩纳 5 档、卡涅利安蓄力档、荒芜拉普兰德／烛煌的 +余组合等），抽取方法见 `agent_workspace/_out/_extract_dialog.py`（括号配对、跳字符串），输出 `agent_workspace/_out/dialog_formulas.json`。
+- **防御类数值行文不用「面板NNN」**：`tools/verify_numbers.py` 把 `面板(\d+)` 一律按攻击面板校准（DEF 不在其域）；纯御等防御行写「基础防御NNN＝…」，否则报「面板与任何已声明口径都对不上」。
 - **P12 子 TAG 新口径（开发者裁定）**：ArkDPS 上有、且涉及的干员已被玩家体感 TAG 收录的「玩家用法组合」→ 收进 **P12 阵容组合**；原有各势力子 TAG **合并为「势力」子 TAG**（原成员全部移入）；新增子 TAG **「用法」** 收录这类组合；条目详情卡文案面向新手写清（尚未实施，见 §6）。
-- **`solidify-criteria` skill**：新增/修订 TAG 评定标准只给例子或模糊词时走它（回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证）；本轮「纯御天花板」为首个用例（记录/问答归档见 `_out/评定标准固化-纯御天花板-记录.md`）。
+- **`solidify-criteria` skill**：新增/修订 TAG 评定标准只给例子或模糊词时走它（回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证）；本轮「纯御天花板」为首个用例（记录/问答归档见 `agent_workspace/_out/评定标准固化-纯御天花板-记录.md`）。
 - **同一行内「条件/成绩/判定窗」必须同排布**：斩业星熊三件套曾分属三个操作场景（4 秒关技／32 秒不关技／关技窗）——复核当场打回；成绩与判定窗取同一次运行。
 - **证据只进「依据」列**；产物里不得出现范围代号、`S1/S2/S3`、模组档码、`表 2A`、`路径⑤`、分文件名、门槛重述（「≥3000%」尾巴、`判定：`前缀都不要）。
-- **回填会不会回退「依据」列**：`_apply_batch.py` 以 **HEAD** 重建整行（只替换条件／备注两格）——工作区若有与 HEAD 不同的「依据／编号／子 TAG」，回填即被回退。动前先 `git status`／`git diff` 摸清既有差异并避开目标行，动后以 `audit_text_migration.py` 的「依据丢失 0」为准。
+- **回填会不会回退「依据」列**：`.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` 以 **HEAD** 重建整行（只替换条件／备注两格）——工作区若有与 HEAD 不同的「依据／编号／子 TAG」，回填即被回退。动前先 `git status`／`git diff` 摸清既有差异并避开目标行，动后以 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 的「依据丢失 0」为准。
 - **P05（插拔容错）回填必须加 `--no-head`**：HEAD 的备注前缀是 `**救急路径：…**；`（带粗体），带回来会让 `generate_results` 的前缀正则解析不到、整批丢子 TAG；工作区才是当前态。仍配 `--keep-prefix`。
 - **换行坑**：临时脚本写分文件一律 `p.write_bytes("\r\n".join(lines).encode("utf-8"))`——用 `write_text` 会因文本模式把 `\r\n` 再转义成 `\r\r\n`（每行后多一个空行），整张表解析崩掉，表现为 `generate_results --check` 报「荐『X』不是本 TAG 的成员」。发现后按 `b"\r\r\n" → b"\r\n"` 修回。另：**自己读文件用 `open(..., newline='')`**——universal newline 会把 CRLF 折成 LF，`split("\r\n")` 会得到一整行（本轮探针踩过）。
-- **`ACCEPTED` 同名键必须合并**：字典字面量里重复键只有**最后一个**生效——批量登记走 `_out/_accepted.py`（它按键读旧值、**并集合并**后整体重写，天然去重；勿手工逐条塞重复键）。
-- **审计默认只打印前 30 条**：登记放行表时用 `AUDIT_ALL=1` 全量输出到文件再解析（`_out/_accepted.py` 已内置；strip 审计的 85 条「键分词误报」即用 `正则`（`（…md:(\d+) → 应为`）提取后批量登记）。
+- **`ACCEPTED` 同名键必须合并**：字典字面量里重复键只有**最后一个**生效——批量登记走 `agent_workspace/_out/_accepted.py`（它按键读旧值、**并集合并**后整体重写，天然去重；勿手工逐条塞重复键）。
+- **审计默认只打印前 30 条**：登记放行表时用 `AUDIT_ALL=1` 全量输出到文件再解析（`agent_workspace/_out/_accepted.py` 已内置；strip 审计的 85 条「键分词误报」即用 `正则`（`（…md:(\d+) → 应为`）提取后批量登记）。
 - **块标签里的嵌套括号**：块标签形如 `第一天赋「X」（Y模组3级（HOK-Y），潜能5）` 时，标签校验必须按**配对**括号剥除（`generate_results._strip_brackets`）——用正则会漏掉嵌套、把含逗号的标签静默退回正文（表现为「块首疑似标签但未被识别」）。标签字数上限与 lint 阈值均为 `BLOCK_LABEL_MAX`（40）。
-- **`_out/` 里的工具随手删不得**：`_out/_accepted.py`／`_build_p13_far.py`／`_p13_insert.py` 这类临时件是流程的一部分；清理前先确认后续批次不再需要。
-- **模组代号补入脚本**（`_out/_sweep_codes_labels.py`）对**组合级 bullet**（12-阵容组合，会进 `read_combo_meta`）要按「每个提及点最近的在前干员名」解析（同名是子串时优先取更长的名字，如「归溟幽灵鲨」vs「幽灵鲨」）。
-- **引用分词的全角冒号**：`strip_prts_noncombat.py` 的 `CITE_RE` 排除集须同时含 `：` 与 `:`；否则「X模组3级：塑心/塑心.md:162」的路径键会连同前缀一起被吞，任何在其前插入文字都会误报「失效」。
+- **`agent_workspace/_out/` 里的工具随手删不得**：`agent_workspace/_out/_accepted.py`／`_build_p13_far.py`／`_p13_insert.py` 这类临时件是流程的一部分；清理前先确认后续批次不再需要。
+- **模组代号补入脚本**（`agent_workspace/_out/_sweep_codes_labels.py`）对**组合级 bullet**（12-阵容组合，会进 `read_combo_meta`）要按「每个提及点最近的在前干员名」解析（同名是子串时优先取更长的名字，如「归溟幽灵鲨」vs「幽灵鲨」）。
+- **引用分词的全角冒号**：`crawlers/strip_prts_noncombat.py` 的 `CITE_RE` 排除集须同时含 `：` 与 `:`；否则「X模组3级：塑心/塑心.md:162」的路径键会连同前缀一起被吞，任何在其前插入文字都会误报「失效」。
 - **在引用紧前方改文字 → strip 审计「失效」误报（键名随散文变化）**：消除方式＝在该文件 `strip_prts_noncombat.ACCEPTED` 显式放行（按 `(分文件, HEAD 侧行号)`），注释写明「引用本身未变、仍指向同一处原文」（第八批 49 个键即此类）。
 - **「指向已删行」的历史余量**：10 条（07 罗小黑×2、13 霍尔海雅×3／安洁莉娜×2／莫斯提马×1／予愿安洁莉娜×2）为批七前后既有、非本批产生；报告每轮都会列出，属「需人工过一遍」的存量。
-- **`_apply_batch.py` 读工作区用 `split("\r\n")`**：分文件若为 LF 行尾，回填会**静默 0 条**——动手前 `file` 核行尾（现全库皆 CRLF）。`_out/_accepted.py` 以文本模式读写 `audit_text_migration.py`，会把它转为 LF——功能无碍（autocrlf 归一化），但别再拿 `split("\r\n")` 直接读它。
-- **`audit_text_migration.py` 的两处判定（勿回退）**：①成员表以「**其后紧跟分隔行**」判定；②同名多行按**出现顺序配对**。
+- **`.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` 读工作区用 `split("\r\n")`**：分文件若为 LF 行尾，回填会**静默 0 条**——动手前 `file` 核行尾（现全库皆 CRLF）。`agent_workspace/_out/_accepted.py` 以文本模式读写 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py`，会把它转为 LF——功能无碍（autocrlf 归一化），但别再拿 `split("\r\n")` 直接读它。
+- **`.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 的两处判定（勿回退）**：①成员表以「**其后紧跟分隔行**」判定；②同名多行按**出现顺序配对**。
 - **子代理的解释性读法要复核后落盘**：裁定原文可能只给判准——写手可能读反，须在回填前由主进程定读法并列入证伪清单。
 - **scan-protocol 复核的实际形态**：写手 → 复核（证伪）→ 写手逐条修正 → 复验 → 核销；远距控制第二批（15＋6 项）与决战歼灭两批（各 6-7 项）均走完两轮，**修正清单本身就是交付物的一部分**。
-- **每批开发者回复原文必须归档**：折入的同时把逐字回复留存到 `_out/待裁定-第N批-回复原文.md`（已建第七、八、九、十批）。第八批另含**当场问答**（`/handoff` 会话中以 AskUserQuestion 确认）与**计划审批时的指示**；第十批含 D1–D8 与两项附加问、以及**反幻觉指示**（「仇白跟巨型根本没什么关系，这属于幻觉成果，要万分警觉」）。
+- **每批开发者回复原文必须归档**：折入的同时把逐字回复留存到 `agent_workspace/_out/待裁定-第N批-回复原文.md`（已建第七、八、九、十批）。第八批另含**当场问答**（`/handoff` 会话中以 AskUserQuestion 确认）与**计划审批时的指示**；第十批含 D1–D8 与两项附加问、以及**反幻觉指示**（「仇白跟巨型根本没什么关系，这属于幻觉成果，要万分警觉」）。
 - **规划类问题用 AskUserQuestion、外审类问题用《待裁定.md》**：开发者在会话内响应很快；但**口径点定类**（会改产物数值的）一律落《待裁定》条文，保证留痕。
-- **DoT 跳数按「[间隔]-[伤害]」循环（裁定 2026-10-03／2026-10-05 复核修正）**：**施加型持续伤害效果（DoT）**按 [间隔]-[伤害] 计时，首次结算在施加后第 1 个间隔，但**持续时长末端的「尾击」计入**——跳数＝**⌊覆盖窗口÷结算间隔⌋**（整倍时即 T/i，如 12 秒@1 秒＝12 跳）；**若施加该状态的那一击本身无伤害（除状态外无伤害输出），另计 1 次「首击」**（施加时立即结算；望 1 技能 6.5 秒＝7 跳、酒神召唤物 6 秒@0.5 秒＝13 跳）；**技能/天赋/装置/召唤物自身按间隔直接造成的伤害与条件状态型伤害不套循环**，按「覆盖时长÷结算间隔（四舍五入）」计；**攻击动作仍含首击**；**帧伤按 2 帧机制原文另计**。落库：`02-次数对策.md` 共同约定①、`docs/calc-rules.md`（跳数式／C5·C6／§4.4）、`_reverify/rules.md` R6；台账「八、DoT 跳数循环裁定」。
+- **DoT 跳数按「[间隔]-[伤害]」循环（裁定 2026-10-03／2026-10-05 复核修正）**：**施加型持续伤害效果（DoT）**按 [间隔]-[伤害] 计时，首次结算在施加后第 1 个间隔，但**持续时长末端的「尾击」计入**——跳数＝**⌊覆盖窗口÷结算间隔⌋**（整倍时即 T/i，如 12 秒@1 秒＝12 跳）；**若施加该状态的那一击本身无伤害（除状态外无伤害输出），另计 1 次「首击」**（施加时立即结算；望 1 技能 6.5 秒＝7 跳、酒神召唤物 6 秒@0.5 秒＝13 跳）；**技能/天赋/装置/召唤物自身按间隔直接造成的伤害与条件状态型伤害不套循环**，按「覆盖时长÷结算间隔（四舍五入）」计；**攻击动作仍含首击**；**帧伤按 2 帧机制原文另计**。落库：`02-次数对策.md` 共同约定①、`docs/calc-rules.md`（跳数式／C5·C6／§4.4）、`agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` R6；台账「八、DoT 跳数循环裁定」。
 
 ## 4. 校验套件（改完必跑）
 
 ```bash
-.venv/Scripts/python.exe -X utf8 prts_stats.py --check          # 属性层覆盖率（异常 0）
-.venv/Scripts/python.exe -X utf8 verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
-.venv/Scripts/python.exe -X utf8 generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
-.venv/Scripts/python.exe -X utf8 audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
-.venv/Scripts/python.exe -X utf8 strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
+.venv/Scripts/python.exe -X utf8 tools/prts_stats.py --check          # 属性层覆盖率（异常 0）
+.venv/Scripts/python.exe -X utf8 tools/verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
+.venv/Scripts/python.exe -X utf8 tools/generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
+.venv/Scripts/python.exe -X utf8 crawlers/strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
 .venv/Scripts/python.exe -X utf8 recommend_gui.py --check        # GUI 规范（0 错误 0 提醒）
 ```
 
-改完 `results/operator-tags.json` 后**必须复制到前端**（`D:/development-projects/contribution-projects/ark-yituliu/frontend-v2-plus/src/static/json/combat/operator-tags.json`）并核对 md5。
-
-## 5. 状态快照（转交时：2026-10-02，第三轮＝全量交付后待终审）
-
-**2026-10-03／2026-10-05 追加轮（DoT 跳数修复＋尾击/首击机制落库；此段最新）**：产物 **v14**、md5 `64abb92c051af85653f6752c6c763354`（**1824** 条关系，白雪恢复入表）；最终机制（**尾击计入＋施加一击无伤害者另计首击**）见 `docs/rulings.md` 八；记录 `_out/待裁定-DoT跳数循环-记录.md`、校验输出 `_out/_check_*.txt`。待验收：修复本身＋`docs/player-tags-specify.md` 定义句（归开发者手改）。
-
-- **产物**：`results/operator-tags.json`（**v13**）400 干员 / **90 TAG**（官方 79＋玩家 11）/ **1824** 条关系；`docs/untagged-operators.md` 同批写出；**另** `results/player-tags-explain.json`（tooltip 文案，11＋49 条）。已同步前端：operator-tags md5 `c181fe98e5479e9fac795878a9c6cc87`、explain md5 `43c48c89fe53af017cdd6c0344348397`。
-- **本轮完成**：
-  - 新 skill `solidify-criteria`（＋`CLAUDE.md`／`add-player-tag` 指针）；
-  - P01 遗留三行重算（玛恩纳 5 分支 134835/121891/108947/83058/31282；卡涅利安 60954/32030；荒芜拉普兰德 188519）；
-  - **P13 第 7 子 TAG 纯御天花板**（8 名；`_out/_p13_pure_def.py`）；
-  - **P12 势力/用法**（`_out/_p12_usage.py`；生成器组合 subTags；gui 放行）；
-  - **荐两层名单**（`_recommend_fallback.json`；`recommend.py --fallback`；生成器/校验/规范）；
-  - **tooltip 数据**（`docs/player-tags-explain.md`＋`explain_to_json.py`＋前端静态 JSON）；
-  - **前端三改**（`better-combat-operator-filter.vue`：荐兜底、ArkDPS 链接化、TAG tooltip、P12 分类 chips、文案；SFC 编译通过；vite build 已跑）；
-  - **用法数值核验（追加轮）**：按开发者「采用字面读法」回源 rawFormula 逐条复算——`取中位数(…,5,100)` 为截断、字面代入＝站点默认显示；四组值 荒芜 228330／烛煌 110522／澄闪 102082（改 FUN-Y）／真言+酒神 224285 与站点逐一对上；组合级卡片段补「组合数值」句（进 JSON 渲染）；详见 `_out/用法数值-字面读法核验-2026-10-02.md`；
-  - **ArkDPS 引用渲染修复＋末尾统一标注（追加轮）**：修 `linkifyArkdps` 两轮替换导致的嵌套锚点残片（改单次替换）；引用标识**撤出成绩／说明正文**，改为**详情卡片末尾**一条详细引用块（「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：{parts}——{detail}」；操作员卡聚合、组合卡用组合来源）；`source` 增 `author`（极夜星辰）＋`parts`＋`detail`（生成器按「用法」子 TAG 与显式行清单登记）；规则正本五处同步；详见 `_out/ArkDPS引用-渲染修复与统一标注-2026-10-02.md`；
-  - **终审稿**：根目录 `待裁定.md`（自包含；待开发者回复）。
-- **待终审后处理**：三组裁定（纯御标准与 8 名／+余→P12／荐两层）＋追加「用法数值·字面读法」的 `rulings.md` 登记；可选：补录用法组合、填兜底名单、tooltip 文案修订；`docs/player-tags-specify.md` 的定义句由开发者补。
-- **遗留（`_out/`，勿删）**：`本轮决策与执行状态-2026-10-02.md`、`评定标准固化-纯御天花板-记录.md`；`dialog_formulas.json`、`dialog_code_map.md`、`ArkDPS-弹窗公式-*.md`、`mainjs_coverage_fixed.md`、`_extract_dialog.py`、`_p01_leftover_rows.py`、`_p13_pure_def.py`、`_p12_usage.py`、`_accept_leftover.py`、`_accepted.py`、`纯御-候选扫描.md`、`纯御-精算数据.md`、`纯御-短名单原文.md`；`_p01_zhanxing.py`、`_p01_siting.py`、`_p13_apply.py`、`_extract_strict.py`、`_verify_names.py`；`ArkDPS-对照总表.md`、`ArkDPS-技能时长与分支.md`、`ArkDPS-取用选项.md`；`慢热-A-v3.md|json`；`名单-*`、`P01-*`、`P13-*`、`P03-*` 系列；`_site_formulas_*.json`、`arkdps-*`；`证伪式复核-第九批.md`、`证伪式复核-第十批.md`。`docs/temp.txt`＝ark-dps 快照；`material_datas/PRTS/异常效果/*.wikitext`＝图鉴快照。
-
-## 6. 未完成的目标（接手后的第一件事）
-
-1. **等待开发者对根目录 `待裁定.md` 的终审回复**（含补充轮五条：P12 子 TAG chips 删除、荐口径修正与下沉、GUI 子 TAG 荐、用法卡片数值、tooltip 对比度）；**另待验收 2026-10-03 追加轮的 DoT 跳数循环修复（v14；见 §5 顶段）**。
-2. **回复后按四步折入**：三组既有裁定＋补充轮裁定＋追加两轮（用法数值·字面读法／ArkDPS 引用渲染与标注）写 `docs/rulings.md`；脚本放行/规范同步；清空/替换 `待裁定.md`；`docs/player-tags-specify.md` 定义句由开发者补。
-3. **可选项（视终审）**：按 `_out/荐下沉迁移表.md` 圈减多归属荐；补录其他用法组合（凛御银灰＋斯卡蒂2/乌尔比安3、缪尔赛思＋复制艾拉、塑心＋妮芙）；按修订点更新 60 条 tooltip 文案（改 `docs/player-tags-explain.md` → 重跑 `explain_to_json.py` → 同步前端）。
-4. **纪律提醒**：防御数值不用「面板NNN」；`main.js` 103 名＋`dialog.js` 公式；用法卡片仅在「用法」子 TAG 使用 ArkDPS 默认数据（其余行仍我方口径）；改产物后必须同步前端并核对 md5；提交须待开发者发话。
+改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `.venv/Scripts/python.exe -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。

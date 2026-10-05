@@ -2,7 +2,7 @@
 
 > 数据基础：`material_datas/PRTS/`（431 名干员 / 501 个文件，2026-09-08 抓取）+ PRTS《异常效果》客户端数据页与《术语释义》词条。
 > 校验目标：按官方状态/机制目录对全量干员逐行校验，产出每个 TAG 的**完整持有者名单**（TAG×干员为多对多关系），共 79 个 TAG、1231 条 TAG×干员关系。
-> 「全场光环」（I 类）由玩家体感 TAG 转入，条目证据见 `material_datas/tag_pipeline/official-fullmap-aura.md`。
+> 「全场光环」（I 类）由玩家体感 TAG 转入，条目证据见 `agent_workspace/tag_pipeline/official-fullmap-aura.md`。
 >
 > **TAG 类型说明**：本文档全部为 **① 官方定义类 TAG**（判定依据为 PRTS 官方数据页/词条/干员原文，见 §1–§2）。玩家使用体感经验类 TAG（法蒸/永控/吃拐等，无官方词条、来自实战经验总结，部分需多干员配合才成立）单独收录，定义见 `docs/player-tags-specify.md`、名单见 `docs/player-tags-members.md`；两类 TAG 在未来 UI 中可分源筛选、可互相引用。
 
@@ -1881,6 +1881,6 @@
 
 ## 9. 分类执行流程（维护与生成）
 
-1. 本文件 §4 由 `material_datas/tag_pipeline/official_tags/*.md` 分模块经 `_merge_official_to_docs.py` 合并生成（§3 总览与 §5 时间线同步重算）；每个 TAG 的成员表逐行给出「条件」（硬性要求）与「备注」（游戏内原文引用与要点）。
+1. 本文件 §4 由 `agent_workspace/tag_pipeline/official_tags/*.md` 分模块经 `_merge_official_to_docs.py` 合并生成（§3 总览与 §5 时间线同步重算）；每个 TAG 的成员表逐行给出「条件」（硬性要求）与「备注」（游戏内原文引用与要点）。
 2. 判定铁律、官方定义与本文件及附录为准；拿不准的（伤害计算边界、状态别名、模式限定）一律询问开发者，不自行扩展名单；新干员上线后按第 1、2 节方法在对应分模块中增量补录，并重跑合并脚本。
 3. 结果 JSON 的生成与发布见 `docs/output-standard.md`（本文件为官方类 TAG 的唯一来源）。

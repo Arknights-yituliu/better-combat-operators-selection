@@ -15,11 +15,11 @@ description: 评定标准固化流程（solidify criteria）。当开发者新�
 
 ### 1. 记录原话与例子
 
-把开发者的原始定义、例子、语境**逐字**写进 `_out/评定标准固化-<TAG名>-记录.md`，不得转述走样。
+把开发者的原始定义、例子、语境**逐字**写进 `agent_workspace/_out/评定标准固化-<TAG名>-记录.md`，不得转述走样。
 
 ### 2. 回源枚举样例
 
-以定义中的机制关键词出发，回 `material_datas/PRTS/`、`material_datas/tag_pipeline/stats.json`、`deterministic.json`、`docs/abnormal-effects.md`、`docs/module-hidden-mechanics.md` 做全量搜索；沿参数轴扩展样例：
+以定义中的机制关键词出发，回 `material_datas/PRTS/`、`agent_workspace/tag_pipeline/stats.json`、`deterministic.json`、`docs/abnormal-effects.md`、`docs/module-hidden-mechanics.md` 做全量搜索；沿参数轴扩展样例：
 
 - 数值档（阈值上下、叠层/触发条件）、覆盖与持续时长、频率/间隔；
 - 生效对象与方向（自身／友方／敌方）；
@@ -36,14 +36,14 @@ description: 评定标准固化流程（solidify criteria）。当开发者新�
 
 - 用 AskUserQuestion 分批（每批 3–5 条；每条自带背景、数值、候选与选项；自创词当场解释，**不假设知识对齐**）。
 - 回复模糊（「差不多」「看情况」）时继续追问，直到能落成「数值／条件／计数方式」。
-- 留痕：问答逐字归档到 `_out/评定标准固化-<TAG名>-问答.md`。
+- 留痕：问答逐字归档到 `agent_workspace/_out/评定标准固化-<TAG名>-问答.md`。
   - **新 TAG／子 TAG 从零固化**：会话裁定 ＋ 归档 ＋ `docs/rulings.md` 登记。
   - **修订既有标准**（会动已发布产物）：先落《待裁定.md》自包含条文，回复后按四步折入。
 
 ### 4. 提炼可量化标准
 
 - 从裁定反推：纳入／排除／门槛（数值与算式给全）／条件（精英化、技能、专精、模组与等级、模式限定、目标限制）／计数方式／与其它 TAG 的关系／约定。
-- 文字遵守 CLAUDE.md「评定标准写作规则」：用「评定标准」一词、固定小标题、**无日期无轮次、不写编辑痕迹**。
+- 文字遵守 AGENTS.md「评定标准写作规则」：用「评定标准」一词、固定小标题、**无日期无轮次、不写编辑痕迹**。
 - 边界与排除逐条进「边界与排除记录」，附证据 `文件:行号`。
 
 ### 5. 回归验证

@@ -2,7 +2,7 @@
 
 > 用途：前端在筛选面板悬停玩家体感 TAG／子 TAG 时展示的「人话版」说明。
 > 撰写要求：不使用项目内部词汇（评定标准、子 TAG、口径、档位、特限等）；游戏术语（技力、初动、再部署、元素损伤、麻痹、脆弱、屏障、闪避、阻挡数、失衡力度、浮空等）需随文解释；面向新玩家，2–4 句。
-> 生成：`explain_to_json.py` → `results/player-tags-explain.json` → 同步前端 `src/static/json/combat/player-tags-explain.json`；前端按标签 id 与 `组|值` 取文案。
+> 生成：`tools/explain_to_json.py` → `results/player-tags-explain.json` → 同步前端 `src/static/json/combat/player-tags-explain.json`；前端按标签 id 与 `组|值` 取文案。
 
 ## 决战歼灭
 
