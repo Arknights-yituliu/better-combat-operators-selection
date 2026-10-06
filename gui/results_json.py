@@ -334,6 +334,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
         if not isinstance(members, list):
             add("error", "G2", f"tags[{ti}].members", plc + ["members"], label, "members 必须是数组")
             members = []
+        subs_any = any(isinstance(m, dict) and m.get("subTags") for m in members)
         seen: dict[str, set] = {}  # 干员名 → 已占用的末端子 TAG 集合（无子 TAG 者以 ("", "", "") 记）
         combo_names: dict[str, int] = {}  # 阵容组合（P12）：组合名 → 首次出现的成员序号
         for mi, mem in enumerate(members):
@@ -382,13 +383,14 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                         if "detail" in sub and sub["value"] != "触发时":
                             add("warn", "M9", f"tags[{ti}].members[{mi}].subTags[{si}].detail", splc + ["detail"], label + " · " + (mname or ""),
                                 "detail 仅在 value 为「触发时」时使用")
-            # 唯一性以「末端子 TAG」为界：同一干员可在不同子 TAG 下各出现一次（如 次数对策 的多段伤害/间隔伤害）
+            # 唯一性以「同一条目的子 TAG 组合」为界：同一干员可因不同技能各占一行，但两行的子 TAG 组合不得完全相同（如 决战歼灭 的范围轴＋伤害轴、次数对策 的多段伤害/间隔伤害）
             if mname:
-                if mname in seen and (leaves & seen[mname]):
-                    shared = "／".join(sorted({g + "／" + v for g, v, _ in leaves & seen[mname]} - {"／"}))
+                rowset = frozenset(leaves)
+                if mname in seen and rowset in seen[mname]:
+                    shared = "／".join(sorted({g + "／" + v for g, v, _ in rowset} - {"／"}))
                     add("error", "M4", f"tags[{ti}].members[{mi}].operator", mplc + ["operator"], label + " · " + mname,
-                        f"同一末端子 TAG 内重复（{shared or '无子 TAG'}）")
-                seen.setdefault(mname, set()).update(leaves)
+                        f"同一条目的子 TAG 组合重复（{shared or '无子 TAG'}）")
+                seen.setdefault(mname, set()).add(rowset)
             purl = mem.get("prtsUrl")
             if not isinstance(purl, str) or not purl.strip():
                 add("error", "M10", f"tags[{ti}].members[{mi}].prtsUrl", mplc + ["prtsUrl"], label + " · " + (mname or ""), "prtsUrl 必填")
@@ -414,6 +416,13 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                     if DATE_RE.match(da) and DATE_RE.match(db) and da < db:
                         add("warn", "M13", f"tags[{ti}].members[{mi}]", plc + ["members", mi], label + " · " + str(nb),
                             f"成员未按实装时间倒序（{nb} {db} 排在 {na} {da} 之后）")
+        # 子 TAG 覆盖（玩家 TAG）：有子 TAG 的 TAG，全部成员必须至少带一个子 TAG（去重并集＝全部成员）
+        if src == "player" and subs_any:
+            for m in members:
+                if isinstance(m, dict) and not m.get("subTags"):
+                    nm = m.get("operator") or m.get("combo") or ""
+                    add("error", "M14", f"tags[{ti}].members", plc + ["members"], label + " · " + str(nm),
+                        "成员未归属任何子 TAG（有子 TAG 的 TAG 应全员至少带一个子 TAG，去重并集＝全部成员）")
         rec = tag.get("recommended")
         if rec is not None:
             if not (isinstance(rec, list) and all(isinstance(x, str) for x in rec)):
@@ -442,6 +451,13 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                     if x not in seen:
                         add("error", "R4", f"tags[{ti}].recommendedFallback[{k}]", plc + ["recommendedFallback", k],
                             label, f"兜底荐「{x}」不是本 TAG 的成员")
+        # TAG 级不设荐：有子 TAG 的 TAG（成员带 subTags 或已用 recommendedBySub），荐需下沉到子 TAG
+        if src == "player" and (subs_any or tag.get("recommendedBySub") or tag.get("recommendedFallbackBySub")):
+            for fld in ("recommended", "recommendedFallback"):
+                v = tag.get(fld)
+                if isinstance(v, list) and v:
+                    add("error", "R7", f"tags[{ti}].{fld}", plc + [fld], label,
+                        f"{fld} 非空（有子 TAG 的 TAG 不应有 TAG 级荐，荐需下沉到子 TAG）")
         for fld, base_code in (("recommendedBySub", "G13"), ("recommendedFallbackBySub", "G14")):
             subs = tag.get(fld)
             if subs is None:

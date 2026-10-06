@@ -91,7 +91,7 @@ Notes and failure modes:
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
   prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
 * 阵容组合 (P12) is edited **per category (势力／用法)**: the scope bar switches the view; the combo header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Providers within a combo by release date.
-* 荐 scoping: for player TAGs **with sub-TAGs**, a scope bar switches between the TAG-level list and each sub-TAG's list; entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
+* 荐 scoping: for player TAGs **with sub-TAGs**, the scope bar switches between the sub-TAG lists only — there is **no TAG-level scope** (TAG level cannot hold 荐; the panel refuses TAG-level adds and defaults to a sub-scope). Entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
 * 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
 * The CLI equivalent is `tools/recommend.py list|add|remove|check`; both write the same `_recommend.json`.
 
@@ -116,7 +116,8 @@ TAG), carrying their 条件 / 备注 where that makes sense.
 ### 5.2 Selecting targets
 
 * The TAG tree groups **玩家体感 TAG** (P01–P12) and **官方设定 TAG** (A–I, one category per row).
-* A TAG whose member table is split (远程消耗, 保人, 阵容组合) shows a caret: click the TAG row
+* A TAG whose member table is split (决战歼灭, 次数对策, 吃拐一轮秒, 远程消耗, 充电, 初动增加, 保人,
+  高档控制, 阵容组合) shows a caret: click the TAG row
   to browse all of its members, click a **sub-table row** (表 1 / 2A / 2B / …) to select it. The
   sub-table — not the TAG — is the unit that receives new rows, because each sub-table means
   something different.
@@ -177,7 +178,7 @@ record **within the currently selected scope**:
 * 条件 / 备注 — click to edit. Clearing 备注 deletes the key; an empty 条件 is flagged in amber
   until you fill it in.
 * `依据` — read-only evidence pointer (player TAGs only).
-* `子 TAG` — add / edit / delete `{group, value, detail}` rows.
+* `子 TAG` — for member tables that carry a `子 TAG` column (拐杖 and the like), click the cell to edit it: values are written as `组/值`, multiple values joined with `、` (e.g. `增益类型/攻击力(加算)、生效方式/在场`; the `触发时` value keeps its detail in parentheses). TAGs whose sub-TAGs are stored as sub-tables are managed by moving rows between sub-tables instead.
 * `prtsUrl` — free text plus four anchor buttons (`无锚点 / #技能 / #天赋 / #模组 / #召唤物信息`) and
   `按干员名重建`. Choosing the anchor is a human judgement (see `docs/output-standard.md` §5).
 * `↑ 上移` / `↓ 下移` / `删除成员` — reorder or remove the member row.
@@ -343,6 +344,10 @@ Things to keep in sync when you change the UI:
 4. **New tab checklist.** Add the `<main id="page-…" hidden>` block, a `.tab[data-tab]` button, a
    branch in `setTab()`, a `render…()` call and (if it needs data) an endpoint in `server.py` plus a
    contract entry in `selfcheck.py`.
+5. **Sub-TAG structure or representation changes.** After touching how a TAG stores its sub-TAGs
+   (sub-tables ↔ `子 TAG` column ↔ remark prefix), walk all three tabs once: 荐 (scope bar, add /
+   remove), 人工归纳 (pick a sub-table → 并入 / move / remove; edit 条件 / 备注 / 子 TAG cells),
+   结果 JSON (load → 校验 → leave without saving). Then run `tools/run_all_checks.py`.
 
 Run `--check` and click through all three tabs after any change; the end-to-end Playwright scripts
 used during development live outside the repo (in the OS temp directory) and drive the same DOM

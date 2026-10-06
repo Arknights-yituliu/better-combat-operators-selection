@@ -325,6 +325,28 @@ ACCEPTED = {
     # （≈6.5 次 → ＝7 次（施加一击无伤害、另计 1 次首击）），引用本身未变、仍指向同一处原文——属「键分词误报」，放行。
     # （同轮早前登记的 白雪 15／103、谜图 107、归溟幽灵鲨 61／62／64／66／67 因口径回改已不再触发，一并移除。）
     ("agent_workspace/tag_pipeline/player_tags/02-次数对策.md", "96"),
+    # 决战歼灭 范围二档全库扫描轮（2026-10-07）：01-决战歼灭.md 的「边界与排除记录」按裁定整体改写
+    # （旧条目行整体替换、旧引用随行移除或重排；旧引用位于括号内、键带「（」前缀，替换后该键不再存在
+    # ——按整块替换显式放行；引用指向的原文仍在，新条目各带新引用）。
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "15"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "38"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "45"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "55"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "86"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "90"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "101"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "114"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "116"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "126"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "128"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "130"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "131"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "133"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "134"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "135"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "156"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "175"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "177"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.

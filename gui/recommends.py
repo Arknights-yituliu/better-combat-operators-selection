@@ -43,6 +43,9 @@ def apply_recommend(payload: dict) -> dict:
             raise UserError(f"「{tag}」没有子 TAG「{scope}」")
         key = f"{tag}/{scope}"
     else:
+        vals = rec.tag_scope_values(tag) or []
+        if vals and action == "add":
+            raise UserError(f"「{tag}」有子 TAG：荐须落在子 TAG 上（TAG 级不能单独放人）")
         key = tag
     data = rec.load_recommend()
     ops = data.setdefault(key, [])

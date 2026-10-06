@@ -5,8 +5,8 @@
 没有值得新手优先培养的干员时，转为指定「该 TAG 下综合实力较强」的干员（写入
 兜底文件）。两份名单均人工指定，程序只负责读取与渲染。
 
-**作用域**：有子 TAG 的顶级 TAG，荐下沉到子 TAG——键写 `TAG/子值`（如
-`高档控制/纯御天花板`）；没有子 TAG 的顶级 TAG（或确属全 TAG 的荐）用裸 TAG 键。
+**作用域**：有子 TAG 的顶级 TAG，荐一律下沉到子 TAG——键写 `TAG/子值`（如
+`高档控制/纯御天花板`），裸 TAG 键不得放人（`add` 拒绝、`check` 列出）；没有子 TAG 的顶级 TAG 用裸 TAG 键。
 子值即前端可见的子 TAG 名（`results/operator-tags.json` 中该 TAG 的 subTags.values）。
 
 数据文件：
@@ -23,14 +23,15 @@
     python tools/recommend.py                     # 列出 11 个 TAG 及当前荐
     python tools/recommend.py list 充电           # 查看某 TAG 的荐（含各子作用域）
     python tools/recommend.py list 高档控制/纯御天花板
-    python tools/recommend.py add 充电 白铁 [干员...]
+    python tools/recommend.py add 充电/直接补充技力 白铁 [干员...]
     python tools/recommend.py add 高档控制/纯御天花板 蛇屠箱
-    python tools/recommend.py remove 充电 白铁 [干员...]
+    python tools/recommend.py remove 充电/直接补充技力 白铁 [干员...]
     python tools/recommend.py --fallback add 高档控制/纯御天花板 蛇屠箱
     python tools/recommend.py check               # 校验两份名单（TAG／子值／成员是否有效）
 
 校验：TAG 必须存在；子值必须是该 TAG 的子 TAG 名；干员必须是该 TAG 主表成员或
-组合名——边界与排除记录里的干员不能设为荐（避免悬空引用）。本工具只写荐数据文件。
+组合名——边界与排除记录里的干员不能设为荐（避免悬空引用）；有子 TAG 的 TAG 不得使用
+裸 TAG 键（TAG 级不承载，荐需下沉到子 TAG）。本工具只写荐数据文件。
 """
 
 from __future__ import annotations
@@ -126,6 +127,10 @@ def split_key(key: str) -> tuple[str, str | None]:
     return tag, (scope if sep else None)
 
 
+# 01 决战歼灭：子 TAG 排列顺序（范围轴＋伤害轴；与 tools/generate_results.py 的 P01_SUB_ORDER 同步）
+P01_SUB_ORDER = ["小范围", "大范围", "主物理伤害", "主法术伤害", "主真实伤害", "主弱点伤害",
+                 "物法混伤", "物真混伤", "物元混伤", "法元混伤"]
+
 _SUB_CACHE: dict[str, list[str]] | None = None
 
 
@@ -145,6 +150,8 @@ def tag_scope_values(tag_name: str) -> list[str] | None:
                     for s in m.get("subTags", []):
                         if s.get("value") and s["value"] not in vals:
                             vals.append(s["value"])
+                if t["name"] == "决战歼灭":  # 作用域栏顺序与生成器的 P01_SUB_ORDER 同步
+                    vals.sort(key=lambda v: P01_SUB_ORDER.index(v) if v in P01_SUB_ORDER else len(P01_SUB_ORDER))
                 _SUB_CACHE[t["name"]] = vals
     return _SUB_CACHE.get(tag_name)
 
@@ -225,6 +232,13 @@ def cmd_add(tags: list[tuple[str, pathlib.Path]], data: dict[str, list[str]], ar
             path: pathlib.Path = RECOMMEND) -> int:
     tag, scope = split_key(args.tag)
     name = resolve_tag(tag, [t for t, _ in tags])
+    vals = tag_scope_values(name) or []
+    if scope is None and vals:
+        raise SystemExit(
+            f"「{name}」有子 TAG：荐须落在子 TAG 上（TAG 级不能单独放人）。\n"
+            f"可用子 TAG：{'、'.join(vals)}\n"
+            f"例：tools/recommend.py add {name}/{vals[0]} 干员名"
+        )
     key = name if scope is None else f"{name}/{resolve_scope(name, scope)}"
     members = recommendable_members(dict(tags)[name])
     ops = data.setdefault(key, [])
@@ -276,6 +290,8 @@ def _check_one(data: dict[str, list[str]], tag_names: list[str], label: str,
             problems.append(f"{label}：未知 TAG「{tag}」（键「{key}」）")
             continue
         vals = tag_scope_values(tag)
+        if scope is None and vals:
+            problems.append(f"{label}：「{key}」是 TAG 级键，但「{tag}」有子 TAG——荐需下沉到子 TAG（如 「{tag}/{vals[0]}」）")
         if scope is not None:
             if vals is None:
                 problems.append(f"{label}：「{key}」使用了子值，但生成产物中无此 TAG 的子项数据，无法校验")

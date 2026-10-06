@@ -92,7 +92,7 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/recommend":
                     self._json(apply_recommend(payload))
                 elif path == "/api/cell":
-                    self._json(save_cell(payload["file"], int(payload["line"]), payload["original"], payload["cond"], payload["note"]))
+                    self._json(save_cell(payload["file"], int(payload["line"]), payload["original"], payload["cond"], payload["note"], payload.get("sub"), payload.get("subcol", "子 TAG")))
                 elif path == "/api/apply":
                     self._json(apply_ops(payload))
                 elif path == "/api/results/list":

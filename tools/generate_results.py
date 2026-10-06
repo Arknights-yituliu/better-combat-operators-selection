@@ -41,7 +41,7 @@ PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v14"
+VERSION = "v18"
 
 # 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
 DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
@@ -649,7 +649,10 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
 # ---------------------------------------------------------------- 玩家 TAG 解析
 
 P05_PATH_RE = re.compile(r"^救急路径[:：]([^；。]*)[；；]?")
-P07_SUB_RE = re.compile(r"^\*{0,2}子 ?TAG[:：]([^。]*)。")
+
+# 01 决战歼灭：子 TAG 排列顺序（范围轴＋伤害轴；与 tools/recommend.py 的 P01_SUB_ORDER 同步）
+P01_SUB_ORDER = ["小范围", "大范围", "主物理伤害", "主法术伤害", "主真实伤害", "主弱点伤害",
+                 "物法混伤", "物真混伤", "物元混伤", "法元混伤"]
 
 def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list[str],
                    cond: str, remark: str) -> tuple[str, list[dict]]:
@@ -663,7 +666,18 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
         if item not in subs:
             subs.append(item)
 
-    if tag_no == "02":
+    if tag_no == "01":
+        # 子表标题＝伤害类型；「范围」列＝范围轴；每行恰两个值，按 P01_SUB_ORDER 排序
+        for v in re.split(r"[、＋+]", h3):
+            if v.strip():
+                add("子 TAG", v.strip())
+        if "范围" in header:
+            v = cells[header.index("范围")].strip()
+            if v:
+                add("子 TAG", v)
+        subs.sort(key=lambda s: P01_SUB_ORDER.index(s["value"]) if s["value"] in P01_SUB_ORDER else len(P01_SUB_ORDER))
+    elif tag_no in ("02", "03", "06"):
+        # 子表标题即子 TAG：02 多段·间隔／03 聚爆·连射·慢热／06 编入·部署
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
@@ -674,16 +688,12 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
         if h4 and h3.strip().startswith("远距控制"):  # 远距控制之下再分「独立达成／需配合」
             if h4.strip():
                 add("远距控制", h4.strip())
-    elif tag_no == "03":
-        for v in re.split(r"[、＋+]", cells[header.index("子 TAG")]):
-            if v.strip():
-                add("子 TAG", v.strip())
     elif tag_no == "04":
         m = re.match(r"表\s*\d+\s*·\s*([^（(]+)", h3)
         parent = m.group(1).strip() if m else ""
         if parent:
             add("子 TAG", parent)
-        if h4 and parent:  # 「2A 召唤师 / 装置型召唤物」「2B 陷阱师（…）」＝子 TAG 之下的再分组
+        if parent and h4.startswith("2A "):   # 「2A 召唤师 / 装置型召唤物」＝子 TAG 之下的再分组（陷阱部分并入本表、无再分组）
             child = re.sub(r"^\d[A-Z]\s*", "", h4).split("（")[0].strip()
             if child:
                 add(parent, child)
@@ -691,11 +701,12 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
         remark, vals = strip_marker(remark, [P05_PATH_RE])
         for v in vals:
             add("救急路径", re.sub(r"（[^）]*）$", "", v).strip())
-        add("承载方式", "召唤物承载" if "承载" in remark else "本体")
-    elif tag_no == "07":
-        remark, vals = strip_marker(remark, [P07_SUB_RE])
-        for v in vals:
-            add("子 TAG", v)
+        if "承载" in remark:          # 承载方式：只记「召唤物承载」（其余为干员本体承担、不设值）
+            add("承载方式", "召唤物承载")
+    elif tag_no == "07":          # 充电：子表标题即子 TAG（直接补充技力／技力回复速度加快／补弹）
+        for v in re.split(r"[、＋+]", h3):
+            if v.strip():
+                add("子 TAG", v.strip())
     elif tag_no == "08":
         for item in cells[header.index("子 TAG")].split("、"):
             item = item.strip()
@@ -733,6 +744,8 @@ def rec_fields(tag_name: str, members: list[dict],
     """荐字段：有子 TAG 的顶级 TAG → recommendedBySub（荐下沉到子 TAG）；
     无子 TAG 的维持 TAG 级 recommended/recommendedFallback。"""
     scopes = collect_sub_scopes(members)
+    if tag_name == "决战歼灭":  # 范围轴＋伤害轴按 P01_SUB_ORDER 排列（见 docs/output-standard.md §4.3）
+        scopes.sort(key=lambda gv: P01_SUB_ORDER.index(gv[1]) if gv[1] in P01_SUB_ORDER else len(P01_SUB_ORDER))
     out: dict = {}
     if not scopes:
         out["recommended"] = list(rec_map.get(tag_name, []))

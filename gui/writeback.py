@@ -227,8 +227,8 @@ def apply_ops(payload: dict, dry_run: bool = False) -> dict:
             "empty_blocks": empty_blocks, "merge": merge, "warnings": warnings}
 
 
-def save_cell(file: str, line_no: int, original: str, cond: str, note: str) -> dict:
-    """只替换成员表该行的条件/备注两格；行尾、依据列、其它行原样保留。"""
+def save_cell(file: str, line_no: int, original: str, cond: str, note: str, sub: str | None = None, subcol: str = "子 TAG") -> dict:
+    """只替换成员表该行的条件/备注两格（表格有 subcol 列且传入 sub 时一并替换该格，默认列名「子 TAG」）；行尾、依据列、其它行原样保留。"""
     reg = doc_registry()
     if file not in reg:
         raise UserError(f"未知文件：{file}")
@@ -242,15 +242,20 @@ def save_cell(file: str, line_no: int, original: str, cond: str, note: str) -> d
         raise UserError("这一行已被外部改动（或行号已偏移），请点「刷新数据」后重试")
 
     warn = ""
-    new_cond, new_note = cond, note
-    for label, value in (("条件", cond), ("备注", note)):
+    new_cond, new_note, new_sub = cond, note, sub
+    checks = [("条件", cond), ("备注", note)] + ([(subcol, sub)] if sub is not None else [])
+    for label, value in checks:
         if "|" in value:
             raise UserError(f"{label}不能包含竖线 |（会破坏表格结构）")
-    if "\n" in cond or "\r" in cond or "\n" in note or "\r" in note:
+    if any(("\n" in v or "\r" in v) for v in (cond, note) + ((sub,) if sub is not None else ())):
         new_cond = re.sub(r"\s*[\r\n]+\s*", " ", cond)
         new_note = re.sub(r"\s*[\r\n]+\s*", " ", note)
+        if sub is not None:
+            new_sub = re.sub(r"\s*[\r\n]+\s*", " ", sub)
         warn = "换行已转为空格（表格单元格必须单行）"
     new_cond, new_note = new_cond.strip(), new_note.strip()
+    if new_sub is not None:
+        new_sub = new_sub.strip()
 
     i = line_no - 1
     while i > 0 and lines[i - 1].lstrip().startswith("|"):
@@ -259,10 +264,18 @@ def save_cell(file: str, line_no: int, original: str, cond: str, note: str) -> d
     cells = split_cells(cur)
     if len(cells) != len(header) or "条件" not in header or "备注" not in header:
         raise UserError("该行所在表格结构异常，无法安全写回（条件/备注列未识别）")
+    if new_sub is not None and subcol not in header:
+        raise UserError(f"该行所在表格没有「{subcol}」列，无法写回")
     parts = cur.split("|")  # 首尾为空串，第 k 格 = parts[k+1]（含原有空白）
-    for idx, value in ((header.index("条件"), new_cond), (header.index("备注"), new_note)):
+    pairs = [(header.index("条件"), new_cond), (header.index("备注"), new_note)]
+    if new_sub is not None:
+        pairs.append((header.index(subcol), new_sub))
+    for idx, value in pairs:
         parts[idx + 1] = f" {value} "
     new_line = "|".join(parts)
     lines[line_no - 1] = new_line + lines[line_no - 1][len(cur):]
     write_atomic(path, "".join(lines))
-    return {"ok": True, "line": line_no, "raw": new_line, "cond": new_cond, "note": new_note, "warn": warn}
+    out = {"ok": True, "line": line_no, "raw": new_line, "cond": new_cond, "note": new_note, "warn": warn}
+    if new_sub is not None:
+        out["sub"] = new_sub
+    return out

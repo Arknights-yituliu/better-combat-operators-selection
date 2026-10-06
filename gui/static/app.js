@@ -108,6 +108,14 @@ function currentScope(t) {
   const want = ST.zhen.scope || null;
   return list.find(s => (s.scope || null) === want) || list[0];
 }
+function ensureScope(t) {
+  // 有子 TAG 的 TAG 不提供 TAG 级作用域：默认切到第一个有内容的子作用域（无则取第一个子作用域）
+  const hasSubs = (t.rec_scopes || []).some(s => s.scope);
+  if (hasSubs && !(ST.zhen.scope || null)) {
+    const alt = (t.rec_scopes || []).find(s => s.scope && s.ops.length) || (t.rec_scopes || []).find(s => s.scope);
+    if (alt) ST.zhen.scope = alt.scope;
+  }
+}
 function viewOps() {
   if (ST.zhen.tag === "__all__") {
     const names = [...new Set(DATA.player_tags.flatMap(t => t.blocks.flatMap(b => b.rows.map(r => r.op))))];
@@ -115,7 +123,7 @@ function viewOps() {
     return names.map(op => ({op, rec: false, rows: allRowsOf(op)}));
   }
   const t = tagOf(ST.zhen.tag);
-  // 有子作用域而 TAG 级为空时，自动切到第一个有内容的子作用域（荐自偏移入子 TAG 后的正常状态）
+  ensureScope(t);
   let sc = currentScope(t);
   if (!sc.ops.length && !(ST.zhen.scope || null)) {
     const alt = (t.rec_scopes || []).find(s => s.scope && s.ops.length);
@@ -130,7 +138,8 @@ function viewOps() {
   return recs.concat(members);
 }
 function scopeBar(t) {
-  const list = (t.rec_scopes || []).filter(s => s.scope || t.num !== "12");
+  const hasSubs = (t.rec_scopes || []).some(s => s.scope);
+  const list = (t.rec_scopes || []).filter(s => s.scope || !hasSubs);
   if (list.length <= 1) return null;
   const bar = document.createElement("div");
   bar.className = "scopebar";
@@ -174,6 +183,7 @@ function renderOps() {
   const t12 = ST.zhen.tag === "__all__" ? null : tagOf(ST.zhen.tag);
   if (t12 && t12.num === "12") return renderCombos(t12, list);
   if (t12) {
+    ensureScope(t12);
     const bar = scopeBar(t12);
     if (bar) list.appendChild(bar);
   }
@@ -484,11 +494,13 @@ function recordCard(x, readonly) {
   const el = document.createElement("div");
   el.className = "row" + (readonly ? " ro" : "");
   const badge = b.source === "player" ? "<span class='badge p'>玩家</span>" : "<span class='badge o'>官方</span>";
+  const subCol = b.source === "player" ? ((b.header || []).indexOf("子 TAG") >= 0 ? "子 TAG" : ((b.header || []).indexOf("范围") >= 0 ? "范围" : "")) : "";
   el.innerHTML = "<div class='head'>" + badge + "<b>" + esc(b.tagName) + "</b>" +
     (blkLabel(b) ? "<span class='chip'>" + esc(b.label) + "</span>" : "") +
     "<span class='loc'>" + esc(b.file) + ":" + r.line + "</span></div>" +
     "<div class='vlabel'>条件</div><div class='val" + (r.cond ? "" : " empty") + "' data-k='cond'>" + esc(r.cond || "（待填）") + "</div>" +
     "<div class='vlabel'>备注</div><div class='val" + (r.note ? "" : " empty") + "' data-k='note'>" + esc(r.note || "（待填）") + "</div>" +
+    (subCol ? "<div class='vlabel'>" + subCol + "</div><div class='val" + (r.sub ? "" : " empty") + "' data-k='sub'>" + esc(r.sub || "（待填）") + "</div>" : "") +
     (b.source === "player" ? "<div class='src'>依据：" + esc(r.src || "—") + "</div>" : "");
   if (!readonly) el.querySelectorAll(".val").forEach(v => { v.onclick = () => startEdit(v, x); });
   return el;
@@ -514,10 +526,12 @@ function startEdit(el, x) {
     const v = input.value;
     const cond = key === "cond" ? v : x.r.cond;
     const note = key === "note" ? v : x.r.note;
+    const sub = key === "sub" ? v : undefined;
+    const subcol = key === "sub" ? ((x.b.header || []).indexOf("子 TAG") >= 0 ? "子 TAG" : "范围") : undefined;
     if (v === old) { line.replaceWith(el); return; }
     try {
-      const j = await api("/api/cell", {file: x.b.file, line: x.r.line, original: x.r.raw, cond, note});
-      x.r.cond = j.cond; x.r.note = j.note; x.r.raw = j.raw;
+      const j = await api("/api/cell", {file: x.b.file, line: x.r.line, original: x.r.raw, cond, note, sub, subcol});
+      x.r.cond = j.cond; x.r.note = j.note; if (j.sub !== undefined) x.r.sub = j.sub; x.r.raw = j.raw;
       paintVal(el, x.r[key]);
       line.replaceWith(el);
       toast("已保存" + (j.warn ? "（" + j.warn + "）" : ""));

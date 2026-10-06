@@ -50,7 +50,7 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
             i = j
             continue
         ci, ni = header.index("条件"), header.index("备注")
-        sub_col = header.index("子 TAG") if "子 TAG" in header else None
+        sub_col = header.index("子 TAG") if "子 TAG" in header else (header.index("范围") if "范围" in header else None)
         cid_col = header.index("编号") if "编号" in header else None
         label = (h4 or h3 or h2).lstrip("#").strip()
         rows = []

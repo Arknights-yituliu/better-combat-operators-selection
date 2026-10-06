@@ -76,6 +76,8 @@ def main() -> int:
                 expected_subs.add((t["name"], s["group"], s["value"]))
 
     problems: list[str] = []
+    # 已声明但暂无成员的子项（说明先于成员存在；登记见 docs/rulings.md 十一）
+    DECLARED_EMPTY = {("决战歼灭", "子 TAG", "物元混伤")}
     for name, tid in tag_ids.items():
         if not tags.get(name):
             problems.append(f"缺少顶级说明：## {name}")
@@ -88,7 +90,7 @@ def main() -> int:
     for key in subs:
         if key[0] not in tag_ids:
             problems.append(f"子项说明多于产物：### {key[0]} · {key[1]} / {key[2]}")
-        elif key not in expected_subs:
+        elif key not in expected_subs and key not in DECLARED_EMPTY:
             problems.append(f"子项说明在产物中未出现（组/值对不上）：### {key[0]} · {key[1]} / {key[2]}")
 
     out = {

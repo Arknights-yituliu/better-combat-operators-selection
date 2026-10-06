@@ -26,7 +26,7 @@ H2_START = rec.START_MARKS
 H2_STOP = rec.STOP_MARKS
 
 # 可写表格的列白名单：其它结构的表不参与写回
-KNOWN_COLS = {"干员", "编号", "子 TAG", "条件", "备注", "依据"}
+KNOWN_COLS = {"干员", "编号", "子 TAG", "范围", "条件", "备注", "依据"}
 
 # 干员名 → charId：成员表「编号」列的唯一来源（插入新行时按干员名自动填充）
 CHAR_IDS_FILE = ROOT / "agent_workspace" / "tag_pipeline" / "char_ids.json"
