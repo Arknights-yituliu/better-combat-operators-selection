@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# 一键启动干员 TAG 维护面板（GUI 仅依赖 Python 标准库）
+# One-click launcher for the TAG maintenance panel (stdlib-only GUI).
 cd "$(dirname "$0")" || exit 1
 if [ -x ".venv/bin/python" ]; then
   PY=".venv/bin/python"
