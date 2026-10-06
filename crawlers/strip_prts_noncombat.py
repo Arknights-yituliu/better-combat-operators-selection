@@ -347,6 +347,11 @@ ACCEPTED = {
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "156"),
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "175"),
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "177"),
+    # 决战歼灭 大范围范围条件调整轮（2026-10-07）：林3 按小范围线复核未达、成员行移出（转入「明确排除」条目），
+    # 其引用随行改以括号式出现在边界条目、键并入引用前散文（「3480%）＜5000%。（林/林.md」）——
+    # 旧键「林/林.md」在工作区的数字集合不再含 196（17/33/40/55/130/195 已在上面整批放行）；
+    # 引用指向的原文仍在（PRTS 语料未动），属有意为之的整块替换，显式放行。
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "196"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
