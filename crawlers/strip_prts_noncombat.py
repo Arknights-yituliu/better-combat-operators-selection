@@ -352,6 +352,11 @@ ACCEPTED = {
     # 旧键「林/林.md」在工作区的数字集合不再含 196（17/33/40/55/130/195 已在上面整批放行）；
     # 引用指向的原文仍在（PRTS 语料未动），属有意为之的整块替换，显式放行。
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.md", "196"),
+    # 砾行（台账「十二、数据勘误」）：精英2 第一天赋更名为「小个子支援」的字句改写使引用紧前方的
+    # 散文并入「键分词」，键随文字改动而变、致误报「失效」；引用本身未变、仍指向同一处原文
+    # （PRTS 语料未动，映射为恒等），放行。
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.md", "56"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.md", "57"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
