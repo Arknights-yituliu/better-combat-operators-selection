@@ -12,7 +12,7 @@
   键集沿用原文件，含空数组者）与 `final_lists.tsv`（TAG→成员，按 id 排序）；`catalog.json`
   只读不写（缺条目时 warn），`deterministic.json` 为基础属性快照、不随 TAG 变化。
 
-用法：python -X utf8 _merge_official_to_docs.py [--check] [--sync-dicts]
+用法：.venv/Scripts/python.exe -X utf8 _merge_official_to_docs.py [--check] [--sync-dicts]
 """
 import json
 import os

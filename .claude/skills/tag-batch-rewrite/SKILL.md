@@ -16,7 +16,7 @@ description: 批量改写／复算 TAG 条目的回填与守恒审计流程。Us
 
 ```bash
 # 先 dry-run 核对全部键命中
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py \
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py \
     --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json --dry-run
 ```
 
@@ -29,8 +29,8 @@ python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py \
 ## 守恒审计：`audit_text_migration.py`
 
 ```bash
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01  # 只审某个分文件
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01  # 只审某个分文件
 ```
 
 - 对比 HEAD 与工作区：报「数字丢失／依据丢失／残留禁用／块标签未点名／结构未生成」，均应 0。

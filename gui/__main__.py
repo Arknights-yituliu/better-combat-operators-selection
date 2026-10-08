@@ -22,9 +22,9 @@
     docs/player-tags-members.md、docs/official-tags-members.md 由合并脚本重新生成（只读）。
 
 用法：
-    python -X utf8 recommend_gui.py                  # 启动并打开浏览器
-    python -X utf8 recommend_gui.py --port 8520 --no-browser
-    python -X utf8 recommend_gui.py --check          # 只解析自检，不起服务
+    .venv/Scripts/python.exe -X utf8 recommend_gui.py                  # 启动并打开浏览器
+    .venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
+    .venv/Scripts/python.exe -X utf8 recommend_gui.py --check          # 只解析自检，不起服务
 """
 
 from __future__ import annotations

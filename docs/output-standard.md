@@ -267,7 +267,7 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 2. 生成时顺带做文本规范化（不改变含义）：去 markdown 强调标记与 `文件:行号` 证据；生产文档路径引用改写为产品表述（`08-拐杖.json` → `「拐杖」TAG`、`_brief.md` §x → 删除、PRTS 素材路径 → 删除）；备注开头的结构性前缀（「子 TAG：…。」「救急路径：…」，可连续多个）折入 `subTags` 后不再保留；`remark` 按 `｜`（块）与 `；`（条）解析为 §4.2 的块数组。
 3. 文本 lint：生成时按 `docs/concept.md`「备注分块」的禁用项检查源单元格（`★` 分类标记、`备注：`／`PRTS 备注：` 等前缀、`（下详）` 类悬空引用、`S2` 类简写、UI 指令文字），`--check` 逐条列出、不阻断写出——报告即存量待重排清单。
 
-发布流程：`python -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
+发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
 
 **手工编辑**：`recommend_gui.py` 的「结果 JSON」页可把 `results/` 下的 json 载入内存编辑（结构化卡片 + 源码视图共用一份数据，编辑期间不写盘），再由「保存…」选择覆盖已有文件或新建自定义文件名；保存前按本规范列出问题（可定位，但不阻断保存，仅内容不是合法 JSON 时拒绝写盘），内容有变化时按 §1 更新 `version`／`updated`。该页只编辑、不生成初版。
 

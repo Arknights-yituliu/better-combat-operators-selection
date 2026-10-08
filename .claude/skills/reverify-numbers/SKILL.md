@@ -15,13 +15,13 @@ description: 「（待验证）」数值条目的复算与回填流程（extract
 ## 子命令
 
 ```bash
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract   # 抽出（待验证）条目 → items.jsonl
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py check     # 算术自检与证据校验
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py report    # 渲染《待验证复算.md》
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py apply --dry-run
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py verify    # 重生成后的验收
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py fetch-rules  # 刷新 _rules/ 快照
-python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py lint      # S1–S11 巡检
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract   # 抽出（待验证）条目 → items.jsonl
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py check     # 算术自检与证据校验
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py report    # 渲染《待验证复算.md》
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py apply --dry-run
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py verify    # 重生成后的验收
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py fetch-rules  # 刷新 _rules/ 快照
+.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py lint      # S1–S11 巡检
 ```
 
 ## 规则与留痕

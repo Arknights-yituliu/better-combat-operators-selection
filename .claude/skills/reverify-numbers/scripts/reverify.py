@@ -16,7 +16,7 @@
     verify   —— 重生成之后的验收（标记归零、结构 diff、锚点稳定）。
 
 运行（Windows 控制台为 GBK，务必带 -X utf8；报告统一写 UTF-8 文件再读）：
-    python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract
+    .venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract
 """
 
 from __future__ import annotations

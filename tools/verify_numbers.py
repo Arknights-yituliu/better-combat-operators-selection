@@ -10,9 +10,9 @@
 5. **代号残留**：范围代号、`S1/S2/S3`、`表 2A`、`路径⑤`、复算规则号等内部代号（写法规范见 docs/concept.md）。
 
 用法：
-    python -X utf8 tools/verify_numbers.py                # 全库
-    python -X utf8 tools/verify_numbers.py --only P01     # 只查某个 TAG
-    python -X utf8 tools/verify_numbers.py --coverage     # 只出因子覆盖清单
+    .venv/Scripts/python.exe -X utf8 tools/verify_numbers.py                # 全库
+    .venv/Scripts/python.exe -X utf8 tools/verify_numbers.py --only P01     # 只查某个 TAG
+    .venv/Scripts/python.exe -X utf8 tools/verify_numbers.py --coverage     # 只出因子覆盖清单
 """
 
 from __future__ import annotations

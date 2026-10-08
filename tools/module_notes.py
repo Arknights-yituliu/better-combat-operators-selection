@@ -5,9 +5,9 @@
 - 源文件是 HTML 片段（MediaWiki 表格 DOM），不是 Markdown——用 stdlib 的 HTMLParser 建一棵小 DOM 再取数。
 - 本脚本是**生成物**的产出方：改格式请改本脚本后重跑；不要手改 `docs/module-hidden-mechanics.md`。
 - 用法：
-    `python -X utf8 tools/module_notes.py --list`     # 只打印统计与条文清单（核对用）
-    `python -X utf8 tools/module_notes.py --emit`     # 写出 docs/module-hidden-mechanics.md
-    `python -X utf8 tools/module_notes.py --check`    # 只校验（不写盘），输出统计
+    `.venv/Scripts/python.exe -X utf8 tools/module_notes.py --list`     # 只打印统计与条文清单（核对用）
+    `.venv/Scripts/python.exe -X utf8 tools/module_notes.py --emit`     # 写出 docs/module-hidden-mechanics.md
+    `.venv/Scripts/python.exe -X utf8 tools/module_notes.py --check`    # 只校验（不写盘），输出统计
 """
 from __future__ import annotations
 

@@ -6,7 +6,7 @@
 子表名对行所在块的标题（h3/h4）做子串匹配。
 
 用法：
-    python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json ...
+    .venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json ...
 
 JSON 的键＝成员表「干员」列的名字：{"<Pn>": {"<干员名>": {"condition": …, "remark": …, "why": …}}}。
 只替换「条件」「备注」两个字段；编号/子 TAG/范围/依据原样保留。

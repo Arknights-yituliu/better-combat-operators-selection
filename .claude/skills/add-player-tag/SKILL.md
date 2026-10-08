@@ -42,7 +42,7 @@ If the developer picks it:
 4. **Member scan**: drive full-corpus searches from the criteria keywords (PRTS pages under `material_datas/PRTS/` + `deterministic.json`); every inclusion and exclusion cites `文件:行号`; summons/devices count as the owner; mode-limited modules (ISW-α/RA-α/SO-α…) count, with the mode written into 条件.
 5. **Boundary records**: 纳入存疑 / 明确排除 with rationale + evidence; unresolved items go to `## 待开发者确认`.
 6. **Cross-TAG check**: compare with every other TAG main table, update the 多 TAG 并存 notes on both sides.
-7. **Merge and verify**: run `python -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`, check the 总览 row count and the diff.
+7. **Merge and verify**: run `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`, check the 总览 row count and the diff.
 
 ## Do not
 

@@ -14,8 +14,8 @@
 两侧文件都经 partdoc 渲染为 md 文本后再走同一套行解析（含 12 的孤立单行等既有语义）。
 
 用法：
-    python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表文件
-    python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01   # 只审文件名含「01」者
+    .venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表文件
+    .venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01   # 只审文件名含「01」者
 """
 
 from __future__ import annotations

@@ -32,4 +32,4 @@
 
 - `AGENTS.md` 是通用入口（Claude Code、OpenCode、Codex 等均可读取）。
 - `.claude/skills/` 下的技能可被 Claude Code 与 OpenCode 等读取；`.claude/agents/` 是 Claude Code 的子代理定义。
-- 技能中示例命令以 Windows 写法（`python`）为主，POSIX 环境替换为 `.venv/bin/python`。
+- 技能中示例命令以 Windows 写法（`.venv/Scripts/python.exe`）为主，POSIX 环境替换为 `.venv/bin/python`。

@@ -13,9 +13,9 @@
   （**多字段连写**，如 `攻击 +55防御 +45攻击速度 +7`，按内容切分——`docs/calc-rules.md` §3.2）。
 
 用法：
-    python -X utf8 tools/prts_stats.py            # 写 stats.json
-    python -X utf8 tools/prts_stats.py --check    # 只报覆盖率与异常，不写盘
-    python -X utf8 tools/prts_stats.py --panel 逻各斯 --stage e2 --pot 5 --module Δ --tier 3
+    .venv/Scripts/python.exe -X utf8 tools/prts_stats.py            # 写 stats.json
+    .venv/Scripts/python.exe -X utf8 tools/prts_stats.py --check    # 只报覆盖率与异常，不写盘
+    .venv/Scripts/python.exe -X utf8 tools/prts_stats.py --panel 逻各斯 --stage e2 --pot 5 --module Δ --tier 3
 """
 
 from __future__ import annotations

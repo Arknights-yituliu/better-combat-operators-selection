@@ -17,8 +17,8 @@ Fixed pipeline: **crawl → judge every TAG → ask about uncovered mechanics �
 ## 1. Crawl (per operator)
 
 1. If missing, append to `docs/operators.txt` in the existing format: `<干员名> https://prts.wiki/w/<干员名>` (use the PRTS page name, e.g. `阿米娅(近卫)`).
-2. `python -X utf8 crawlers/crawl_prts.py --only "干员名"` — summons are crawled automatically next to the main file; the run is resumable.
-3. `python -X utf8 crawlers/crawl_ranges.py --only "干员名"` — attack-range grids per elite phase / skill / summon.
+2. `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"` — summons are crawled automatically next to the main file; the run is resumable.
+3. `.venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py --only "干员名"` — attack-range grids per elite phase / skill / summon.
 4. Add the operator's 上线时间 to `agent_workspace/tag_pipeline/player_tags/_launch_dates.json` (format `"干员名": "YYYY-MM-DD"`, from the crawled `## 获得方式`) — the merge script reads it for the 实装时间 column.
 5. Verify per `.claude/skills/crawl-prts-operator/SKILL.md` → "Verify after crawling": folder + `<干员名>.md` + one file per summon + `## 特性/天赋/技能/模组` + `攻击范围.md`; the 属性 table (稀有度/职业/所属势力/攻击间隔) must be present — the judgments need it. For judgments that need the range grid, read `攻击范围.md`.
 
@@ -51,10 +51,10 @@ Never create a TAG from your own judgment; never silently drop a notable mechani
 
 1. **官方** — edit the split modules under `agent_workspace/tag_pipeline/official_tags/`（`official_tags/[A-I]-*.json` 各分模块），然后运行合并脚本重生成文档：
    - 在每个命中的 TAG 的成员表（`| 干员 | 编号 | 条件 | 备注 |`）中按**实装时间倒序**插入一行：条件＝硬性要求（精英化／技能／模组与等级／模式限定；天生即具备写「无」），备注＝游戏内原文引用；
-   - run `python -X utf8 agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py` — 脚本自动重算各 TAG「N 人 · 首现」、§3 总览与 §5 时间线，并合入 `docs/official-tags-members.md`；
+   - run `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py` — 脚本自动重算各 TAG「N 人 · 首现」、§3 总览与 §5 时间线，并合入 `docs/official-tags-members.md`；
    - the pipeline artifacts (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv,…}`) are **not** maintained entry-by-entry — see `docs/output-standard.md` §7.
 2. **玩家** — edit the part files (`成员表` + 边界/多 TAG 并存 as needed), then run:
-   `python -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`
+   `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`
    and verify the 总览 rows in `docs/player-tags-members.md` (each affected TAG 行数 +N).
 3. **体检** — `git diff --stat` shows only the expected files; 评定标准 sections must be untouched (this pipeline updates *member lists*; needing a criteria change is a separate task for the developer). Then verify a couple of new rows render correctly in the merged doc.
 4. **Do NOT generate `results/operator-tags.json`** — the final JSON is produced separately per `docs/output-standard.md`. Do not commit unless asked.

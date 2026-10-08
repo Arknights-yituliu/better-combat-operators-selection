@@ -15,8 +15,8 @@ Fixed pipeline: **refresh what changed → judge the new operator → fold new m
 
 ## 1. Refresh only what changed
 
-1. New operator → follow `add-new-operator` §1: `docs/operators.txt` → `python -X utf8 crawlers/crawl_prts.py --only "干员名"` → `crawlers/crawl_ranges.py --only "干员名"` → add 上线时间 to `player_tags/_launch_dates.json` → verify per `crawl-prts-operator/SKILL.md` → "Verify after crawling".
-2. New module on an existing operator → the PRTS page changed, so **re-crawl that operator with `--force`**: `python -X utf8 crawlers/crawl_prts.py --only "干员名" --force`; re-run `crawlers/crawl_ranges.py --only "干员名"` if the module touches ranges/grids (`攻击范围.md`). Verify the same way.
+1. New operator → follow `add-new-operator` §1: `docs/operators.txt` → `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"` → `crawlers/crawl_ranges.py --only "干员名"` → add 上线时间 to `player_tags/_launch_dates.json` → verify per `crawl-prts-operator/SKILL.md` → "Verify after crawling".
+2. New module on an existing operator → the PRTS page changed, so **re-crawl that operator with `--force`**: `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名" --force`; re-run `crawlers/crawl_ranges.py --only "干员名"` if the module touches ranges/grids (`攻击范围.md`). Verify the same way.
 
 ## 2. Judge the new operator
 
@@ -58,7 +58,7 @@ When a dimension hits: re-verify each affected row against the PRTS text (`文�
 
 ## 5. Finish
 
-1. Run `python -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py` and `.../official_tags/_merge_official_to_docs.py`; confirm 总览 row counts changed as expected (`git diff --stat` = only the touched files + the two merged docs + `_launch_dates.json`).
+1. Run `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py` and `.../official_tags/_merge_official_to_docs.py`; confirm 总览 row counts changed as expected (`git diff --stat` = only the touched files + the two merged docs + `_launch_dates.json`).
 2. `tools/recommend.py check` — if a 荐-bearing entry moved/vanished, the dangling 荐 surfaces here; report it to the developer (荐 由开发者维护).
 3. `tools/generate_results.py` only when the developer asks; never commit unless asked.
 4. Known drift: the dictionary layer (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv}`) is **not** maintained entry-by-entry, yet some part files cite its counts as cross-anchors (08/09/12) — if the update invalidates an anchor, report it instead of silently editing the anchor text.

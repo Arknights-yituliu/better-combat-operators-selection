@@ -73,12 +73,12 @@ description: >-
 ## 4. 校验套件（改完必跑）
 
 ```bash
-python -X utf8 tools/prts_stats.py --check          # 属性层覆盖率（异常 0）
-python -X utf8 tools/verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
-python -X utf8 tools/generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
-python -X utf8 crawlers/strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
-python -X utf8 recommend_gui.py --check        # GUI 规范（0 错误 0 提醒）
+.venv/Scripts/python.exe -X utf8 tools/prts_stats.py --check          # 属性层覆盖率（异常 0）
+.venv/Scripts/python.exe -X utf8 tools/verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
+.venv/Scripts/python.exe -X utf8 tools/generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
+.venv/Scripts/python.exe -X utf8 crawlers/strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --check        # GUI 规范（0 错误 0 提醒）
 ```
 
-改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `python -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。
+改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `.venv/Scripts/python.exe -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。

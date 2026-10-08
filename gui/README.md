@@ -29,10 +29,10 @@ files — this guide only explains the tool.
 # from the repository root
 start_gui.bat                 # Windows: double-click or run; uses .venv when present
 ./start_gui.sh                # macOS/Linux equivalent
-python -X utf8 recommend_gui.py                 # start + open the browser
-python -X utf8 recommend_gui.py --port 8520 --no-browser
-python -X utf8 recommend_gui.py --check         # read-only self-test, no server
-python -X utf8 -m gui                           # identical (implementation lives in gui/)
+.venv/Scripts/python.exe -X utf8 recommend_gui.py                 # start + open the browser
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --check         # read-only self-test, no server
+.venv/Scripts/python.exe -X utf8 -m gui                           # identical (implementation lives in gui/)
 ```
 
 * Python 3.11+. The panel itself needs **no** third-party packages; the crawlers' dependencies are in `requirements.txt`.

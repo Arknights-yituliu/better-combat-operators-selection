@@ -10,7 +10,7 @@ description: Crawl one or more Arknights operators (plus their summons, if any) 
 The project crawler `crawlers/crawl_prts.py` (run it with the project venv) does everything:
 
 ```bash
-python -X utf8 crawlers/crawl_prts.py --only "干员名"
+.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"
 ```
 
 - If the operator is missing from `docs/operators.txt`, add a line first: `干员名 https://prts.wiki/w/干员名`.

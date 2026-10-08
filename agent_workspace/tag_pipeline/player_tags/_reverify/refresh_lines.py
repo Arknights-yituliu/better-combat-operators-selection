@@ -10,7 +10,7 @@
 （供备注文本已被手工修订的条目兜底）；均未命中者保留原定位并报告。
 
 运行（Windows 控制台 GBK，务必带 -X utf8）：
-    python -X utf8 agent_workspace/tag_pipeline/player_tags/_reverify/refresh_lines.py [--dry-run]
+    .venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_reverify/refresh_lines.py [--dry-run]
 """
 
 from __future__ import annotations

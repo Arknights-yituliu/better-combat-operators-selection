@@ -73,39 +73,39 @@ Read only what the task needs; the two member docs and the two results JSONs are
 
 ```bash
 # Crawl one (or several) operators, with summons; resumable + throttled
-python -X utf8 crawlers/crawl_prts.py --only "干员名"
+.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"
 #   new operator? first add a line to docs/operators.txt:  干员名 https://prts.wiki/w/干员名
 #   flags: --force (re-crawl ok entries), --delay-min/--delay-max, --operators-file, --out-dir
 #   爬虫写出前会跑 strip_noncombat()，落盘语料不含剧情/养成内容
 
 # 核对证据层：全仓库 文件:行号 是否仍指向剥离前的原文（剥离或改行号后必跑）
-python -X utf8 crawlers/strip_prts_noncombat.py --audit   # --fix-stale 补正
+.venv/Scripts/python.exe -X utf8 crawlers/strip_prts_noncombat.py --audit   # --fix-stale 补正
 
 # 核对条件/备注重排：对比 HEAD，查重排行是否丢数字、丢依据、留禁用符号（改过分文件后必跑）
 #   有意改动的数字登记在脚本内的 ACCEPTED（键＝文件名｜干员，值＝放行令牌＋理由）
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py           # --only 01 只审某文件
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py           # --only 01 只审某文件
 
 # 批次回填：把 agent_workspace/_out/<批名>.json（tag-rewrite 子代理的产出，键＝干员名）写回分文件
 #   按表头定位列、以 HEAD 重建整行，只替换「条件」「备注」两格；行首机器协议前缀用 --keep-prefix 保留
-python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json
+.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json
 
 # PRTS 语料 → 机读属性层（属性/信赖/潜能/模组档位固定属性）→ agent_workspace/tag_pipeline/stats.json
-python -X utf8 tools/prts_stats.py                     # --check 只报覆盖率；--panel 干员 --stage e2 --pot 4 --module Δ --tier 3
+.venv/Scripts/python.exe -X utf8 tools/prts_stats.py                     # --check 只报覆盖率；--panel 干员 --stage e2 --pot 4 --module Δ --tier 3
 # 产物数值校准：面板是否与条件声明的档位相符、模组档位是否取满、恒等式、内部代号、因子覆盖
-python -X utf8 tools/verify_numbers.py                 # --only P01；--coverage 只看因子覆盖清单
+.venv/Scripts/python.exe -X utf8 tools/verify_numbers.py                 # --only P01；--coverage 只看因子覆盖清单
 
 # 一键全量校验：属性层覆盖率 / 数值校准 / 生成规范与文本 lint / 迁移守恒 / 证据层审计 / GUI 自检
-python -X utf8 tools/run_all_checks.py
+.venv/Scripts/python.exe -X utf8 tools/run_all_checks.py
 
 # Regenerate the merged player-TAG document after editing part files
-python -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py
+.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py
 
 # Generate the final results JSON from both member docs (spec: docs/output-standard.md §7)
-python -X utf8 tools/generate_results.py          # --check / --report
+.venv/Scripts/python.exe -X utf8 tools/generate_results.py          # --check / --report
 #   writes results/operator-tags.json; --check validates against the spec without writing
 
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
-python -X utf8 tools/recommend.py list|add|remove|check   # 例：tools/recommend.py add 充电 白铁
+.venv/Scripts/python.exe -X utf8 tools/recommend.py list|add|remove|check   # 例：tools/recommend.py add 充电 白铁
 # Local web panel, three tabs:
 #   「荐」= 荐 add/remove (详情 = info card + read-only 条件/备注 in the right column);
 #   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
@@ -114,24 +114,24 @@ python -X utf8 tools/recommend.py list|add|remove|check   # 例：tools/recommen
 #   「结果 JSON」= load results/*.json into memory (or start from a spec-shaped skeleton), edit with
 #     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
 #     written until 保存, and validation against docs/output-standard.md only warns, never blocks.
-python -X utf8 recommend_gui.py                    # --port / --no-browser / --check
-python -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
+.venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
+.venv/Scripts/python.exe -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
 
 # Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
-python -X utf8 crawlers/crawl_ranges.py            # --only 干员名 / --force
+.venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py            # --only 干员名 / --force
 
 # Regenerate the combat-term glossary JSON from docs/glossary.md (mirror-checked inside)
-python -X utf8 tools/glossary_to_json.py
+.venv/Scripts/python.exe -X utf8 tools/glossary_to_json.py
 
 # 解析 docs/temp.txt（PRTS《模组》页快照）→ 模组隐藏机制汇编 docs/module-hidden-mechanics.md
-python -X utf8 tools/module_notes.py            # --list 只看统计；--emit 写出
+.venv/Scripts/python.exe -X utf8 tools/module_notes.py            # --list 只看统计；--emit 写出
 
 # Refresh the PRTS《特殊机制》snapshot + normalized entries (network; throttled)
-python -X utf8 crawlers/crawl_special_mechanics.py  # --emit / --apply（追加术语章节）/ --input
+.venv/Scripts/python.exe -X utf8 crawlers/crawl_special_mechanics.py  # --emit / --apply（追加术语章节）/ --input
 
 # After any official-TAG structural change (add/rename/merge TAGs, member edits): rebuild
 # the machine-readable dicts merged.json / final_lists.tsv from the module files
-python -X utf8 agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts
+.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts
 ```
 
 - On Windows the console is GBK: always run Python with `-X utf8` / `PYTHONIOENCODING=utf-8`, or write CJK output to a UTF-8 file and read it with the Read tool — printing CJK directly yields mojibake.

@@ -12,9 +12,9 @@
 - material_datas/PRTS/<干员>/*.md                              锚点判定用的天赋/技能/模组/召唤物名索引
 
 用法：
-    python -X utf8 tools/generate_results.py            # 写 results/operator-tags.json
-    python -X utf8 tools/generate_results.py --check    # 只生成到内存并跑规范校验
-    python -X utf8 tools/generate_results.py --report   # 打印统计与逐 TAG 计数
+    .venv/Scripts/python.exe -X utf8 tools/generate_results.py            # 写 results/operator-tags.json
+    .venv/Scripts/python.exe -X utf8 tools/generate_results.py --check    # 只生成到内存并跑规范校验
+    .venv/Scripts/python.exe -X utf8 tools/generate_results.py --report   # 打印统计与逐 TAG 计数
 """
 
 from __future__ import annotations

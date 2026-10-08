@@ -39,17 +39,17 @@
 
 ```bash
 python -m venv .venv
-python -m pip install -r requirements.txt   # Windows；POSIX 为 .venv/bin/python
+.venv/Scripts/python.exe -m pip install -r requirements.txt   # Windows；POSIX 为 .venv/bin/python
 ```
 
 - 启动维护面板：双击 `start_gui.bat`（Windows）或运行 `./start_gui.sh`；也可直接
-  `python -X utf8 recommend_gui.py`（面板只监听本机 127.0.0.1）。
+  `.venv/Scripts/python.exe -X utf8 recommend_gui.py`（面板只监听本机 127.0.0.1）。
 - 常用命令：
 
 ```bash
-python -X utf8 crawlers/crawl_prts.py --only "干员名"   # 爬取一个干员（含召唤物）
-python -X utf8 tools/generate_results.py --check        # 校验并生成结果 JSON
-python -X utf8 tools/run_all_checks.py                  # 一键全量校验
+.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"   # 爬取一个干员（含召唤物）
+.venv/Scripts/python.exe -X utf8 tools/generate_results.py --check        # 校验并生成结果 JSON
+.venv/Scripts/python.exe -X utf8 tools/run_all_checks.py                  # 一键全量校验
 ```
 
 完整命令与工具清单见 `AGENTS.md` 的「Commands」。

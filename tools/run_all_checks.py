@@ -2,7 +2,7 @@
 """一键全量校验：依次运行项目校验套件并汇总结果。
 
 用法（Windows；POSIX 用 .venv/bin/python）：
-    python -X utf8 tools/run_all_checks.py
+    .venv/Scripts/python.exe -X utf8 tools/run_all_checks.py
 """
 from __future__ import annotations
 
