@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""把 `agent_workspace/_out/<TAG>.json` 里的重写结果回填进对应分文件。
+"""把 `agent_workspace/_out/<批名>.json` 里的重写结果回填进对应分文件（tag-part/1 JSON）。
 
-**按表头定位列**（各 TAG 的成员表列数不同：多数是 干员｜编号｜条件｜备注｜依据，02/03/04/08/10… 多一列「子 TAG」），
-并以 **HEAD 版本**为底重建整行——只替换「条件」「备注」两格，其余列（编号／子 TAG／依据）原样取 HEAD。
-这样既能避免写错列，也能修复历史上写错列的行。
+**结构化定位**：按「干员」列名定位行（列名即 JSON 字段，不存在写错列的可能）；
+同名多行（如 01 的真言、02 的两张子表）时，键写成 `干员名（子表名）` 消歧——
+子表名对行所在块的标题（h3/h4）做子串匹配。
 
 用法：
-    .venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.md --out agent_workspace/_out/P03-A.json ...
+    python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json ...
 
-JSON 的键＝成员表「干员」列的名字；同一分文件内同一干员有多行时（如 次数对策的
-「多段伤害」「间隔伤害」两张子表），键写成 `干员名（子表名）` 以消歧。
+JSON 的键＝成员表「干员」列的名字：{"<Pn>": {"<干员名>": {"condition": …, "remark": …, "why": …}}}。
+只替换「条件」「备注」两个字段；编号/子 TAG/范围/依据原样保留。
 """
 
 from __future__ import annotations
@@ -18,70 +18,51 @@ import argparse
 import json
 import pathlib
 import re
-import subprocess
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(ROOT / "agent_workspace" / "tag_pipeline"))
+import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
+
 PLAYER = ROOT / "agent_workspace" / "tag_pipeline" / "player_tags"
 
+# 行首机器协议前缀（P05 的「救急路径：…；」、备注开头的「子 TAG：…。」——后者玩家侧当前无数据，
+# 但生成器靠此前缀解析 subTags，保留两条分支以维持与历史批次一致的行为）。
+PREFIX_RE = re.compile(r"^(?:\*{0,2}救急路径[:：][^；。]*\*{0,2}[；。]|(?:\*\*)?子\s?TAG[:：][^。]*。)")
+_CLEAN = lambda cell: cell.replace("**", "").strip()  # noqa: E731
 
-def cells_of(line: str) -> list[str]:
-    return [c.strip() for c in line.split("|")[1:-1]]
 
+def find_row(tables: list[dict], op: str):
+    """定位 `op`；同名多行取文档序最后者，`干员（子表名）` 形式对块标题做子串消歧。
 
-def index_rows(lines: list[str]) -> tuple[dict[str, tuple[int, list[str]]],
-                                          dict[str, list[tuple[int, list[str], str]]]]:
-    """成员表行 → 位置＋该行的表头，按当前表定位（多张表各自有表头）。
-
-    返回 `(out, named)`：`out` 按干员名索引（同名多行时后者覆盖前者）；
-    `named` 保留每个名字的全部行及其**上方最近的小节标题**，供「干员（子表名）」形式的键消歧
-    （如 次数对策的「机械师（多段伤害）」「机械师（间隔伤害）」）。
+    返回 (table, 行下标) 或 None。
     """
-    out: dict[str, tuple[int, list[str]]] = {}
-    named: dict[str, list[tuple[int, list[str], str]]] = {}
-    header: list[str] | None = None
-    heading = ""
-    for i, line in enumerate(lines):
-        if line.startswith("#"):
-            heading = line.lstrip("#").strip()
-            continue
-        if not line.startswith("|"):
-            continue
-        cs = cells_of(line)
-        if "条件" in cs and "备注" in cs:
-            header = cs
-            continue
-        if not header or len(cs) != len(header) or set("".join(cs)) <= set("-: "):
-            continue
-        name = cs[0].replace("**", "").strip()
-        out[name] = (i, header)
-        named.setdefault(name, []).append((i, header, heading))
-    return out, named
-
-
-def find_row(idx, op: str) -> tuple[int | None, list[str] | None]:
-    """在 `index_rows` 的结果里定位 `op`；支持「干员（子表名）」形式消歧（同名多行时用）。"""
-    out, named = idx
-    if op in out:
-        return out[op]
+    idx: dict[str, tuple[dict, int]] = {}
+    named: dict[str, list[tuple[dict, int, str]]] = {}
+    for t in tables:
+        for k, row in enumerate(t["rows"]):
+            name = _CLEAN(row[0])
+            idx[name] = (t, k)
+            named.setdefault(name, []).append((t, k, t["label"]))
+    if op in idx:
+        return idx[op]
     m = re.match(r"^(.*?)（(.+)）$", op)
     if m:
-        for i, header, heading in named.get(m.group(1).strip(), []):
-            if m.group(2).strip() in heading:
-                return i, header
-    return None, None
+        for t, k, label in named.get(m.group(1).strip(), []):
+            if m.group(2).strip() in label:
+                return t, k
+    return None
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="回填批量重写结果")
+    ap = argparse.ArgumentParser(description="回填批量重写结果（tag-part/1）")
     ap.add_argument("--tag", required=True, help="TAG 编号，如 P03")
-    ap.add_argument("--file", required=True, help="分文件名，如 03-吃拐一轮秒.md")
+    ap.add_argument("--file", required=True, help="分文件名，如 03-吃拐一轮秒.json")
     ap.add_argument("--out", nargs="+", required=True, help="代理产出的 JSON")
-    ap.add_argument("--no-head", action="store_true", help="不以 HEAD 为底（仅当该文件本轮未被先前批次的错误写法污染）")
     ap.add_argument("--keep-prefix", action="store_true",
-                    help="保留原备注行首的机器协议前缀（P05 的「救急路径：…；」、P07 的「子 TAG：…。」）——"
+                    help="保留原备注行首的机器协议前缀（P05 的「救急路径：…；」、备注开头的「子 TAG：…。」）——"
                          "生成器靠它解析 subTags，新文本若不带就整批丢子 TAG")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -101,20 +82,9 @@ def main() -> int:
         print("没有可回填的条目")
         return 1
 
-    rel = f"agent_workspace/tag_pipeline/player_tags/{args.file}"
     target = PLAYER / args.file
-    raw = target.read_bytes()
-    nl = "\r\n" if b"\r\n" in raw else "\n"
-    cur = raw.decode("utf-8").replace("\r\n", "\n").split("\n")
-    base = cur
-    if not args.no_head:
-        got = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=ROOT, capture_output=True)
-        if got.returncode == 0:
-            base = got.stdout.decode("utf-8").replace("\r\n", "\n").split("\n")
-        else:
-            print("  ⚠ 取不到 HEAD 版本，改以工作区为底")
-    base_idx = index_rows(base)
-    cur_idx = index_rows(cur)
+    doc = partdoc.load(target)
+    tables = list(partdoc.iter_member_tables(doc))
 
     hit, miss = [], set(rows)
     for op, rec in rows.items():
@@ -126,29 +96,19 @@ def main() -> int:
             if "|" in text.replace("｜", ""):
                 print(f"  ❌ {op} 的{field}含 ASCII 竖线，跳过")
                 return 1
-        src, idx = find_row(base_idx, op)
-        if src is None:
-            pos = find_row(cur_idx, op)
-            if pos[0] is None:
-                miss.add(op)
-                continue
-            src, idx = pos
-            row = cells_of(cur[src])
-        else:
-            row = cells_of(base[src])
-        if args.keep_prefix:
-            old_note = row[idx.index("备注")]
-            m = re.match(r"^(?:\*{0,2}救急路径[:：][^；。]*\*{0,2}[；。]|(?:\*\*)?子\s?TAG[:：][^。]*。)", old_note)
-            if m:
-                note = m.group(0) + note
-        row[idx.index("条件")] = cond
-        row[idx.index("备注")] = note
-        line = "| " + " | ".join(row) + " |"
-        pos = find_row(cur_idx, op)
-        if pos[0] is None:
+        found = find_row(tables, op)
+        if found is None:
             miss.add(op)
             continue
-        cur[pos[0]] = line
+        t, k = found
+        cols = t["columns"]
+        row = t["rows"][k]
+        if args.keep_prefix:
+            m = PREFIX_RE.match(row[cols.index("备注")])
+            if m:
+                note = m.group(0) + note
+        row[cols.index("条件")] = cond
+        row[cols.index("备注")] = note
         hit.append(op)
         miss.discard(op)
     if miss:
@@ -156,7 +116,7 @@ def main() -> int:
     if args.dry_run:
         print(f"[dry-run] 将回填 {len(hit)} 条：{hit}")
         return 0
-    target.write_bytes(nl.join(cur).encode("utf-8"))
+    partdoc.save(doc, target)
     print(f"已回填 {len(hit)} 条：{'、'.join(hit)}")
     return 0
 

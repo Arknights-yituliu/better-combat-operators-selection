@@ -15,7 +15,7 @@ from .merges import run_merge
 from .model import build_model
 from .recommends import apply_recommend
 from .results_json import check_results, list_results, load_results, save_results
-from .writeback import apply_ops, save_cell
+from .writeback import apply_ops, save_row
 
 # 写锁：覆盖 build_model 与所有写入路径（含合并子进程），避免并发丢更新
 LOCK = threading.RLock()
@@ -92,7 +92,10 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/recommend":
                     self._json(apply_recommend(payload))
                 elif path == "/api/cell":
-                    self._json(save_cell(payload["file"], int(payload["line"]), payload["original"], payload["cond"], payload["note"], payload.get("sub"), payload.get("subcol", "子 TAG")))
+                    blk = payload["block"]
+                    self._json(save_row(payload["file"], blk["id"], blk["sig"], payload["i"], payload["op"],
+                                        payload["orig"], payload["cond"], payload["note"],
+                                        payload.get("sub"), payload.get("subcol", "子 TAG")))
                 elif path == "/api/apply":
                     self._json(apply_ops(payload))
                 elif path == "/api/results/list":

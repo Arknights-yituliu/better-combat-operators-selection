@@ -6,15 +6,17 @@
 `agent_workspace/workdocs/待验证复算.md`。
 
 子命令：
-    extract  —— 抽出 JSON 中全部「（待验证）」条目，回查分文件行号/原行/备注原文，
-                抽好待替换的「旧片段」，连同非 JSON 区的附录清单，写成 agent_workspace/tag_pipeline/player_tags/_reverify/items.jsonl。
+    extract  —— 抽出 JSON 中全部「（待验证）」条目，回查分文件定位/备注原文
+                （定位码＝ b<块序>r<行序>，块序按文档序计全部表；见 iter_part_rows），
+                抽好待替换的「旧片段」，连同非 JSON 区的附录清单，写成
+                agent_workspace/tag_pipeline/player_tags/_reverify/items.jsonl。
     check    —— 算术自检（steps[] 复算）+ 证据与最小 diff 校验（复算产物就绪后运行）。
     report   —— 汇总各分组产物为`agent_workspace/workdocs/待验证复算.md`（复核文件）。
-    apply    —— 解析复核文件的「回填：…」行，回填分文件（--dry-run 先行）。
+    apply    —— 解析复核文件的「回填：…」行，按干员/片段定位并回填分文件（--dry-run 先行）。
     verify   —— 重生成之后的验收（标记归零、结构 diff、锚点稳定）。
 
 运行（Windows 控制台为 GBK，务必带 -X utf8；报告统一写 UTF-8 文件再读）：
-    .venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract
+    python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract
 """
 
 from __future__ import annotations
@@ -31,8 +33,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "agent_workspace" / "tag_pipeline"))
 from generate_results import clean_cell, strip_marker, P05_PATH_RE  # noqa: E402
-from gui.md import is_sep_row, split_cells                          # noqa: E402
+import partdoc                                                      # noqa: E402  （分文件 JSON 的唯一读写实现）
 
 PARTS_DIR = ROOT / "agent_workspace" / "tag_pipeline" / "player_tags"
 RV_DIR = PARTS_DIR / "_reverify"
@@ -59,47 +62,28 @@ BOUND = set("，；。、：！？＝=（）()【】「」《》*｜|")
 RULE_TEXT_HINTS = ("标注", "标**（待验证）**", "标「（待验证）」")
 
 
-def read_lines(path: pathlib.Path) -> list[str]:
-    return path.read_text(encoding="utf-8").splitlines()
-
-
 # ---------------------------------------------------------------- 分文件行迭代
-# 与 generate_results.read_tables 相同的表格切分规则，但产出每行的真实行号，
+# 与 partdoc 同一套结构：逐表产出每行的定位码（b<块序>r<行序>，块序按文档序计全部表），
 # 并按分文件顺序记录所在的 h2/h3/h4 小节。
 
 def iter_part_rows(path: pathlib.Path):
-    """产出 (line_no, h2, h3, h4, header, raw, cells)。line_no 为 1 基行号。"""
-    lines = read_lines(path)
+    """产出 (loc, h2, h3, h4, header, cells)。loc 形如 `b3r5`＝第 4 张表（0 起）的第 6 行（0 起）。"""
+    doc = partdoc.load(path)
     h2 = h3 = h4 = ""
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("## "):
-            h2, h3, h4 = line[3:].strip(), "", ""
-            i += 1
-            continue
-        if line.startswith("### "):
-            h3, h4 = line[4:].strip(), ""
-            i += 1
-            continue
-        if line.startswith("#### "):
-            h4 = line[5:].strip()
-            i += 1
-            continue
-        if not line.lstrip().startswith("|"):
-            i += 1
-            continue
-        j = i
-        while j < len(lines) and lines[j].lstrip().startswith("|"):
-            j += 1
-        header = split_cells(lines[i])
-        for k in range(i + 1, j):
-            raw = lines[k]
-            cells = split_cells(raw)
-            if is_sep_row(cells) or not cells or not cells[0] or len(cells) != len(header):
-                continue
-            yield k + 1, h2, h3, h4, header, raw, cells
-        i = j
+    bi = 0
+    for it in doc["body"]:
+        if it["t"] == "heading":
+            lv, text = it["level"], partdoc.clean_heading(it["text"])
+            if lv == 2:
+                h2, h3, h4 = text, "", ""
+            elif lv == 3:
+                h3, h4 = text, ""
+            elif lv == 4:
+                h4 = text
+        elif it["t"] == "table":
+            for i, cells in enumerate(it["rows"]):
+                yield f"b{bi}r{i}", h2, h3, h4, it["columns"], cells
+            bi += 1
 
 
 def member_row_remark(tag_no: str, header: list[str], cells: list[str]) -> str:
@@ -157,12 +141,12 @@ def extract() -> int:
     line_owner: dict[tuple[str, int], str] = {}   # (file, line) → 该行的用途标注
     file_texts: dict[str, str] = {}
     for no, tag_name in TAG_FILES:
-        fname = f"{no}-{tag_name}.md"
+        fname = f"{no}-{tag_name}.json"
         fpath = PARTS_DIR / fname
-        file_texts[fname] = fpath.read_text(encoding="utf-8")
-        for line_no, h2, h3, h4, header, raw, cells in iter_part_rows(fpath):
-            info = {"file": fname, "tag": f"P{no}", "tag_no": no, "line": line_no,
-                    "h2": h2, "h3": h3, "h4": h4, "header": header, "raw": raw, "cells": cells}
+        file_texts[fname] = partdoc.render(partdoc.load(fpath))
+        for loc, h2, h3, h4, header, cells in iter_part_rows(fpath):
+            info = {"file": fname, "tag": f"P{no}", "tag_no": no, "loc": loc,
+                    "h2": h2, "h3": h3, "h4": h4, "header": header, "cells": cells}
             all_rows.append(info)
             if len(header) >= 3 and header[0] == "干员" and "条件" in header and "备注" in header:
                 op = clean_cell(cells[0])
@@ -198,18 +182,18 @@ def extract() -> int:
                 break
         if picked is None:
             picked = cands[0]
-            warnings.append(f"[标记数不符] {tag['id']} {op}：分文件行 {picked['file']}:{picked['line']} "
+            warnings.append(f"[标记数不符] {tag['id']} {op}：分文件定位 {picked['file']}[{picked['loc']}] "
                             f"标记数与 JSON 不一致，已取首行")
         if len(cands) > 1:
             warnings.append(f"[多候选] {tag['id']} {op}：同键匹配 {len(cands)} 行，取 "
-                            f"{picked['file']}:{picked['line']}")
+                            f"{picked['file']}[{picked['loc']}]")
         ni = picked["header"].index("备注")
         ci = picked["header"].index("条件")
         raw_note, raw_cond = picked["cells"][ni], picked["cells"][ci]
         file_text = file_texts[picked["file"]]
         raw_marks = list(MARK_RE.finditer(raw_note))
         if len(raw_marks) != len(marks):
-            warnings.append(f"[备注变换差异] {picked['file']}:{picked['line']} {op}："
+            warnings.append(f"[备注变换差异] {picked['file']}[{picked['loc']}] {op}："
                             f"JSON {len(marks)} 处 / 原文 {len(raw_marks)} 处")
         for k, m in enumerate(raw_marks, 1):
             occ_counter[(tag["id"], op)] = occ_counter.get((tag["id"], op), 0) + 1
@@ -221,14 +205,13 @@ def extract() -> int:
                 "id": f"{tag['id']}-{op}-{occ}",
                 "tag": tag["id"], "tag_name": tag["name"],
                 "operator": op,
-                "file": picked["file"], "line": picked["line"],
+                "file": picked["file"], "loc": picked["loc"],
                 "occ": k, "occ_total": len(raw_marks),
                 "json_path": {"tag_idx": tag_idx, "member_idx": member_idx,
                               "provider_idx": provider_idx},
                 "json_remark": remark,
                 "raw_cond": raw_cond,
                 "raw_note": raw_note,
-                "raw_line": picked["raw"],
                 "old_fragment": frag,
                 "frag_in_cell": raw_note.count(frag),
                 "frag_in_file": file_text.count(frag),
@@ -259,31 +242,44 @@ def extract() -> int:
     if combo_marks:
         warnings.append(f"[组合级备注] P12 组合元数据含 {combo_marks} 处标记，需人工定位")
 
-    # 3) 附录：分文件里未纳入 items 的标记
-    used = {(it["file"], it["line"], it["occ"]) for it in items}
+    # 3) 附录：分文件里未纳入 items 的标记（表格行按 b<块>r<行> 定位，散文行按 t<序> 定位）
     appendix: list[dict] = []
     for no, tag_name in TAG_FILES:
-        fname = f"{no}-{tag_name}.md"
-        text = file_texts[fname]
-        for line_no, line in enumerate(text.splitlines(), 1):
-            if not MARK_RE.search(line):
-                continue
-            # 该行是否为已纳入的成员行
-            taken = sum(1 for it in items if it["file"] == fname and it["line"] == line_no)
-            marks_on_line = len(list(MARK_RE.finditer(line)))
-            if taken >= marks_on_line:
-                continue
-            section = ""
-            for h in reversed(range(1, line_no)):
-                head = text.splitlines()[h - 1]
-                if head.startswith("## "):
-                    section = head[3:].strip()
-                    break
-            rule_text = any(hint in line for hint in RULE_TEXT_HINTS)
+        fname = f"{no}-{tag_name}.json"
+        doc_p = partdoc.load(PARTS_DIR / fname)
+        taken_by: dict[str, int] = {}
+        for it_ in items:
+            if it_["file"] == fname:
+                taken_by[it_["loc"]] = taken_by.get(it_["loc"], 0) + 1
+        section = ""
+        bi = 0
+        tloc = 0
+
+        def scan(loc: str, line_text: str) -> None:
+            if not MARK_RE.search(line_text):
+                return
+            marks_on_line = len(list(MARK_RE.finditer(line_text)))
+            if taken_by.get(loc, 0) >= marks_on_line:
+                return
+            rule_text = any(hint in line_text for hint in RULE_TEXT_HINTS)
             action = "保留" if rule_text else ("忽略" if section.startswith("检索记录") else "复核")
-            appendix.append({"id": f"X-{no}-{line_no}", "file": fname, "tag": f"P{no}",
-                             "line": line_no, "section": section, "action": action,
-                             "text": line.strip()})
+            appendix.append({"id": f"X-{no}-{loc}", "file": fname, "tag": f"P{no}",
+                             "loc": loc, "section": section, "action": action,
+                             "text": line_text.strip()})
+
+        for it_p in doc_p["body"]:
+            if it_p["t"] == "heading":
+                if it_p["level"] == 2:
+                    section = partdoc.clean_heading(it_p["text"])
+                continue
+            if it_p["t"] == "p":
+                for line in it_p["lines"]:
+                    scan(f"t{tloc}", line)
+                    tloc += 1
+            else:
+                for i, row in enumerate(it_p["rows"]):
+                    scan(f"b{bi}r{i}", "| " + " | ".join(row) + " |")
+                bi += 1
 
     # 4) 自检：JSON 标记总数应等于 items 数
     if json_marker_total != len(items):
@@ -299,7 +295,7 @@ def extract() -> int:
         "",
         f"- JSON 标记总数（含组合级）：{json_marker_total}；抽出条目：{len(items)}；"
         f"附录（非 JSON 区）：{len(appendix)}",
-        f"- 涉及分文件：{[it['file'] for it in items].count('01-决战歼灭.md') and ''}"
+        f"- 涉及分文件：{[it['file'] for it in items].count('01-决战歼灭.json') and ''}"
         f"P01={sum(1 for i in items if i['tag'] == 'P01')}、"
         f"P02={sum(1 for i in items if i['tag'] == 'P02')}、"
         f"P03={sum(1 for i in items if i['tag'] == 'P03')}、"
@@ -311,10 +307,10 @@ def extract() -> int:
         "",
     ]
     for it in items[:25]:
-        lines.append(f"- {it['id']}　[{it['file']}:{it['line']}]　旧片段：{it['old_fragment']}")
+        lines.append(f"- {it['id']}　[{it['file']}·{it['loc']}]　旧片段：{it['old_fragment']}")
     lines += ["", "## 附录清单", ""]
     for ap in appendix:
-        lines.append(f"- {ap['id']}　[{ap['file']}:{ap['line']}]（{ap['section']}｜建议{ap['action']}）"
+        lines.append(f"- {ap['id']}　[{ap['file']}·{ap['loc']}]（{ap['section']}｜建议{ap['action']}）"
                      f"{ap['text'][:110]}")
     lines += ["", "## 警告明细", ""] + [f"- {w}" for w in warnings]
     (REPORTS_DIR / "extract.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -751,7 +747,7 @@ def report(dest: pathlib.Path | None = None) -> int:
     for it in items:
         obj = parts[it["id"]]
         orig = MARK_STRICT.sub("", it["old_fragment"]).strip()
-        lines.append(f"| {it['id']} | {it['tag_name']} | {it['operator']} | {it['file']}:{it['line']} | "
+        lines.append(f"| {it['id']} | {it['tag_name']} | {it['operator']} | {it['file']}·{it['loc']} | "
                      f"{orig} | {obj.get('recomputed_value', '')} | {obj.get('conclusion', '')} |")
 
     lines += ["", "## 4. 逐条详情", ""]
@@ -762,7 +758,7 @@ def report(dest: pathlib.Path | None = None) -> int:
             cur_tag = it["tag_name"]
             lines += [f"### {it['tag']} {cur_tag}", ""]
         occ = f"（第 {it['occ']}/{it['occ_total']} 处）" if it.get("occ_total", 1) > 1 else ""
-        lines.append(f"#### {it['id']}　{it['operator']}｜{it['file']}:{it['line']}{occ}")
+        lines.append(f"#### {it['id']}　{it['operator']}｜{it['file']}·{it['loc']}{occ}")
         lines.append(f"- **原值**：{MARK_RE.sub('', it['old_fragment']).strip()}")
         ev = obj.get("evidence") or []
         lines.append("- **依据**：")
@@ -798,7 +794,7 @@ def report(dest: pathlib.Path | None = None) -> int:
         lines.append(f"- **复算值**：**{obj.get('recomputed_value', '')}**　结论：{concl}{tail}{pr}")
         impact = obj.get("impact") or {}
         lines.append(f"- **影响判定**：{impact.get('text', '无')}")
-        bf = [f"文件={it['file']}；行={it['line']}；干员={it['operator']}",
+        bf = [f"文件={it['file']}；定位={it['loc']}；干员={it['operator']}",
               f"旧={obj.get('old_fragment', '')}；新={obj.get('new_fragment', '')}"]
         for k, e in enumerate(obj.get("extra_edits") or [], start=2):
             bf.append(f"旧{k}={e.get('old', '')}；新{k}={e.get('new', '')}")
@@ -908,7 +904,7 @@ def report(dest: pathlib.Path | None = None) -> int:
 
 # ---------------------------------------------------------------- apply
 
-KEY_RE = re.compile(r"(条件旧\d*|条件新\d*|文件|行|干员|旧\d*|新\d*)\s*[=＝]")
+KEY_RE = re.compile(r"(条件旧\d*|条件新\d*|文件|行|定位|干员|旧\d*|新\d*)\s*[=＝]")
 
 
 def parse_backfill_line(line: str) -> list[dict]:
@@ -926,23 +922,9 @@ def parse_backfill_line(line: str) -> list[dict]:
     return out
 
 
-def _table_at(lines: list[str], idx: int) -> tuple[list[str], list[str]] | None:
-    """第 idx 行（1 基，须为表格数据行）所在表格的 (header, cells)；不成立返回 None。"""
-    if not (1 <= idx <= len(lines)) or not lines[idx - 1].lstrip().startswith("|"):
-        return None
-    i = idx - 1
-    while i > 0 and lines[i - 1].lstrip().startswith("|"):
-        i -= 1
-    header = split_cells(lines[i].rstrip("\r\n"))
-    cells = split_cells(lines[idx - 1].rstrip("\r\n"))
-    if "备注" not in header or len(cells) != len(header):
-        return None
-    return header, cells
-
-
 def apply_backfill(review: pathlib.Path, dry_run: bool) -> int:
     from gui.errors import UserError
-    from gui.writeback import save_cell
+    from gui.writeback import save_row
 
     entries: list[dict] = []
     parse_fail = 0
@@ -996,34 +978,28 @@ def apply_backfill(review: pathlib.Path, dry_run: bool) -> int:
         if not path.exists():
             rec("UNKNOWN-FILE", f"分文件不存在：{fname}")
             continue
-        raw = path.open("r", encoding="utf-8", newline="").read()
-        lines = raw.splitlines(keepends=True)
-
-        idx = int(line_s) if line_s.isdigit() else None
-        target, moved = None, False
-        if idx:
-            t = _table_at(lines, idx)
-            if t and all(t[1][t[0].index("备注")].count(e["旧"]) == 1 for e in group):
-                target = idx
-        if target is None:
-            for cand in range(1, len(lines) + 1):
-                t = _table_at(lines, cand)
-                if not t:
+        docp = partdoc.load(path)
+        target = None
+        for t in partdoc.iter_member_tables(docp):
+            ni_ = t["columns"].index("备注")
+            for i, row in enumerate(t["rows"]):
+                if op and row[0].replace("**", "").strip() != op:
                     continue
-                header0, cells0 = t
-                if op and cells0[0] != op:
-                    continue
-                if all(cells0[header0.index("备注")].count(e["旧"]) == 1 for e in group):
-                    target, moved = cand, idx is not None
+                if all(row[ni_].count(e["旧"]) == 1 for e in group):
+                    target = (t, i, row)
                     break
+            if target:
+                break
         if target is None:
             rec("MISS", "未找到含全部旧片段的行（文件已被改动？）")
             continue
-        if moved:
-            tally["LINE-MOVED"] = tally.get("LINE-MOVED", 0) + 1
-            results.append(f"- [LINE-MOVED] {fname}: {line_s} → 实际行 {target}（按干员定位）")
+        if line_s:
+            tally["LINE-IGNORED"] = tally.get("LINE-IGNORED", 0) + 1
+            results.append(f"- [LINE-IGNORED] {fname}: 复核文件所记行号 {line_s} 已不适用（tag-part/1），"
+                           f"按干员/片段定位")
 
-        header, cells = _table_at(lines, target)
+        tgt, ti, cells = target
+        header = tgt["columns"]
         ci, ni = header.index("条件"), header.index("备注")
         note = cells[ni]
         cond = cells[ci]
@@ -1079,8 +1055,14 @@ def apply_backfill(review: pathlib.Path, dry_run: bool) -> int:
                 rec(st, msg + ("（dry-run 未写盘）" if st in ("APPLIED", "COND-APPLIED") else ""))
             continue
         try:
-            save_cell(pathlib.PurePath(fname).name, target, lines[target - 1].rstrip("\r\n"),
-                      cond, note)
+            sub_col = header.index("子 TAG") if "子 TAG" in header else (
+                header.index("范围") if "范围" in header else None)
+            save_row(pathlib.PurePath(fname).name, f"p:{pathlib.PurePath(fname).name}#{tgt['idx']}",
+                     partdoc.sig_of(tgt["label"], header), ti,
+                     cells[0].replace("**", "").strip(),
+                     {"cond": cells[ci], "note": cells[ni],
+                      "sub": cells[sub_col] if sub_col is not None else ""},
+                     cond, note)
         except UserError as exc:
             for st, msg in statuses:
                 rec(st, f"写回失败：{exc}")
@@ -1137,12 +1119,12 @@ def verify() -> int:
     # 预取各分文件当前成员行（干员 → 备注单元格），供回填后比对使用
     file_rows: dict[str, list[tuple[str, str]]] = {}
     for no, tag_name in TAG_FILES:
-        fname = f"{no}-{tag_name}.md"
+        fname = f"{no}-{tag_name}.json"
         fpath = PARTS_DIR / fname
         if not fpath.exists():
             continue
         rows = []
-        for _ln, _h2, _h3, _h4, header, _raw, cells in iter_part_rows(fpath):
+        for _loc, _h2, _h3, _h4, header, cells in iter_part_rows(fpath):
             if len(header) >= 3 and header[0] == "干员" and "备注" in header:
                 rows.append((cells[0].strip(), cells[header.index("备注")]))
         file_rows[fname] = rows
@@ -1190,14 +1172,14 @@ def verify() -> int:
     jcount = len(MARK_RE.findall(RESULTS_FILE.read_text(encoding="utf-8")))
     checks.append(("结果 JSON 内「待验证」归零", jcount == 0, f"剩余 {jcount}"))
     for no, tag_name in TAG_FILES:
-        fname = f"{no}-{tag_name}.md"
+        fname = f"{no}-{tag_name}.json"
         fpath = PARTS_DIR / fname
         if not fpath.exists():
             continue
-        text = fpath.read_text(encoding="utf-8")
+        text = partdoc.render(partdoc.load(fpath))
         # 成员行内残留
         inrows = 0
-        for _ln, _h2, _h3, _h4, header, _raw, cells in iter_part_rows(fpath):
+        for _loc, _h2, _h3, _h4, header, cells in iter_part_rows(fpath):
             if len(header) >= 3 and header[0] == "干员" and "备注" in header:
                 inrows += len(MARK_RE.findall(cells[header.index("备注")])) + \
                           len(MARK_RE.findall(cells[header.index("条件")]))

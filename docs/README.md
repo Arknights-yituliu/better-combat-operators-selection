@@ -43,4 +43,4 @@
 | `temp.txt` | PRTS《模组》页表格快照（本地快照，不进库；`module_notes.py` 的输入） |
 | `templates/` | 工作稿模板：《待裁定.md》《待验证复算.md》；实际工作稿写入 `agent_workspace/workdocs/` |
 
-TAG 判定文件（权威源）在 `agent_workspace/tag_pipeline/`：官方 TAG 分模块 `official_tags/[A-I]-*.md`，玩家 TAG 分文件 `player_tags/NN-*.md`；机读字典与 `stats.json` 同目录。工作区索引见 `agent_workspace/README.md`。
+TAG 判定文件（权威源）在 `agent_workspace/tag_pipeline/`：官方 TAG 分模块 `official_tags/[A-I]-*.json`，玩家 TAG 分文件 `player_tags/NN-*.json`；机读字典与 `stats.json` 同目录。工作区索引见 `agent_workspace/README.md`。

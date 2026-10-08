@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""把 player_tags/ 下的 12 个玩家体感 TAG 分文件合并为 docs/player-tags-members.md。
+"""把 player_tags/ 下的 12 个玩家体感 TAG 分文件（tag-part/1 JSON）合并为 docs/player-tags-members.md。
 
+- 数据源＝各 `NN-*.json`（`partdoc.render` 还原为 md 文本后走原渲染管线，输出逐字节不变）。
 - 所有 markdown 表格：去掉「依据」列；「干员」列后插入「实装时间」列（PRTS 上线时间）。
 - 评定标准 / 成员表 / 边界与排除记录：原文收录；待开发者确认统一收进末尾。
 - 「阵容组合」的「数据结构建议」收录（记录组合条目的 JSON 落形）；检索记录不入正文。
@@ -12,23 +13,28 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 PARTS = os.path.join(ROOT, "agent_workspace", "tag_pipeline", "player_tags")
 OUT = os.path.join(ROOT, "docs", "player-tags-members.md")
 
 TAGS = [
-    ("01", "决战歼灭", "01-决战歼灭.md"),
-    ("02", "次数对策", "02-次数对策.md"),
-    ("03", "吃拐一轮秒", "03-吃拐一轮秒.md"),
-    ("04", "远程消耗", "04-远程消耗.md"),
-    ("05", "插拔容错", "05-插拔容错.md"),
-    ("06", "初动增加", "06-初动增加.md"),
-    ("07", "充电", "07-充电.md"),
-    ("08", "拐杖", "08-拐杖.md"),
-    ("09", "保人", "09-保人.md"),
-    ("13", "高档控制", "13-高档控制.md"),
-    ("12", "阵容组合", "12-阵容组合.md"),
+    ("01", "决战歼灭", "01-决战歼灭.json"),
+    ("02", "次数对策", "02-次数对策.json"),
+    ("03", "吃拐一轮秒", "03-吃拐一轮秒.json"),
+    ("04", "远程消耗", "04-远程消耗.json"),
+    ("05", "插拔容错", "05-插拔容错.json"),
+    ("06", "初动增加", "06-初动增加.json"),
+    ("07", "充电", "07-充电.json"),
+    ("08", "拐杖", "08-拐杖.json"),
+    ("09", "保人", "09-保人.json"),
+    ("13", "高档控制", "13-高档控制.json"),
+    ("12", "阵容组合", "12-阵容组合.json"),
 ]
+assert [t[2] for t in TAGS] == [p.name for _, _, p in partdoc.player_files(PARTS)], \
+    "TAGS 与分文件集合不一致（顺序或文件名漂移）"
 
 TABLE_TITLES = {
     "12": "成员表（按组合）",
@@ -38,7 +44,7 @@ dates = json.load(open(os.path.join(PARTS, "_launch_dates.json"), encoding="utf-
 
 
 def read(name):
-    return open(os.path.join(PARTS, name), encoding="utf-8").read()
+    return partdoc.render(partdoc.load(os.path.join(PARTS, name)))
 
 
 def section(text, start, stops):

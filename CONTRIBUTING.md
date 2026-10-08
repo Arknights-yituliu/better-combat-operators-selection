@@ -12,7 +12,7 @@
 ## 提交前
 
 ```bash
-.venv/Scripts/python.exe -X utf8 tools/run_all_checks.py
+python -X utf8 tools/run_all_checks.py
 ```
 
 全量校验通过后再提交。以下本地文件不要提交（已在 `.gitignore`）：`agent_workspace/_out/`、`agent_workspace/workdocs/`、`agent_workspace/handoff/`、`agent_workspace/tag_pipeline/player_tags/_reverify/` 的批处理中间物、`local.json`、`docs/temp.txt`、`material_datas/videos/` 等。

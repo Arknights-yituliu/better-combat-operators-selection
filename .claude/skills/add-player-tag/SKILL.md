@@ -29,20 +29,20 @@ Every time the criteria are not yet clear, offer this as an explicit choice:
 
 If the developer picks it:
 
-- Create `agent_workspace/tag_pipeline/player_tags/NN-<TAG名>.md` (NN = next free index) with the raw definition under `## 评定标准`, marked `[待考]`, an empty 成员表, and a `## 待开发者确认` item listing precisely what is still unclear.
+- Create `agent_workspace/tag_pipeline/player_tags/NN-<TAG名>.json`（tag-part/1；NN = next free index）——最小骨架：`{"format":"tag-part/1","kind":"player","num":"NN","name":"<TAG名>","title":"# <TAG名>","body":[{"t":"heading","level":2,"text":"## 评定标准"},{"t":"p","lines":["（[待考] 原始定义）"]},{"t":"heading","level":2,"text":"## 成员表（按实装时间倒序）"},{"t":"table","columns":["干员","编号","条件","备注","依据"],"rows":[]},{"t":"heading","level":2,"text":"## 待开发者确认"},{"t":"p","lines":["- …"]}],"trailing_newlines":1}`，写完用 `partdoc.load()` 自检，并**同时登记** `_merge_to_docs.py` 的 `TAGS` 与 `partdoc.PLAYER_ORDER`。
 - Register the TAG: add it to the `TAGS` list in `player_tags/_merge_to_docs.py` and add its 评定标准 section to the new part file.
 - `docs/player-tags-specify.md` is hand-edited by the developer — ask them to add the definition sentence rather than editing it yourself.
 - Run the merge script so the stub appears in `docs/player-tags-members.md`.
 
 ## Once the 评定标准 is clear
 
-1. **Pick the index/name**: `NN-<TAG名>.md` (existing part files are `01-…`–`12-…` — 12 player TAGs in total).
-2. **Register**: `_merge_to_docs.py` TAGS list and the new part file's `## 评定标准`; `docs/player-tags-specify.md` is updated by the developer.
+1. **Pick the index/name**: `NN-<TAG名>.json`（现有分文件为 `01-…`–`09-…`、`13-…`、`12-…`，共 11 个）。
+2. **Register**: `_merge_to_docs.py` 的 `TAGS` 与 `partdoc.PLAYER_ORDER`（两处都改）；`docs/player-tags-specify.md` is updated by the developer.
 3. **Write `## 评定标准`** following the 评定标准 writing rules in AGENTS.md: use the term 评定标准 (never 口径 or 裁决), no dates, no edit traces; numbered paths when there are several; state boundaries and exclusions.
 4. **Member scan**: drive full-corpus searches from the criteria keywords (PRTS pages under `material_datas/PRTS/` + `deterministic.json`); every inclusion and exclusion cites `文件:行号`; summons/devices count as the owner; mode-limited modules (ISW-α/RA-α/SO-α…) count, with the mode written into 条件.
 5. **Boundary records**: 纳入存疑 / 明确排除 with rationale + evidence; unresolved items go to `## 待开发者确认`.
 6. **Cross-TAG check**: compare with every other TAG main table, update the 多 TAG 并存 notes on both sides.
-7. **Merge and verify**: run `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`, check the 总览 row count and the diff.
+7. **Merge and verify**: run `python -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`, check the 总览 row count and the diff.
 
 ## Do not
 

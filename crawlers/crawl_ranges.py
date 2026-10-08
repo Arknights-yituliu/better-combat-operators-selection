@@ -13,9 +13,9 @@
 版面右侧为干员面朝方向（PRTS 约定）。
 
 用法：
-  .venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py            # 全部（可断点续跑）
-  .venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py --only 赤刃明霄陈
-  .venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py --force    # 已抓过的也重抓
+  python -X utf8 crawlers/crawl_ranges.py            # 全部（可断点续跑）
+  python -X utf8 crawlers/crawl_ranges.py --only 赤刃明霄陈
+  python -X utf8 crawlers/crawl_ranges.py --force    # 已抓过的也重抓
 """
 from __future__ import annotations
 

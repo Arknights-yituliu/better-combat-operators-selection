@@ -15,16 +15,16 @@ description: 「（待验证）」数值条目的复算与回填流程（extract
 ## 子命令
 
 ```bash
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract   # 抽出（待验证）条目 → items.jsonl
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py check     # 算术自检与证据校验
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py report    # 渲染《待验证复算.md》
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py apply --dry-run
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py verify    # 重生成后的验收
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py fetch-rules  # 刷新 _rules/ 快照
-.venv/Scripts/python.exe -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py lint      # S1–S11 巡检
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py extract   # 抽出（待验证）条目 → items.jsonl
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py check     # 算术自检与证据校验
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py report    # 渲染《待验证复算.md》
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py apply --dry-run
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py verify    # 重生成后的验收
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py fetch-rules  # 刷新 _rules/ 快照
+python -X utf8 .claude/skills/reverify-numbers/scripts/reverify.py lint      # S1–S11 巡检
 ```
 
 ## 规则与留痕
 
 - 复算结论与回填行走复核文件；一切需要开发者裁决的问题走 `agent_workspace/workdocs/待裁定.md` 流程（先查 `docs/rulings.md`），裁定后折入正本并在台账登记。
-- 分文件行号在复算期间被手工修订时，用 `_reverify/refresh_lines.py` 只重定位行号，不重跑 extract。
+- 分文件在复算期间被手工修订时，用 `_reverify/refresh_lines.py` 只重定位（items.jsonl 的 `loc` 字段＝`b<块序>r<行序>`，见 reverify.iter_part_rows），不重跑 extract。

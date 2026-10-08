@@ -16,15 +16,15 @@
 
 写入的文件（前两页即时落盘，「结果 JSON」页仅在点保存时写）：
     agent_workspace/tag_pipeline/player_tags/_recommend.json   （荐）
-    agent_workspace/tag_pipeline/player_tags/NN-*.md           （成员行增删、条件/备注）
-    agent_workspace/tag_pipeline/official_tags/[A-I]-*.md      （成员行增删、条件/备注、条目头人数重算）
+    agent_workspace/tag_pipeline/player_tags/NN-*.json         （成员行增删、条件/备注）
+    agent_workspace/tag_pipeline/official_tags/[A-I]-*.json    （成员行增删、条件/备注；条目头为渲染期派生）
     results/*.json                                             （结果 JSON 页保存）
     docs/player-tags-members.md、docs/official-tags-members.md 由合并脚本重新生成（只读）。
 
 用法：
-    .venv/Scripts/python.exe -X utf8 recommend_gui.py                  # 启动并打开浏览器
-    .venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
-    .venv/Scripts/python.exe -X utf8 recommend_gui.py --check          # 只解析自检，不起服务
+    python -X utf8 recommend_gui.py                  # 启动并打开浏览器
+    python -X utf8 recommend_gui.py --port 8520 --no-browser
+    python -X utf8 recommend_gui.py --check          # 只解析自检，不起服务
 """
 
 from __future__ import annotations

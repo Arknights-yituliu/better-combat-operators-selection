@@ -47,27 +47,19 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PARTS = ROOT / "agent_workspace" / "tag_pipeline" / "player_tags"
+sys.path.insert(0, str(PARTS.parent))
+import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
 RECOMMEND = PARTS / "_recommend.json"
 RECOMMEND_FALLBACK = PARTS / "_recommend_fallback.json"
 
-# 成员表区间：起于「## 成员表」或「## §A」，止于下列任一标题
-START_MARKS = ("## 成员表", "## §A")
-STOP_MARKS = (
-    "## 边界与排除记录",
-    "## 待开发者确认",
-    "## 检索记录",
-    "## 数据结构建议",
-    "## 交叉引用",
-    "## 多 TAG 检查",
-)
 SEP_ROW = re.compile(r"^\|[\s:|-]+\|$")
 
 
 def load_tags() -> list[tuple[str, str, pathlib.Path]]:
-    """扫描分文件，返回 [(TAG 名, 文件路径), ...]，按编号排序。"""
+    """扫描分文件（NN-*.json），返回 [(TAG 名, 文件路径), ...]，按编号排序。"""
     out = []
-    for path in PARTS.glob("*.md"):
-        m = re.fullmatch(r"(\d{2})-(.+)\.md", path.name)
+    for path in PARTS.glob("*.json"):
+        m = re.fullmatch(r"(\d{2})-(.+)\.json", path.name)
         if m:
             out.append((int(m.group(1)), m.group(2), path))
     out.sort(key=lambda t: t[0])
@@ -75,34 +67,51 @@ def load_tags() -> list[tuple[str, str, pathlib.Path]]:
 
 
 def main_table_members(path: pathlib.Path) -> list[str]:
-    """读取分文件主成员表第一列的干员名（按表内顺序，去重取值）。"""
+    """读取分文件主成员表第一列的干员名（按文档顺序，去重取值）。
+
+    与视图侧同语义：`## 成员表…` 节内一切竖线行——成员表数据行与空行隔开的
+    孤立单行（12 的 B 组合提供者行）——都取第一列（已是现行行为，逐字节保持）。
+    """
+    doc = partdoc.load(path)
     names: list[str] = []
-    inside = False
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if line.startswith("## "):
-            inside = line.startswith(START_MARKS) and not line.startswith(STOP_MARKS)
-            continue
-        if not inside or not line.startswith("|") or SEP_ROW.match(line):
-            continue
+
+    def take(line: str) -> None:
+        if not line.startswith("|") or SEP_ROW.match(line.strip()):
+            return
         first = line.strip("|").split("|")[0].strip().replace("**", "")
         if first and first != "干员" and first not in names:
             names.append(first)
+
+    in_members = False
+    for it in doc["body"]:
+        if it["t"] == "heading":
+            if it["level"] == 2:
+                in_members = partdoc.clean_heading(it["text"]).startswith("成员表")
+        elif in_members and it["t"] == "p":
+            for line in it["lines"]:
+                take(line)
+        elif in_members and it["t"] == "table":
+            for row in it["rows"]:
+                first = row[0].replace("**", "").strip()
+                if first and first != "干员" and first not in names:
+                    names.append(first)
     return names
 
 
 def combo_names(path: pathlib.Path) -> list[str]:
     """阵容组合（12）：成员表区间内 `### A<N>.`（势力）/ `### B<N>.`（用法）标题去序号前缀。"""
+    doc = partdoc.load(path)
     names: list[str] = []
-    inside = False
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if line.startswith("## "):
-            inside = line.startswith(START_MARKS) and not line.startswith(STOP_MARKS)
+    in_members = False
+    for it in doc["body"]:
+        if it["t"] != "heading":
             continue
-        if not inside:
+        if it["level"] == 2:
+            in_members = partdoc.clean_heading(it["text"]).startswith("成员表")
             continue
-        m = re.fullmatch(r"### [AB]\d+\.\s*(.+)", line)
+        if not in_members:
+            continue
+        m = re.fullmatch(r"### [AB]\d+\.\s*(.+)", it["text"].strip())
         if m and m.group(1).strip() not in names:
             names.append(m.group(1).strip())
     return names
@@ -335,7 +344,7 @@ def cmd_check(tags: list[tuple[str, pathlib.Path]], primary: dict[str, list[str]
 def main() -> int:
     tags = load_tags()
     if not tags:
-        raise SystemExit(f"未在 {PARTS} 找到分 TAG 文件（NN-*.md）")
+        raise SystemExit(f"未在 {PARTS} 找到分 TAG 文件（NN-*.json）")
     primary = load_recommend(RECOMMEND)
     fallback = load_recommend(RECOMMEND_FALLBACK)
 

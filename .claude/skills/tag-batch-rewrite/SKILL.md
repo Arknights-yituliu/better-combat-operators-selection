@@ -16,21 +16,21 @@ description: 批量改写／复算 TAG 条目的回填与守恒审计流程。Us
 
 ```bash
 # 先 dry-run 核对全部键命中
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py \
-    --tag P03 --file 03-吃拐一轮秒.md --out agent_workspace/_out/P03-A.json --dry-run
+python -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py \
+    --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json --dry-run
 ```
 
 - 产出 JSON 的键＝干员名；同一分文件内同名多行时写成 `干员名（子表名）`。
-- 脚本按表头定位列、以 HEAD 版本重建整行，只替换「条件」「备注」两格；其余列原样取 HEAD，防写错列并修复历史写错列。
-- `--keep-prefix` 保留行首机器协议前缀（插拔容错的 `救急路径：`、充电的 `子 TAG：`）；`--no-head` 以工作区为底（P05 等 HEAD 前缀已是旧格式时使用）。
+- 脚本按「干员」列名**结构化定位**行、只设「条件」「备注」两个字段；其余字段（编号/子 TAG/范围/依据）原样保留。同名多行（01 真言、02 两子表同名干员等）取文档序最后一处，键写 `干员（子表名）` 可对块标题消歧。
+- `--keep-prefix` 从当前行取出并保留行首机器协议前缀（插拔容错的 `救急路径：`、`子 TAG：`）；不带则整批丢子 TAG。
 - 回填不会增删成员行；新增/移除行走 GUI 或按实装倒序手工插入。
 - 脚本读工作区文件时按实际换行处理，输出沿用原文件的换行风格。
 
 ## 守恒审计：`audit_text_migration.py`
 
 ```bash
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01  # 只审某个分文件
+python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py            # 全部成员表
+python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py --only 01  # 只审某个分文件
 ```
 
 - 对比 HEAD 与工作区：报「数字丢失／依据丢失／残留禁用／块标签未点名／结构未生成」，均应 0。

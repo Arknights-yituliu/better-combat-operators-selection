@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""生成 results/operator-tags.json（v1）：把两份名单文档合成为最终结果 JSON。
+"""生成 results/operator-tags.json（v1）：把两份分文件（tag-part/1 JSON）合成为最终结果 JSON。
 
 数据来源（docs/output-standard.md §7）：
-- docs/official-tags-members.md       官方设定 TAG（81 个，成员表 干员｜编号｜条件｜备注）
-- docs/player-tags-members.md        玩家体感 TAG（12 个，含 子 TAG／救急路径 等分组信息）
+- agent_workspace/tag_pipeline/official_tags/[A-I]-*.json       官方设定 TAG 分模块（tag-part/1，成员表 干员｜编号｜条件｜备注）
+- agent_workspace/tag_pipeline/player_tags/NN-*.json            玩家体感 TAG 分文件（tag-part/1，含 子 TAG／救急路径 等分组信息）
 - agent_workspace/tag_pipeline/catalog.json                    官方 TAG 字典（名称 → id／类别）
 - agent_workspace/tag_pipeline/char_ids.json                   干员名 → charId
 - agent_workspace/tag_pipeline/player_tags/_launch_dates.json  干员名 → 实装时间
@@ -12,9 +12,9 @@
 - material_datas/PRTS/<干员>/*.md                              锚点判定用的天赋/技能/模组/召唤物名索引
 
 用法：
-    .venv/Scripts/python.exe -X utf8 tools/generate_results.py            # 写 results/operator-tags.json
-    .venv/Scripts/python.exe -X utf8 tools/generate_results.py --check    # 只生成到内存并跑规范校验
-    .venv/Scripts/python.exe -X utf8 tools/generate_results.py --report   # 打印统计与逐 TAG 计数
+    python -X utf8 tools/generate_results.py            # 写 results/operator-tags.json
+    python -X utf8 tools/generate_results.py --check    # 只生成到内存并跑规范校验
+    python -X utf8 tools/generate_results.py --report   # 打印统计与逐 TAG 计数
 """
 
 from __future__ import annotations
@@ -29,25 +29,26 @@ import urllib.parse
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+PIPE = ROOT / "agent_workspace" / "tag_pipeline"
+OFFICIAL_DIR = PIPE / "official_tags"
+PLAYER_DIR = PIPE / "player_tags"
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(PIPE))
+sys.path.insert(0, str(OFFICIAL_DIR))
 from gui.md import is_sep_row, split_cells          # noqa: E402
 from gui.roster import launch_date, parse_prts_brief  # noqa: E402
 from gui import results_json as rj                   # noqa: E402
+import partdoc                                       # noqa: E402  （分文件 JSON 的唯一读写实现）
+import _merge_official_to_docs as offm               # noqa: E402  （官方分模块清单 FILES 的唯一来源）
 
 PRTS_DIR = ROOT / "material_datas" / "PRTS"
-PIPE = ROOT / "agent_workspace" / "tag_pipeline"
-OFFICIAL_DOC = ROOT / "docs" / "official-tags-members.md"
-PLAYER_DOC = ROOT / "docs" / "player-tags-members.md"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
 VERSION = "v20"
 
-# 官方条目行：**施加恐惧**（5 人 · 首现 2024-07-09）：定义
-DEF_RE = re.compile(r"^\*\*(?P<name>.+?)\*\*（(?P<n>\d+) 人 · 首现 (?P<d>[\d-]+)）：")
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
-PLAYER_H2_RE = re.compile(r"^## (\d\d)｜(.+)$")
 
 # 锚点判定用的类别名
 SRC_SKILL, SRC_TALENT, SRC_MODULE, SRC_TRAIT, SRC_SUMMON = "技能", "天赋", "模组", "特性", "召唤物"
@@ -288,37 +289,38 @@ def parse_names(text: str) -> list[str]:
     return names
 
 
-def read_combo_meta(path: pathlib.Path) -> dict[str, dict]:
-    """阵容组合：`### A<N>. 组合名`（势力）/ `### B<N>. 组合名`（用法）段里固定三条 bullet
-    → 组合级 condition/remark/beneficiaries，并记子 TAG 分类（A→势力、B→用法）。"""
+def read_combo_meta(doc: dict) -> dict[str, dict]:
+    """阵容组合（12 的 tag-part/1）：`### A<N>. 组合名`（势力）/ `### B<N>. 组合名`（用法）段里
+    固定三条 bullet → 组合级 condition/remark/beneficiaries，并记子 TAG 分类（A→势力、B→用法）。"""
     out: dict[str, dict] = {}
     cur = ""
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("### "):
-            m = COMBO_NAME_RE.match(line[4:].strip())
-            cur = m.group(3).strip() if m else ""
-            if cur:
-                out.setdefault(cur, {})
-                if m:
-                    out[cur]["subtag"] = COMBO_CATEGORY.get(m.group(1), "")
+    for it in doc["body"]:
+        if it["t"] == "heading":
+            if it["level"] == 2:
+                cur = ""
+            elif it["level"] == 3:
+                m = COMBO_NAME_RE.match(partdoc.clean_heading(it["text"]))
+                cur = m.group(3).strip() if m else ""
+                if cur:
+                    out.setdefault(cur, {})
+                    if m:
+                        out[cur]["subtag"] = COMBO_CATEGORY.get(m.group(1), "")
             continue
-        if line.startswith("## "):
-            cur = ""
+        if not cur or it["t"] != "p":
             continue
-        if not cur:
-            continue
-        m = COMBO_BULLET_RE.match(line.strip())
-        if not m:
-            continue
-        label, text = m.group(1), m.group(2).strip()
-        if label == "触发条件":
-            out[cur]["condition"] = text
-        elif label == "组合整体机制":
-            out[cur]["remark"] = text
-        else:
-            names = parse_names(text)
-            if names:
-                out[cur]["beneficiaries"] = names
+        for line in it["lines"]:
+            m = COMBO_BULLET_RE.match(line.strip())
+            if not m:
+                continue
+            label, text = m.group(1), m.group(2).strip()
+            if label == "触发条件":
+                out[cur]["condition"] = text
+            elif label == "组合整体机制":
+                out[cur]["remark"] = text
+            else:
+                names = parse_names(text)
+                if names:
+                    out[cur]["beneficiaries"] = names
     return out
 
 
@@ -358,46 +360,6 @@ def arkdps_source(remark: str, default_parts: str = "算法框架与用法分支
         parts = default_parts
     return {"model": "ArkDPS", "url": ARKDPS_SOURCE_URL, "author": "极夜星辰",
             "parts": parts, "detail": ARKDPS_DETAILS.get(parts, ARKDPS_DETAILS["算法框架与用法分支"])}
-
-
-def read_tables(path: pathlib.Path):
-    """顺序产出 (h2, h3, h4, header, rows, line_no)：以表头行分组、跳过空行分隔。"""
-    lines = path.read_text(encoding="utf-8").splitlines()
-    h2 = h3 = h4 = ""
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("## "):
-            h2, h3, h4 = line[3:].strip(), "", ""
-            i += 1
-            continue
-        if line.startswith("### "):
-            h3, h4 = line[4:].strip(), ""
-            i += 1
-            continue
-        if line.startswith("#### "):
-            h4 = line[5:].strip()
-            i += 1
-            continue
-        if not line.lstrip().startswith("|"):
-            i += 1
-            continue
-        j = i
-        while j < len(lines) and lines[j].lstrip().startswith("|"):
-            j += 1
-        header = split_cells(lines[i])
-        rows = []
-        for raw in lines[i + 1:j]:
-            cells = split_cells(raw)
-            if is_sep_row(cells) or not cells or not cells[0] or len(cells) != len(header):
-                continue
-            rows.append(cells)
-        yield h2, h3, h4, header, rows, i + 1
-        i = j
-
-
-def is_member_table(header: list[str]) -> bool:
-    return bool(header) and header[0] == "干员" and "条件" in header and "备注" in header
 
 
 # ---------------------------------------------------------------- PRTS 名称索引（锚点判定用）
@@ -588,61 +550,42 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
     unknown = [n for n in OFFICIAL_SUB_GROUPS if n not in name2id]
     assert not unknown, f"子 TAG 取值闭集表里的 TAG 不在 catalog.json：{unknown}"
     tags, operators = [], {}
-    lines = OFFICIAL_DOC.read_text(encoding="utf-8").splitlines()
-    category = ""
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("### "):
-            category = line[4:].strip()
-            i += 1
-            continue
-        m = DEF_RE.match(line.strip())
-        if not m:
-            i += 1
-            continue
-        name = m.group("name")
-        j = i + 1
-        while j < len(lines) and not lines[j].lstrip().startswith("|"):
-            j += 1
-        k = j
-        while k < len(lines) and lines[k].lstrip().startswith("|"):
-            k += 1
-        header = split_cells(lines[j]) if j < k else []
-        assert is_member_table(header), f"官方条目 {name} 成员表列头异常：{header}"
-        ci, ni = header.index("条件"), header.index("备注")
-        entry = name2id.get(name)
-        assert entry is not None, f"catalog.json 缺少官方 TAG：{name}"
+    for category, flist in offm.FILES:
         cat = re.sub(r"（.*?）$", "", category).strip()
-        assert cat == entry["cat"], f"{name} 类别不一致：文档 {cat} / 字典 {entry['cat']}"
-        members = []
-        for raw in lines[j + 1:k]:
-            cells = split_cells(raw)
-            if is_sep_row(cells) or not cells or not cells[0] or len(cells) != len(header):
-                continue
-            op = cells[0].replace("**", "").strip()
-            cond, remark = clean_cell(cells[ci]), clean_cell(cells[ni])
-            remark, subs = parse_sub_prefix(remark, name)
-            if re.match(r"^子\s?TAG", remark):  # 前缀漏写「。」时正则失配、前缀会原样混入备注
-                SUB_PROBLEMS.append(f"{name}｜{op}：备注开头的子 TAG 前缀未以「。」收尾")
-            lint_text(name, op, cond, remark)
-            member = {"operator": op, "condition": cond}
-            blocks = parse_blocks(remark)
-            if blocks:
-                member["remark"] = blocks
-            if subs:
-                member["subTags"] = subs
-            # 召唤物类 TAG：能力即「拥有/回收/绑定召唤物」，常驻者锚召唤物信息段（§5 表）
-            if name in ("拥有召唤物", "召唤物退场返还/自动刷新", "技能-召唤物绑定"):
-                anchor = "#技能" if re.search(r"[0-9一二三]技能", cond) else "#召唤物信息"
-            else:
-                anchor = idx.anchor(op, cond, remark)
-            member["prtsUrl"] = url_of(op, anchor)
-            members.append(member)
-            operators.setdefault(op, None)
-        tags.append({"id": entry["id"], "name": name, "source": "official",
-                     "category": cat, "members": members})
-        i = k
+        for fname in flist:
+            doc = partdoc.load(OFFICIAL_DIR / fname)
+            for e in doc["entries"]:
+                name = e["name"]
+                rows = [list(r) for it in e["items"] if it["t"] == "table" for r in it["rows"]]
+                # 原管道读的视图已按实装时间倒序排好；此处对源行做同一排序（共享助手，防两处漂移）
+                rows, _undated = partdoc.order_official_rows(rows)
+                entry = name2id.get(name)
+                assert entry is not None, f"catalog.json 缺少官方 TAG：{name}"
+                assert cat == entry["cat"], f"{name} 类别不一致：文档 {cat} / 字典 {entry['cat']}"
+                members = []
+                for cells in rows:
+                    op = cells[0].replace("**", "").strip()
+                    cond, remark = clean_cell(cells[2]), clean_cell(cells[3])  # 列序＝干员｜编号｜条件｜备注
+                    remark, subs = parse_sub_prefix(remark, name)
+                    if re.match(r"^子\s?TAG", remark):  # 前缀漏写「。」时正则失配、前缀会原样混入备注
+                        SUB_PROBLEMS.append(f"{name}｜{op}：备注开头的子 TAG 前缀未以「。」收尾")
+                    lint_text(name, op, cond, remark)
+                    member = {"operator": op, "condition": cond}
+                    blocks = parse_blocks(remark)
+                    if blocks:
+                        member["remark"] = blocks
+                    if subs:
+                        member["subTags"] = subs
+                    # 召唤物类 TAG：能力即「拥有/回收/绑定召唤物」，常驻者锚召唤物信息段（§5 表）
+                    if name in ("拥有召唤物", "召唤物退场返还/自动刷新", "技能-召唤物绑定"):
+                        anchor = "#技能" if re.search(r"[0-9一二三]技能", cond) else "#召唤物信息"
+                    else:
+                        anchor = idx.anchor(op, cond, remark)
+                    member["prtsUrl"] = url_of(op, anchor)
+                    members.append(member)
+                    operators.setdefault(op, None)
+                tags.append({"id": entry["id"], "name": name, "source": "official",
+                             "category": cat, "members": members})
     return tags, list(operators)
 
 
@@ -714,7 +657,7 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
                 continue
             group, _, value = item.partition("/")
             value, detail = value.strip(), ""
-            if value.startswith("触发时"):  # 拐杖：仅「触发时」并记 detail（见 08-拐杖.md §子 TAG 定义）
+            if value.startswith("触发时"):  # 拐杖：仅「触发时」并记 detail（见 08-拐杖.json §子 TAG 定义）
                 dm = re.match(r"^触发时\((.*)\)$", value)
                 if dm:
                     value, detail = "触发时", dm.group(1).strip()
@@ -778,53 +721,48 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
     rec_fb_file = PIPE / "player_tags" / "_recommend_fallback.json"
     if rec_fb_file.exists():
         recommend_fallback = json.loads(rec_fb_file.read_text(encoding="utf-8"))
-    combo_meta = read_combo_meta(PLAYER_DOC)
+    combo_meta = read_combo_meta(partdoc.load(PLAYER_DIR / "12-阵容组合.json"))
     tags, seen_ops = [], []
-    tag_no = last_h2 = ""
     per_tag: dict[str, list[dict]] = {}
     combos: dict[str, dict] = {}  # 阵容组合：组合名 → {combo, providers}
     tags_order: list[dict] = []
-    for h2, h3, h4, header, rows, _ln in read_tables(PLAYER_DOC):
-        m = PLAYER_H2_RE.match(f"## {h2}")
-        if m and h2 != last_h2:  # 同一 TAG 的多张子表只建一次条目
-            last_h2 = h2
-            tag_no, tag_name = m.group(1), m.group(2)
-            tags_order.append({"no": tag_no, "name": tag_name, "members": []})
-            per_tag[tag_no] = []
-        if not tags_order or not is_member_table(header):
-            continue
-        ci, ni = header.index("条件"), header.index("备注")
-        for cells in rows:
-            clean = [clean_cell(c) for c in cells]
-            op = clean[0]
-            cond, remark = clean[ci], clean[ni]
-            if tag_no == "12":  # 阵容组合：成员行 = 组合的提供者（组合名取自子表标题）
-                cm = COMBO_NAME_RE.match(h3.strip())
-                combo = cm.group(3).strip() if cm else ""
-                entry = combos.setdefault(combo, {"combo": combo, "providers": []})
-                lint_text("阵容组合/" + combo, op, cond, remark)
-                prov = {"operator": op, "condition": cond}
+    for tag_no, tag_name, path in partdoc.player_files():
+        doc = partdoc.load(path)
+        tags_order.append({"no": tag_no, "name": tag_name, "members": []})  # 一文件 = 一个 TAG
+        per_tag[tag_no] = []
+        for h3, h4, header, rows, _bi in partdoc.member_tables(doc):
+            ci, ni = header.index("条件"), header.index("备注")
+            for cells in rows:
+                clean = [clean_cell(c) for c in cells]
+                op = clean[0]
+                cond, remark = clean[ci], clean[ni]
+                if tag_no == "12":  # 阵容组合：成员行 = 组合的提供者（组合名取自子表标题）
+                    cm = COMBO_NAME_RE.match(h3.strip())
+                    combo = cm.group(3).strip() if cm else ""
+                    entry = combos.setdefault(combo, {"combo": combo, "providers": []})
+                    lint_text("阵容组合/" + combo, op, cond, remark)
+                    prov = {"operator": op, "condition": cond}
+                    blocks = parse_blocks(remark)
+                    if blocks:
+                        prov["remark"] = blocks
+                    prov["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
+                    entry["providers"].append(prov)
+                    seen_ops.append(op)
+                    continue
+                remark, subs = player_subtags(tag_no, h3, h4, header, clean, cond, remark)
+                lint_text(tag_name, op, cond, remark)
+                member = {"operator": op, "condition": cond}
                 blocks = parse_blocks(remark)
                 if blocks:
-                    prov["remark"] = blocks
-                prov["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
-                entry["providers"].append(prov)
+                    member["remark"] = blocks
+                if subs:
+                    member["subTags"] = subs
+                if "ArkDPS" in remark or (tag_no, op) in ARKDPS_MEMBER_ROWS:
+                    # 显示成绩引用了外部帧模型/用法分支（口径见 docs/calc-rules.md §4.10）
+                    member["source"] = arkdps_source(remark, default_parts="帧模型与用法分支")
+                member["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
+                per_tag[tag_no].append(member)  # 一行成员表 = 一条成员；同一末端子 TAG 不重复即可重名
                 seen_ops.append(op)
-                continue
-            remark, subs = player_subtags(tag_no, h3, h4, header, clean, cond, remark)
-            lint_text(tag_name, op, cond, remark)
-            member = {"operator": op, "condition": cond}
-            blocks = parse_blocks(remark)
-            if blocks:
-                member["remark"] = blocks
-            if subs:
-                member["subTags"] = subs
-            if "ArkDPS" in remark or (tag_no, op) in ARKDPS_MEMBER_ROWS:
-                # 显示成绩引用了外部帧模型/用法分支（口径见 docs/calc-rules.md §4.10）
-                member["source"] = arkdps_source(remark, default_parts="帧模型与用法分支")
-            member["prtsUrl"] = url_of(op, idx.anchor(op, cond, remark))
-            per_tag[tag_no].append(member)  # 一行成员表 = 一条成员；同一末端子 TAG 不重复即可重名
-            seen_ops.append(op)
     for t in tags_order:
         if t["no"] == "12":  # 阵容组合：members = 组合条目（组合名/条件/备注/受益者/提供者明细）
             members = []

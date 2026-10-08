@@ -1,164 +1,100 @@
 # -*- coding: utf-8 -*-
-"""玩家分文件的区块解析与官方分文件的条目解析。"""
+"""分文件（tag-part/1）→ 前端模型块：玩家成员表与官方条目表。
+
+行不再携带行号/原文（写回改按「块 id + 行下标 i + 行现值」寻址）；每块带文件摘要 fd
+（mtime/size/digest），供写回做乐观并发校验。块 id 形如 `p:<文件名>#<成员表序号>` /
+`o:<文件名>#<条目序号>`，sig = partdoc.sig_of(label, columns)。
+"""
 
 from __future__ import annotations
 
 import pathlib
-import re
 
-from .config import DEF_ANY, DEF_RE, H2_START, H2_STOP, KNOWN_COLS, OFFICIAL_DIR, OFFICIAL_FILES
-from .md import is_sep_row, row_op, sig_of, split_cells
+import partdoc
+from .config import KNOWN_COLS, OFFICIAL_DIR, OFFICIAL_FILES
+
+
+def _fd(path: pathlib.Path) -> dict:
+    st = path.stat()
+    return {"mtime_ns": st.st_mtime_ns, "size": st.st_size, "digest": partdoc.digest(path)}
+
+
+def _clean_op(cell: str) -> str:
+    return cell.replace("**", "").strip()
+
+
+def _rows_of(columns: list[str], rows: list[list[str]]) -> list[dict]:
+    ci, ni = columns.index("条件"), columns.index("备注")
+    sub_col = columns.index("子 TAG") if "子 TAG" in columns else (
+        columns.index("范围") if "范围" in columns else None)
+    cid_col = columns.index("编号") if "编号" in columns else None
+    src_col = columns.index("依据") if "依据" in columns else None
+    out = []
+    for k, cells in enumerate(rows):
+        out.append({
+            "i": k,
+            "op": _clean_op(cells[0]),
+            "cid": cells[cid_col] if cid_col is not None else "",
+            "cond": cells[ci],
+            "note": cells[ni],
+            "src": cells[src_col] if src_col is not None else "",
+            "sub": cells[sub_col] if sub_col is not None else "",
+        })
+    return out
 
 
 def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
-    """玩家分文件 → 区块（一张连续表 = 一个区块）。
+    """玩家分文件 → 区块（一张成员表 = 一个区块）。
 
-    只认「## 成员表 / ## §A」区间内、表头首列为「干员」且列名在白名单内的表；
-    列序与列数不限定（「编号」「子 TAG」有则带出，无则为空串）。
-    每块给出 label（最近的 ###/#### 标题）、表头行号、排序方式与逐行条目。
+    只认 `## 成员表…` 节内、表头首列为「干员」且列名在白名单内的表；
+    label = 最近的 ###/#### 标题（与写回签名同源）。
     """
-    lines = path.read_text(encoding="utf-8").splitlines()
+    doc = partdoc.load(path)
+    fd = _fd(path)
+    sort = "none" if path.name.startswith("12-") else "date"
     blocks: list[dict] = []
-    h2 = h3 = h4 = ""
-    inside = False
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("## "):
-            h2, h3, h4 = line, "", ""
-            inside = line.startswith(H2_START) and not line.startswith(H2_STOP)
-            i += 1
+    for t in partdoc.iter_member_tables(doc):
+        if not all(c in KNOWN_COLS for c in t["columns"]):
             continue
-        if line.startswith("### "):
-            h3, h4 = line, ""
-            i += 1
-            continue
-        if line.startswith("#### "):
-            h4 = line
-            i += 1
-            continue
-        if not inside or not line.lstrip().startswith("|"):
-            i += 1
-            continue
-        j = i
-        while j < len(lines) and lines[j].lstrip().startswith("|"):
-            j += 1
-        table = lines[i:j]
-        header = split_cells(table[0])
-        if not (header and header[0] == "干员" and "条件" in header and "备注" in header
-                and all(c in KNOWN_COLS for c in header)):
-            i = j
-            continue
-        ci, ni = header.index("条件"), header.index("备注")
-        sub_col = header.index("子 TAG") if "子 TAG" in header else (header.index("范围") if "范围" in header else None)
-        cid_col = header.index("编号") if "编号" in header else None
-        label = (h4 or h3 or h2).lstrip("#").strip()
-        rows = []
-        for k, raw in enumerate(table):
-            if k == 0:
-                continue
-            cells = split_cells(raw)
-            if is_sep_row(cells) or not cells or not cells[0] or len(cells) != len(header):
-                continue
-            rows.append({
-                "line": i + k + 1,
-                "raw": raw,
-                "op": row_op(cells),
-                "cid": cells[cid_col] if cid_col is not None else "",
-                "cond": cells[ci],
-                "note": cells[ni],
-                "src": cells[len(header) - 1] if len(header) > ni else "",
-                "sub": cells[sub_col] if sub_col is not None else "",
-            })
         blocks.append({
-            "id": f"p:{path.name}#{len(blocks)}",
-            "sig": sig_of(label, table[0]),
+            "id": f"p:{path.name}#{t['idx']}",
+            "sig": partdoc.sig_of(t["label"], t["columns"]),
             "file": path.name,
             "tag": tag_name,
-            "label": label,
-            "header": header,
-            "line": i + 1,
-            "sort": "none" if path.name.startswith("12-") else "date",
-            "rows": rows,
+            "label": t["label"],
+            "header": t["columns"],
+            "sort": sort,
+            "fd": fd,
+            "rows": _rows_of(t["columns"], t["rows"]),
         })
-        i = j
     return blocks
 
 
 def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
-    """官方分文件 → 条目（粗体定义行 + 其后唯一一张成员表 = 一个区块）。
-
-    官方成员表列头为「干员｜编号｜条件｜备注」4 列；列数按表头实读，
-    未加「编号」列的 3 列表（干员｜条件｜备注）同样可解析。
-    """
-    lines = path.read_text(encoding="utf-8").splitlines()
+    """官方分文件 → 条目（定义行 + 唯一成员表 = 一个区块）。"""
+    doc = partdoc.load(path)
+    fd = _fd(path)
     entries: list[dict] = []
-    i = 0
-    while i < len(lines):
-        m = DEF_RE.match(lines[i].strip())
-        declared = bool(m)
-        if not m:
-            m = DEF_ANY.match(lines[i].strip())
-        if not m:
-            i += 1
-            continue
-        j = i + 1
-        notes = []
-        while j < len(lines) and not lines[j].lstrip().startswith("|"):
-            s = lines[j].strip()
-            if s.startswith(">"):
-                notes.append(s)
-            j += 1
-        k = j
-        while k < len(lines) and lines[k].lstrip().startswith("|"):
-            k += 1
-        table = lines[j:k]
-        header = split_cells(table[0]) if table else []
-        if not (header and header[0] == "干员" and "条件" in header and "备注" in header
-                and all(c in KNOWN_COLS for c in header)):
-            i = k if k > i else i + 1
-            continue
-        ci, ni = header.index("条件"), header.index("备注")
-        cid_col = header.index("编号") if "编号" in header else None
-        rows = []
-        for t, raw in enumerate(table[1:], start=1):
-            cells = split_cells(raw)
-            if is_sep_row(cells) or not cells or not cells[0] or len(cells) != len(header):
-                continue
-            rows.append({
-                "line": j + t + 1,
-                "raw": raw,
-                "op": row_op(cells),
-                "cid": cells[cid_col] if cid_col is not None else "",
-                "cond": cells[ci],
-                "note": cells[ni],
-                "src": "",
-                "sub": "",
-            })
+    for idx, e in enumerate(doc["entries"]):
+        table = next(it for it in e["items"] if it["t"] == "table")
+        columns = table["columns"]
         entries.append({
-            "name": m.group("name"),
+            "name": e["name"],
             "category": category,
             "file": path.name,
-            "def_line": i + 1,
-            "def_raw": lines[i],
-            "declared": declared,
-            "n_declared": int(m.group("n")) if declared else None,
-            "first_declared": m.group("d") if declared else None,
-            "notes": notes,
             "blocks": [{
-                "id": f"o:{path.name}#{len(entries)}",
-                "sig": sig_of(m.group("name"), table[0]),
+                "id": f"o:{path.name}#{idx}",
+                "sig": partdoc.sig_of(e["name"], columns),
                 "file": path.name,
-                "tag": m.group("name"),
+                "tag": e["name"],
                 "cat": category,
-                "label": m.group("name"),
-                "header": header,
-                "line": j + 1,
+                "label": e["name"],
+                "header": columns,
                 "sort": "date",
-                "rows": rows,
+                "fd": fd,
+                "rows": _rows_of(columns, table["rows"]),
             }],
         })
-        i = k
     return entries
 
 

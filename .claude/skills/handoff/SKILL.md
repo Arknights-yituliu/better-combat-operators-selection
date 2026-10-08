@@ -26,7 +26,7 @@ description: >-
 3. `docs/rulings.md` —— **裁定台账**（近期：**「六、第九批裁定」**：慢热组A 读法／棘刺累积／结城理·望／硬控·软控子 TAG／远距「独立达成·需配合」与四项纳入排除／潜能对吃拐无帮助／03 死芒·烛煌·蓝毒·号角／模组代号清理范围；**「七、第十批裁定」**：显示成绩混合口径／外部来源标注／执行顺序与样例／《异常效果》落库）。**判断类问题先查它**。
 4. `agent_workspace/workdocs/待裁定.md` —— 第十批 D1–D8 已回复落定、**无待决项**；本轮新裁定（纯御门槛/来源/对象/阻挡数写法、+余→P12「用法」、荐两层名单口径）逐字归档在 `agent_workspace/_out/本轮决策与执行状态-2026-10-02.md`，**尚待按四步折入 `docs/rulings.md` 正本**。
 5. `docs/scan-protocol.md` —— **不漏扫流程正本**（名单文件＋逐人决断＋复核代理），一切扫描类作业先读它。
-6. 任务涉及的文件：`player_tags/NN-*.md`、`official_tags/[A-I]-*.md`、`docs/calc-rules.md`、`docs/concept.md`、`docs/ui-render-rules.md`、`docs/output-standard.md`、`docs/module-hidden-mechanics.md`（模组「※」隐藏机制汇编）、`docs/abnormal-effects.md`（PRTS《异常效果》落库：异常效果/组合/统一检查分类/硬软控对照）。
+6. 任务涉及的文件：`player_tags/NN-*.json`、`official_tags/[A-I]-*.json`、`docs/calc-rules.md`、`docs/concept.md`、`docs/ui-render-rules.md`、`docs/output-standard.md`、`docs/module-hidden-mechanics.md`（模组「※」隐藏机制汇编）、`docs/abnormal-effects.md`（PRTS《异常效果》落库：异常效果/组合/统一检查分类/硬软控对照）。
 
 ## 2. 三条硬纪律（违反过，代价明确）
 
@@ -51,9 +51,9 @@ description: >-
 - **`solidify-criteria` skill**：新增/修订 TAG 评定标准只给例子或模糊词时走它（回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证）；本轮「纯御天花板」为首个用例（记录/问答归档见 `agent_workspace/_out/评定标准固化-纯御天花板-记录.md`）。
 - **同一行内「条件/成绩/判定窗」必须同排布**：斩业星熊三件套曾分属三个操作场景（4 秒关技／32 秒不关技／关技窗）——复核当场打回；成绩与判定窗取同一次运行。
 - **证据只进「依据」列**；产物里不得出现范围代号、`S1/S2/S3`、模组档码、`表 2A`、`路径⑤`、分文件名、门槛重述（「≥3000%」尾巴、`判定：`前缀都不要）。
-- **回填会不会回退「依据」列**：`.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` 以 **HEAD** 重建整行（只替换条件／备注两格）——工作区若有与 HEAD 不同的「依据／编号／子 TAG」，回填即被回退。动前先 `git status`／`git diff` 摸清既有差异并避开目标行，动后以 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 的「依据丢失 0」为准。
-- **P05（插拔容错）回填必须加 `--no-head`**：HEAD 的备注前缀是 `**救急路径：…**；`（带粗体），带回来会让 `generate_results` 的前缀正则解析不到、整批丢子 TAG；工作区才是当前态。仍配 `--keep-prefix`。
-- **换行坑**：临时脚本写分文件一律 `p.write_bytes("\r\n".join(lines).encode("utf-8"))`——用 `write_text` 会因文本模式把 `\r\n` 再转义成 `\r\r\n`（每行后多一个空行），整张表解析崩掉，表现为 `generate_results --check` 报「荐『X』不是本 TAG 的成员」。发现后按 `b"\r\r\n" → b"\r\n"` 修回。另：**自己读文件用 `open(..., newline='')`**——universal newline 会把 CRLF 折成 LF，`split("\r\n")` 会得到一整行（本轮探针踩过）。
+- **回填只动目标行的「条件」「备注」字段**：`.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` 结构化写回（tag-part/1）——其余字段（编号/子 TAG/范围/依据）原样保留，HEAD 重建机制已随迁移移除；回填前后以 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 的「依据丢失 0」为准。
+- **P05（插拔容错）回填配 `--keep-prefix`**：原备注行首的 `救急路径：…；` 前缀由脚本直接取自当前行并保留（不再有 HEAD/工作区取谁之分）；不带则整批丢子 TAG。
+- **改分文件一律经 `partdoc.save`**（原子写、CRLF、规范 JSON）——别手写文本；若确需手写字节，`p.write_bytes("\r\n".join(lines).encode("utf-8"))`，用 `write_text` 会因文本模式把 `\r\n` 再转义成 `\r\r\n`（每行后多一个空行），整张表解析崩掉。另：**自己读文件用 `open(..., newline='')`**——universal newline 会把 CRLF 折成 LF。
 - **`ACCEPTED` 同名键必须合并**：字典字面量里重复键只有**最后一个**生效——批量登记走 `agent_workspace/_out/_accepted.py`（它按键读旧值、**并集合并**后整体重写，天然去重；勿手工逐条塞重复键）。
 - **审计默认只打印前 30 条**：登记放行表时用 `AUDIT_ALL=1` 全量输出到文件再解析（`agent_workspace/_out/_accepted.py` 已内置；strip 审计的 85 条「键分词误报」即用 `正则`（`（…md:(\d+) → 应为`）提取后批量登记）。
 - **块标签里的嵌套括号**：块标签形如 `第一天赋「X」（Y模组3级（HOK-Y），潜能5）` 时，标签校验必须按**配对**括号剥除（`generate_results._strip_brackets`）——用正则会漏掉嵌套、把含逗号的标签静默退回正文（表现为「块首疑似标签但未被识别」）。标签字数上限与 lint 阈值均为 `BLOCK_LABEL_MAX`（40）。
@@ -62,23 +62,23 @@ description: >-
 - **引用分词的全角冒号**：`crawlers/strip_prts_noncombat.py` 的 `CITE_RE` 排除集须同时含 `：` 与 `:`；否则「X模组3级：塑心/塑心.md:162」的路径键会连同前缀一起被吞，任何在其前插入文字都会误报「失效」。
 - **在引用紧前方改文字 → strip 审计「失效」误报（键名随散文变化）**：消除方式＝在该文件 `strip_prts_noncombat.ACCEPTED` 显式放行（按 `(分文件, HEAD 侧行号)`），注释写明「引用本身未变、仍指向同一处原文」（第八批 49 个键即此类）。
 - **「指向已删行」的历史余量**：10 条（07 罗小黑×2、13 霍尔海雅×3／安洁莉娜×2／莫斯提马×1／予愿安洁莉娜×2）为批七前后既有、非本批产生；报告每轮都会列出，属「需人工过一遍」的存量。
-- **`.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` 读工作区用 `split("\r\n")`**：分文件若为 LF 行尾，回填会**静默 0 条**——动手前 `file` 核行尾（现全库皆 CRLF）。`agent_workspace/_out/_accepted.py` 以文本模式读写 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py`，会把它转为 LF——功能无碍（autocrlf 归一化），但别再拿 `split("\r\n")` 直接读它。
+- **`_apply_batch.py` 的 CRLF 直读坑已随结构化迁移消失**（现为 JSON 读写）；`.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 经 `agent_workspace/_out/_accepted.py` 文本模式读写可能被转为 LF——功能无碍（autocrlf 归一化）。
 - **`.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py` 的两处判定（勿回退）**：①成员表以「**其后紧跟分隔行**」判定；②同名多行按**出现顺序配对**。
 - **子代理的解释性读法要复核后落盘**：裁定原文可能只给判准——写手可能读反，须在回填前由主进程定读法并列入证伪清单。
 - **scan-protocol 复核的实际形态**：写手 → 复核（证伪）→ 写手逐条修正 → 复验 → 核销；远距控制第二批（15＋6 项）与决战歼灭两批（各 6-7 项）均走完两轮，**修正清单本身就是交付物的一部分**。
 - **每批开发者回复原文必须归档**：折入的同时把逐字回复留存到 `agent_workspace/_out/待裁定-第N批-回复原文.md`（已建第七、八、九、十批）。第八批另含**当场问答**（`/handoff` 会话中以 AskUserQuestion 确认）与**计划审批时的指示**；第十批含 D1–D8 与两项附加问、以及**反幻觉指示**（「仇白跟巨型根本没什么关系，这属于幻觉成果，要万分警觉」）。
 - **规划类问题用 AskUserQuestion、外审类问题用《待裁定.md》**：开发者在会话内响应很快；但**口径点定类**（会改产物数值的）一律落《待裁定》条文，保证留痕。
-- **DoT 跳数按「[间隔]-[伤害]」循环（裁定 2026-10-03／2026-10-05 复核修正）**：**施加型持续伤害效果（DoT）**按 [间隔]-[伤害] 计时，首次结算在施加后第 1 个间隔，但**持续时长末端的「尾击」计入**——跳数＝**⌊覆盖窗口÷结算间隔⌋**（整倍时即 T/i，如 12 秒@1 秒＝12 跳）；**若施加该状态的那一击本身无伤害（除状态外无伤害输出），另计 1 次「首击」**（施加时立即结算；望 1 技能 6.5 秒＝7 跳、酒神召唤物 6 秒@0.5 秒＝13 跳）；**技能/天赋/装置/召唤物自身按间隔直接造成的伤害与条件状态型伤害不套循环**，按「覆盖时长÷结算间隔（四舍五入）」计；**攻击动作仍含首击**；**帧伤按 2 帧机制原文另计**。落库：`02-次数对策.md` 共同约定①、`docs/calc-rules.md`（跳数式／C5·C6／§4.4）、`agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` R6；台账「八、DoT 跳数循环裁定」。
+- **DoT 跳数按「[间隔]-[伤害]」循环（裁定 2026-10-03／2026-10-05 复核修正）**：**施加型持续伤害效果（DoT）**按 [间隔]-[伤害] 计时，首次结算在施加后第 1 个间隔，但**持续时长末端的「尾击」计入**——跳数＝**⌊覆盖窗口÷结算间隔⌋**（整倍时即 T/i，如 12 秒@1 秒＝12 跳）；**若施加该状态的那一击本身无伤害（除状态外无伤害输出），另计 1 次「首击」**（施加时立即结算；望 1 技能 6.5 秒＝7 跳、酒神召唤物 6 秒@0.5 秒＝13 跳）；**技能/天赋/装置/召唤物自身按间隔直接造成的伤害与条件状态型伤害不套循环**，按「覆盖时长÷结算间隔（四舍五入）」计；**攻击动作仍含首击**；**帧伤按 2 帧机制原文另计**。落库：`02-次数对策.json` 共同约定①、`docs/calc-rules.md`（跳数式／C5·C6／§4.4）、`agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` R6；台账「八、DoT 跳数循环裁定」。
 
 ## 4. 校验套件（改完必跑）
 
 ```bash
-.venv/Scripts/python.exe -X utf8 tools/prts_stats.py --check          # 属性层覆盖率（异常 0）
-.venv/Scripts/python.exe -X utf8 tools/verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
-.venv/Scripts/python.exe -X utf8 tools/generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
-.venv/Scripts/python.exe -X utf8 crawlers/strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
-.venv/Scripts/python.exe -X utf8 recommend_gui.py --check        # GUI 规范（0 错误 0 提醒）
+python -X utf8 tools/prts_stats.py --check          # 属性层覆盖率（异常 0）
+python -X utf8 tools/verify_numbers.py              # 数值校准（数值可疑 0；DPS 恒等式已改「÷全时长」并报旧式成绩句；「档位取舍已复核」是已裁定的不取档）
+python -X utf8 tools/generate_results.py --check    # 生成 + 文本 lint（0；条件已无字数上限）
+python -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py        # 守恒（数字/依据/结构 0；ACCEPTED 每条一次显式裁定）
+python -X utf8 crawlers/strip_prts_noncombat.py --audit # 证据层（失效 0；约 2 分钟，可后台跑——注意别用 tail 截断输出，全量落盘再读）
+python -X utf8 recommend_gui.py --check        # GUI 规范（0 错误 0 提醒）
 ```
 
-改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `.venv/Scripts/python.exe -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。
+改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `python -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。
