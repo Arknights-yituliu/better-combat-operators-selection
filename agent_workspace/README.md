@@ -11,6 +11,6 @@
 
 约定：
 
-- `tag_pipeline/official_tags/[A-I]-*.md` 与 `tag_pipeline/player_tags/NN-*.md` 是**判定内容的权威源**（GUI 与技能写回的目标），改动后需运行对应合并脚本重新生成 `docs/` 下的名单文档。
+- `tag_pipeline/official_tags/[A-I]-*.json` 与 `tag_pipeline/player_tags/NN-*.json` 是**判定内容的权威源**（GUI 与技能写回的目标），改动后需运行对应合并脚本重新生成 `docs/` 下的名单文档。
 - `tag_pipeline/stats.json` 由 `tools/prts_stats.py` 从 PRTS 语料抽取，是面板与档位的唯一取数处；不手改。
 - 临时产物一律写 `_out/`；`workdocs/`、`_out/`、`handoff/` 与 `_reverify/` 的批处理中间物均被 `.gitignore` 排除。

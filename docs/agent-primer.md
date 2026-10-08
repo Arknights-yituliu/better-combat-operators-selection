@@ -1,7 +1,7 @@
 # 作业记忆包（agent-primer）
 
 > 用途：**新会话与新派发的子代理开工前必读**。这里放「不知道就会推断错、并且真的推断错过」的东西——游戏侧的解锁关系、仓库侧的作业纪律、以及一份反面清单。
-> 本文只放**常识与红线**；规则正文在各自的权威源（`docs/concept.md`、`docs/calc-rules.md`、`docs/output-standard.md`、各 `NN-*.md`），裁定既往在 `docs/rulings.md`。三者冲突时以规则正文与裁定台账为准。
+> 本文只放**常识与红线**；规则正文在各自的权威源（`docs/concept.md`、`docs/calc-rules.md`、`docs/output-standard.md`、各 `NN-*.json`），裁定既往在 `docs/rulings.md`。三者冲突时以规则正文与裁定台账为准。
 > 维护：爬虫剥离规则、交付格式、命令有任何变动，**本文必须同步**（它一旦过期，子代理就会照着过期记忆办事）。
 
 ---
@@ -75,8 +75,8 @@
 
 派「TAG 改写／复算／数据修复」类子代理时，**用 `.claude/agents/tag-rewrite` 代理类型**，并在 prompt 里至少给出：
 
-1. **必读三件**：本文（`docs/agent-primer.md`）、`docs/rulings.md`、目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.md` 或 `official_tags/[A-I]-*.md`）。
+1. **必读三件**：本文（`docs/agent-primer.md`）、`docs/rulings.md`、目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.json` 或 `official_tags/[A-I]-*.json`）。
 2. **本 TAG 的判据出处**：要求它先读该文件的「评定标准」与「约定」，并声明「以本文件为准」。
-3. **产出格式**：写 JSON 到 `agent_workspace/_out/<批名>.json`（键＝干员名，值＝`{condition, remark, why}`），**不直接改分文件**——由主进程统一回填（回填脚本按表头定位列、以 HEAD 为底重建整行，避免写错列）。
+3. **产出格式**：写 JSON 到 `agent_workspace/_out/<批名>.json`（键＝干员名，值＝`{condition, remark, why}`），**不直接改分文件**——由主进程统一回填（按「干员」列名结构化定位、只设 条件/备注 两个字段，其余字段原样保留）。
 4. **自查命令**：`tools/verify_numbers.py --only <TAG>` 与 `tools/prts_stats.py --check`，并要求回报关键输出。
 5. **不许自作主张的清单**：不得改依据列、不得增删成员行、不得改评定标准（发现规则冲突时报告，不自行其是）；工具报警按本 TAG 判据裁定，裁定结论进 `REVIEWED_TIERS` 或台账。

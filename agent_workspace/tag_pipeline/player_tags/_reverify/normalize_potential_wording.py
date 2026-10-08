@@ -8,7 +8,7 @@
 安全自检：逐条转换后重算「替换对依序应用」结果；若与 new_remark_expected /
 cond_new_expected 不再一致，则跳过该条的转换并列报告（防误伤）。
 
-用法：.venv/Scripts/python.exe -X utf8 normalize_potential_wording.py [--dry-run]
+用法：python -X utf8 normalize_potential_wording.py [--dry-run]
 """
 import json
 import pathlib

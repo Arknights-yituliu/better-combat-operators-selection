@@ -1881,6 +1881,6 @@
 
 ## 9. 分类执行流程（维护与生成）
 
-1. 本文件 §4 由 `agent_workspace/tag_pipeline/official_tags/*.md` 分模块经 `_merge_official_to_docs.py` 合并生成（§3 总览与 §5 时间线同步重算）；每个 TAG 的成员表逐行给出「条件」（硬性要求）与「备注」（游戏内原文引用与要点）。
+1. 本文件 §4 由 `agent_workspace/tag_pipeline/official_tags/[A-I]-*.json` 分模块（tag-part/1）经 `_merge_official_to_docs.py` 合并生成（§3 总览与 §5 时间线同步重算）；每个 TAG 的成员表逐行给出「条件」（硬性要求）与「备注」（游戏内原文引用与要点）。
 2. 判定铁律、官方定义与本文件及附录为准；拿不准的（伤害计算边界、状态别名、模式限定）一律询问开发者，不自行扩展名单；新干员上线后按第 1、2 节方法在对应分模块中增量补录，并重跑合并脚本。
 3. 结果 JSON 的生成与发布见 `docs/output-standard.md`（本文件为官方类 TAG 的唯一来源）。

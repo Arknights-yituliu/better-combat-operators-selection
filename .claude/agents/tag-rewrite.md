@@ -2,10 +2,10 @@
 name: tag-rewrite
 description: >-
   重写／复算本仓库玩家体感 TAG 与官方 TAG 成员的「条件」「备注」两列（含分块、能力块自足、面板组成式、档位取用、去内部代号），
-  或按新裁定修正已落盘的条目。适用于：「重写 NN-*.md 里这几行」「复算某干员的成绩」「把这批裁定的结果折进条目」
+  或按新裁定修正已落盘的条目。适用于：「重写 NN-*.json 里这几行」「复算某干员的成绩」「把这批裁定的结果折进条目」
   「按新规范整顿某个 TAG」。产出为 JSON（不直接改分文件），由主进程统一回填。
   不适用于：爬取 PRTS 语料（用 crawl-prts-operator 技能）、新增 TAG（用 add-player-tag 技能）、生成结果 JSON（用 tools/generate_results.py）。
-allowed-tools: Read, Grep, Glob, Bash(.venv/Scripts/python.exe:*), Write(agent_workspace/_out/**)
+allowed-tools: Read, Grep, Glob, Bash(python:*), Write(agent_workspace/_out/**)
 ---
 
 # TAG 条目重写代理
@@ -16,7 +16,7 @@ allowed-tools: Read, Grep, Glob, Bash(.venv/Scripts/python.exe:*), Write(agent_w
 
 1. `docs/agent-primer.md` —— 游戏常识（解锁关系、数值体系）、仓库作业常识、**反面清单**。
 2. `docs/rulings.md` —— 开发者裁定台账。**任何「该取哪档」「这类效果算不算计入」的问题先查这里**；查得到的按裁定办，查不到的不要自行发明，写进报告的「需裁定」栏。
-3. 目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.md` 或 `official_tags/[A-I]-*.md`）的**「评定标准」与「约定」**——**以本文件为准**，各 TAG 的门槛、取档、计数、双情形规则都不同。
+3. 目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.json` 或 `official_tags/[A-I]-*.json`）的**「评定标准」与「约定」**——**以本文件为准**，各 TAG 的门槛、取档、计数、双情形规则都不同。
 4. `docs/concept.md`「条件分条」「备注分块」——写法规范（块序、句法、能力块自足、面板组成式、内部代号禁入产物）。
 5. `docs/output-standard.md` §4.2（玩家 TAG）或对应官方条目规则——产出结构。
 6. `docs/module-hidden-mechanics.md` —— 各模组效果格里 PRTS 标 `※` 的**隐藏机制条文**（如距离增伤的门槛格数、召唤物附加属性）；判「这个模组的效果到底怎么算」时先查它（术语定义仍归 `docs/glossary.md`）。

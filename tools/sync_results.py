@@ -5,7 +5,7 @@ local.json（本地，不进库；模板见 local.example.json）：
     {"frontend_results_dir": "D:/path/to/frontend/src/static/json/combat"}
 
 用法：
-    .venv/Scripts/python.exe -X utf8 tools/sync_results.py [--check]
+    python -X utf8 tools/sync_results.py [--check]
 """
 from __future__ import annotations
 

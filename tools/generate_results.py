@@ -657,7 +657,7 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
                 continue
             group, _, value = item.partition("/")
             value, detail = value.strip(), ""
-            if value.startswith("触发时"):  # 拐杖：仅「触发时」并记 detail（见 08-拐杖.md §子 TAG 定义）
+            if value.startswith("触发时"):  # 拐杖：仅「触发时」并记 detail（见 08-拐杖.json §子 TAG 定义）
                 dm = re.match(r"^触发时\((.*)\)$", value)
                 if dm:
                     value, detail = "触发时", dm.group(1).strip()

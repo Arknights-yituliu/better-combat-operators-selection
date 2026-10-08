@@ -58,6 +58,9 @@ REF_EXCLUDE = {"docs/player-tags-members.md"}
 # points at. Each is (source file, HEAD-side atom). --audit reports anything not
 # listed here, so adding to this set is the deliberate act of accepting a deviation.
 ACCEPTED = {
+    # tag-part/1 迁移：`_brief.md` §4 的产出模板由 md 表格示例改为 JSON 骨架，旧模板中的示例
+    # 引用（`维什戴尔/维什戴尔.md:133`）随整块替换移除——属有意为之的文档改写。
+    ("agent_workspace/tag_pipeline/player_tags/_brief.md", "133"),
     # `agent_workspace/workdocs/待裁定.md`每轮整体重写（其条目随裁定折入后移除），旧版里引用过的 11-阻挡数5 例证（`珊比.md:33`）随重写消失——属流程性的整文件替换。
     ("agent_workspace/workdocs/待裁定.md", "33"),
     # 第九批：13-高档控制.md 的边界记录在引用紧前方改写了散文（灵知由「另见待裁」改为「已纳入」），

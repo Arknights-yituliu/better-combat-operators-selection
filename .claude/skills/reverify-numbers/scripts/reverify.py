@@ -295,7 +295,7 @@ def extract() -> int:
         "",
         f"- JSON 标记总数（含组合级）：{json_marker_total}；抽出条目：{len(items)}；"
         f"附录（非 JSON 区）：{len(appendix)}",
-        f"- 涉及分文件：{[it['file'] for it in items].count('01-决战歼灭.md') and ''}"
+        f"- 涉及分文件：{[it['file'] for it in items].count('01-决战歼灭.json') and ''}"
         f"P01={sum(1 for i in items if i['tag'] == 'P01')}、"
         f"P02={sum(1 for i in items if i['tag'] == 'P02')}、"
         f"P03={sum(1 for i in items if i['tag'] == 'P03')}、"
