@@ -185,6 +185,19 @@ def official_stat(entry: dict) -> tuple[int, str]:
     return len(rows), (min(ds) if ds else "—")
 
 
+def order_official_rows(rows: list[list[str]]) -> tuple[list[list[str]], list[str]]:
+    """官方成员行 → (视图同序的行, 无日期者的姓名列表)。
+
+    排序语义与官方合并脚本一致：有日期者按实装时间倒序（稳定排序，同日保持原文序），
+    无日期者按原文序置后——合并脚本与生成器共用本函数，防止两处排序漂移。
+    """
+    dated = [(date_of(r[0]), r) for r in rows]
+    known = [t for t in dated if t[0] is not None]
+    unknown = [t for t in dated if t[0] is None]
+    known.sort(key=lambda t: t[0], reverse=True)
+    return [t[1] for t in known] + [t[1] for t in unknown], [t[1][0] for t in unknown]
+
+
 def render(doc: dict) -> str:
     """JSON → md 文本（CRLF 行尾 + trailing_newlines 个结尾换行）。"""
     parts: list[str] = []

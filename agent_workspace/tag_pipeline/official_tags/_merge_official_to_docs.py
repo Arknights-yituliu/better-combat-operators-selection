@@ -85,17 +85,11 @@ def build_category(cat, fnames):
     stat = []
     for e in entries:
         rows = e["rows"]
-        dated = []
-        for i, (op, cid, cond, rem) in enumerate(rows):
-            d = date_of(op)
-            if d is None:
-                warnings.append(f"{cat}｜{e['name']}: 成员「{op}」无实装时间（保持原位）")
-            dated.append((d, i, op, cid, cond, rem))
-        known = [t for t in dated if t[0] is not None]
-        unknown = [t for t in dated if t[0] is None]
-        known.sort(key=lambda t: t[0], reverse=True)  # 稳定排序：同日保持文件内相对序
-        ordered = known + unknown
-        first = min((t[0] for t in known), default=None)
+        ordered, undated = partdoc.order_official_rows(rows)
+        for op in undated:
+            warnings.append(f"{cat}｜{e['name']}: 成员「{op}」无实装时间（保持原位）")
+        known_dates = [date_of(r[0]) for r in rows if date_of(r[0])]
+        first = min(known_dates, default=None)
         n = len(rows)
         out_lines.append(f"**{e['name']}**（{n} 人 · 首现 {first or '—'}）：{e['rest']}")
         out_lines.append("")
@@ -105,7 +99,7 @@ def build_category(cat, fnames):
             out_lines.append("")
         out_lines.append("| 干员 | 编号 | 条件 | 备注 |")
         out_lines.append("|---|---|---|---|")
-        for _, _, op, cid, cond, rem in ordered:
+        for op, cid, cond, rem in ordered:
             out_lines.append(f"| {op} | {cid} | {cond} | {rem} |")
         out_lines.append("")
         stat.append((e["name"], n, first))
