@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-"""把 official_tags/ 下的官方设定 TAG 分模块合入 docs/official-tags-members.md。
+"""把 official_tags/ 下的官方设定 TAG 分模块（tag-part/1 JSON）合入 docs/official-tags-members.md。
 
+- 数据源＝各 `[A-I]-*.json`（经 partdoc 读取，条目头按 rows 与实装时间重算）。
 - §4 TAG 详情：由本目录 13 个分模块按序重建（定义行括号内「N 人 · 首现」自动重算）。
 - §3 总览：各类别 TAG 数与关系数自动重算；正文两处总数（头部校验目标、§3 标题）同步。
 - §5 时间线：按各 TAG 的「首现」日期重建。
 - 其余章节（§1/§2/§6/§7/§8/§9 等）原样保留；成员表按实装时间倒序（同日期保持文件内相对序）。
 - 成员表列＝`干员 | 编号 | 条件 | 备注`（编号＝charId，值由分模块单元格提供；映射文件
-  `agent_workspace/tag_pipeline/char_ids.json`）；过渡期兼容旧的 3 列（编号留空并 warn）。
+  `agent_workspace/tag_pipeline/char_ids.json`）。
 - `--sync-dicts` 另按分模块重建机读字典 `merged.json`（干员→TAG id，id 按 catalog 顺序；
   键集沿用原文件，含空数组者）与 `final_lists.tsv`（TAG→成员，按 id 排序）；`catalog.json`
   只读不写（缺条目时 warn），`deterministic.json` 为基础属性快照、不随 TAG 变化。
 
-用法：.venv/Scripts/python.exe -X utf8 _merge_official_to_docs.py [--check] [--sync-dicts]
+用法：python -X utf8 _merge_official_to_docs.py [--check] [--sync-dicts]
 """
 import json
 import os
@@ -19,6 +20,9 @@ import re
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -30,21 +34,17 @@ MERGED = os.path.join(ROOT, "agent_workspace", "tag_pipeline", "merged.json")
 FINAL_LISTS = os.path.join(ROOT, "agent_workspace", "tag_pipeline", "final_lists.tsv")
 
 FILES = [
-    ("A 控制·异常（对敌施加）", ["A-控制异常-1.md", "A-控制异常-2.md", "A-控制异常-3.md"]),
-    ("B 伤害类型", ["B-伤害类型.md"]),
-    ("C 生存与增益（自身/友方/召唤物）", ["C-生存与增益-1.md", "C-生存与增益-2.md", "C-生存与增益-3.md",
-                                          "C-生存与增益-4.md"]),
-    ("D 部署与编队", ["D-部署与编队.md"]),
-    ("E 技力与技能资源", ["E-技力与技能资源.md"]),
-    ("F 治疗与支援", ["F-治疗与支援.md"]),
-    ("G 召唤物", ["G-召唤物.md"]),
-    ("H 攻击行为特征", ["H-攻击行为特征.md"]),
-    ("I 全场光环（全场持续效果）", ["I-全场光环.md"]),
+    ("A 控制·异常（对敌施加）", ["A-控制异常-1.json", "A-控制异常-2.json", "A-控制异常-3.json"]),
+    ("B 伤害类型", ["B-伤害类型.json"]),
+    ("C 生存与增益（自身/友方/召唤物）", ["C-生存与增益-1.json", "C-生存与增益-2.json",
+                                          "C-生存与增益-3.json", "C-生存与增益-4.json"]),
+    ("D 部署与编队", ["D-部署与编队.json"]),
+    ("E 技力与技能资源", ["E-技力与技能资源.json"]),
+    ("F 治疗与支援", ["F-治疗与支援.json"]),
+    ("G 召唤物", ["G-召唤物.json"]),
+    ("H 攻击行为特征", ["H-攻击行为特征.json"]),
+    ("I 全场光环（全场持续效果）", ["I-全场光环.json"]),
 ]
-
-DEF_RE = re.compile(r"^\*\*(?P<name>.+)\*\*（\d+ 人 · 首现 [\d-]+）：(?P<rest>.*)$")
-DEF_FALLBACK = re.compile(r"^\*\*(?P<name>.+)\*\*（.*?）：(?P<rest>.*)$")
-SEP_RE = re.compile(r"^\|[\s:|-]+\|$")
 
 warnings = []
 
@@ -58,40 +58,22 @@ def date_of(name):
 
 
 def parse_file(fname):
-    """解析一个分模块文件 → 条目列表；成员行统一为 [干员, 编号, 条件, 备注]。
+    """解析一个分模块 JSON（tag-part/1）→ 条目列表；成员行统一为 [干员, 编号, 条件, 备注]。
 
-    过渡期兼容：仍为旧的 3 列（`干员 | 条件 | 备注`）时按原列序解析，编号留空并汇总 warn；
-    数据文件全部加列后可删除该兼容分支。
+    条目头（N 人 · 首现 日期）不在盘上，由 build_category / partdoc 按 rows 与实装时间重算。
     """
-    path = os.path.join(HERE, fname)
-    lines = open(path, encoding="utf-8").read().splitlines()
+    doc = partdoc.load(os.path.join(HERE, fname))
     entries = []
-    cur = None
-    legacy_rows = 0
-    for ln in lines:
-        s = ln.strip()
-        m = DEF_RE.match(s) or DEF_FALLBACK.match(s)
-        if m:
-            cur = {"name": m.group("name"), "rest": m.group("rest"),
-                   "notes": [], "rows": []}
-            entries.append(cur)
-        elif cur is not None and s.startswith(">"):
-            if s:
-                cur["notes"].append(s)
-        elif cur is not None and s.startswith("|"):
-            if SEP_RE.match(s) or s.startswith("| 干员"):
-                continue
-            cells = [c.strip() for c in s.strip("|").split("|")]
-            if len(cells) == 3:  # 旧 3 列 → 原顺序不变，仅补一个空编号格
-                cells = [cells[0], "", cells[1], cells[2]]
-                legacy_rows += 1
-            if len(cells) != 4:
-                warnings.append(f"{fname}: 单元格数 {len(cells)} ≠ 4：{s[:60]}")
-                continue
-            cur["rows"].append(cells)
-        # 其它行（标题/空行/说明）忽略
-    if legacy_rows:
-        warnings.append(f"{fname}: 按旧 3 列格式解析 {legacy_rows} 行（编号留空；过渡期兼容）")
+    for e in doc["entries"]:
+        notes = []
+        for it in e["items"]:
+            if it["t"] == "p":
+                for ln in it["lines"]:
+                    s = ln.strip()
+                    if s.startswith(">"):
+                        notes.append(s)
+        rows = [list(r) for it in e["items"] if it["t"] == "table" for r in it["rows"]]
+        entries.append({"name": e["name"], "rest": e["rest"], "notes": notes, "rows": rows})
     return entries
 
 
