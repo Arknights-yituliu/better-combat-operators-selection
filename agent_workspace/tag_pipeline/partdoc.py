@@ -229,13 +229,15 @@ def player_files(directory: str | Path | None = None) -> list[tuple[str, str, Pa
     return out
 
 
-def member_tables(doc: dict):
-    """玩家文件 → 逐张成员表 yield (h3, h4, columns, rows, idx)。
+def iter_member_tables(doc: dict):
+    """玩家文件 → 逐张成员表 yield 全信息字典。
 
-    h3/h4 语义与合并视图一致：进入 `## 成员表…` 节后，节标题即 h3；更深一级 ### 取代 h3；
-    #### 记 h4（更高级标题到来即清空）。idx 为成员表序号（0 起）。
+    语义与合并视图一致：进入 `## 成员表…` 节后，节标题即 h3；更深一级 ### 取代 h3；
+    #### 记 h4（更高级标题到来即清空）；只有「干员+条件+备注」开头的表算成员表。
+    字段：h3/h4（标题栈）、label（h4 or h3 or 文档名，写回签名用）、columns、rows（
+    与文档同对象的行列表引用，就地增删改即改文档）、idx（成员表序号，0 起）、item（表元素）。
     """
-    _require(doc.get("kind") == "player", "member_tables 仅适用于玩家文件")
+    _require(doc.get("kind") == "player", "iter_member_tables 仅适用于玩家文件")
     h3 = h4 = ""
     in_members = False
     idx = 0
@@ -253,5 +255,12 @@ def member_tables(doc: dict):
         elif it["t"] == "table" and in_members:
             cols = it["columns"]
             if cols and cols[0] == "干员" and "条件" in cols and "备注" in cols:
-                yield h3, h4, cols, it["rows"], idx
+                yield {"h3": h3, "h4": h4, "label": h4 or h3 or clean_heading(doc["title"]),
+                       "columns": cols, "rows": it["rows"], "idx": idx, "item": it}
                 idx += 1
+
+
+def member_tables(doc: dict):
+    """（兼容旧签名）→ 逐张成员表 yield (h3, h4, columns, rows, idx)。"""
+    for t in iter_member_tables(doc):
+        yield t["h3"], t["h4"], t["columns"], t["rows"], t["idx"]

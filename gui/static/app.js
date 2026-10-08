@@ -497,7 +497,7 @@ function recordCard(x, readonly) {
   const subCol = b.source === "player" ? ((b.header || []).indexOf("子 TAG") >= 0 ? "子 TAG" : ((b.header || []).indexOf("范围") >= 0 ? "范围" : "")) : "";
   el.innerHTML = "<div class='head'>" + badge + "<b>" + esc(b.tagName) + "</b>" +
     (blkLabel(b) ? "<span class='chip'>" + esc(b.label) + "</span>" : "") +
-    "<span class='loc'>" + esc(b.file) + ":" + r.line + "</span></div>" +
+    "<span class='loc'>" + esc(b.file) + " · " + esc(b.label) + "</span></div>" +
     "<div class='vlabel'>条件</div><div class='val" + (r.cond ? "" : " empty") + "' data-k='cond'>" + esc(r.cond || "（待填）") + "</div>" +
     "<div class='vlabel'>备注</div><div class='val" + (r.note ? "" : " empty") + "' data-k='note'>" + esc(r.note || "（待填）") + "</div>" +
     (subCol ? "<div class='vlabel'>" + subCol + "</div><div class='val" + (r.sub ? "" : " empty") + "' data-k='sub'>" + esc(r.sub || "（待填）") + "</div>" : "") +
@@ -530,8 +530,9 @@ function startEdit(el, x) {
     const subcol = key === "sub" ? ((x.b.header || []).indexOf("子 TAG") >= 0 ? "子 TAG" : "范围") : undefined;
     if (v === old) { line.replaceWith(el); return; }
     try {
-      const j = await api("/api/cell", {file: x.b.file, line: x.r.line, original: x.r.raw, cond, note, sub, subcol});
-      x.r.cond = j.cond; x.r.note = j.note; if (j.sub !== undefined) x.r.sub = j.sub; x.r.raw = j.raw;
+      const j = await api("/api/cell", {file: x.b.file, block: {id: x.b.id, sig: x.b.sig}, i: x.r.i,
+        op: x.r.op, orig: {cond: x.r.cond, note: x.r.note, sub: x.r.sub}, cond, note, sub, subcol});
+      x.r.cond = j.cond; x.r.note = j.note; if (j.sub !== undefined) x.r.sub = j.sub;
       paintVal(el, x.r[key]);
       line.replaceWith(el);
       toast("已保存" + (j.warn ? "（" + j.warn + "）" : ""));
@@ -591,10 +592,11 @@ function rowMenu(e, op, recs) {
   openMenu(e.clientX, e.clientY, items);
 }
 async function removeRow(x) {
-  if (!confirm("从「" + blkFull(x.b) + "」删除「" + x.r.op + "」的整行记录？\n（含条件/备注/依据，源文件 " + x.b.file + ":" + x.r.line + "，可用 git 恢复）")) return;
+  if (!confirm("从「" + blkFull(x.b) + "」删除「" + x.r.op + "」的整行记录？\n（含条件/备注/依据，源文件 " + x.b.file + "，可用 git 恢复）")) return;
   try {
     const j = await api("/api/apply", {automerge: automergeOn(), ops: [{kind: "delete", op: x.r.op,
-      from: {block: {id: x.b.id, sig: x.b.sig}, line: x.r.line, raw: x.r.raw}}]});
+      from: {block: {id: x.b.id, sig: x.b.sig}, i: x.r.i, op: x.r.op,
+             orig: {cond: x.r.cond, note: x.r.note, sub: x.r.sub}}}]});
     afterApply(j, "已移除：" + x.r.op);
   } catch (e) { toast(e.message, true); if (e.code === "drift") load(true); }
 }
@@ -632,7 +634,7 @@ function stageOp(op, mode, rec) {
   if (k >= 0) {
     const cur = ST.ind.stage[k];
     const sameSrc = mode === "move" && cur.mode === "move" && rec && cur.src
-      && cur.src.blockId === rec.b.id && cur.src.line === rec.r.line;
+      && cur.src.blockId === rec.b.id && cur.src.i === rec.r.i && cur.src.op === rec.r.op;
     if (mode !== "move" || sameSrc) {
       toast("「" + op + "」已在临时区" + (cur.mode === "move" ? "（移动）" : ""));
       return;
@@ -643,7 +645,8 @@ function stageOp(op, mode, rec) {
   ST.ind.stage.push({
     sid: "st-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
     op, mode,
-    src: rec ? {blockId: rec.b.id, blockSig: rec.b.sig, file: rec.b.file, line: rec.r.line, raw: rec.r.raw,
+    src: rec ? {blockId: rec.b.id, blockSig: rec.b.sig, file: rec.b.file, i: rec.r.i, op: rec.r.op,
+                orig: {cond: rec.r.cond, note: rec.r.note, sub: rec.r.sub},
                 tagName: rec.b.tagName, label: blkLabel(rec.b), full: blkFull(rec.b), src: rec.r.src} : null,
     preview: rec ? {cond: rec.r.cond, note: rec.r.note} : null,
     stale: false,
@@ -687,7 +690,8 @@ async function dropStage(it) {
   ST.ind.busy = true;
   try {
     const ops = it.mode === "move"
-      ? [{kind: "move", op_id: it.sid, from: {block: {id: it.src.blockId, sig: it.src.blockSig}, line: it.src.line, raw: it.src.raw}, targets: targets.map(t => ({id: t.id, sig: t.sig}))}]
+      ? [{kind: "move", op_id: it.sid, from: {block: {id: it.src.blockId, sig: it.src.blockSig},
+           i: it.src.i, op: it.src.op, orig: it.src.orig}, targets: targets.map(t => ({id: t.id, sig: t.sig}))}]
       : [{kind: "insert", op_id: it.sid, op: it.op, cond: "", note: "", sub: "", targets: targets.map(t => ({id: t.id, sig: t.sig}))}];
     const j = await api("/api/apply", {automerge: automergeOn(), ops});
     if (it.mode === "move") ST.ind.stage = ST.ind.stage.filter(s => s.sid !== it.sid);
@@ -702,9 +706,10 @@ function markStageStale() {
   for (const it of ST.ind.stage) {
     if (it.mode !== "move" || !it.src) continue;
     const b = blockById(it.src.blockId);
-    const r = b ? b.rows.find(r => r.raw === it.src.raw) : null;
-    if (!b || !r) it.stale = true;
-    else { it.src.line = r.line; it.src.raw = r.raw; it.stale = false; }
+    const r = b ? b.rows.find(r => r.op === it.src.op) : null;
+    const o = it.src.orig || {};
+    if (!b || !r || r.cond !== o.cond || r.note !== o.note || r.sub !== o.sub) it.stale = true;
+    else { it.src.i = r.i; it.stale = false; }
   }
   stageSave(); renderStage();
 }

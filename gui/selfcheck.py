@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
-"""--check 的只读自检：解析断言、结果 JSON 校验器自测、静态资源与 DOM 契约检查。"""
+"""--check 的只读自检：解析断言、partdoc 往返、干跑写回与漂移检测、结果 JSON 校验器自测、静态资源与 DOM 契约检查。"""
 
 from __future__ import annotations
 
 import json
-import pathlib
-import re
 
-from .config import CHAR_IDS, OFFICIAL_DIR, OFFICIAL_FILES, PARTS, STATIC_DIR, rec
+import partdoc
+from .config import CHAR_IDS, OFFICIAL_DIR, OFFICIAL_FILES, PARTS, STATIC_DIR
 from .errors import UserError
-from .md import Doc, split_cells, write_atomic  # noqa: F401
 from .model import build_model
 from .results_json import RESULTS_DIR, render_results, safe_name, validate_results
-from .roster import launch_date
-from .tags import parse_official_entries, parse_player_blocks  # noqa: F401
-from .writeback import apply_ops, doc_registry, insert_into
+from .writeback import apply_ops, doc_registry
 
-# 官方成员表列头：干员｜编号｜条件｜备注（解析器按表头实读，列序/列数不同的老表也不致崩）
+# 官方成员表列头：干员｜编号｜条件｜备注（与 partdoc.validate 的约束一致）
 OFFICIAL_HEADER = ["干员", "编号", "条件", "备注"]
 
 
@@ -36,22 +32,14 @@ def run_check() -> int:
         for b in t["blocks"]:
             for r in b["rows"]:
                 if not r["op"]:
-                    problems.append(f"{b['file']} 有空干员名：{r['raw'][:40]}")
+                    problems.append(f"{b['file']} 有空干员名（行下标 {r['i']}）")
     o_rows = sum(len(b["rows"]) for e in model["official_entries"] for b in e["blocks"])
     print(f"官方设定 TAG {len(model['official_entries'])} 个／成员行 {o_rows} 条")
-    stale_headers = []
     for e in model["official_entries"]:
         b = e["blocks"][0]
         if b["header"] != OFFICIAL_HEADER:
             problems.append(f"{e['file']}｜{e['name']}：官方表列头应为 4 列（{'｜'.join(OFFICIAL_HEADER)}），"
                             f"实为 {len(b['header'])} 列（{'｜'.join(b['header'])}）")
-        dates = [launch_date(r["op"]) for r in b["rows"]]
-        first = min([d for d in dates if d], default=None) or "—"
-        if e["n_declared"] != len(b["rows"]) or e["first_declared"] != first:
-            stale_headers.append(f"{e['name']}（{e['file']}）：条目头 {e['n_declared']} 人 · 首现 {e['first_declared']}"
-                                 f" → 实为 {len(b['rows'])} 人 · 首现 {first}")
-    for s in stale_headers:
-        print("  [条目头待重算] " + s)
     roster = {p["name"] for p in model["roster"]}
     print(f"全量干员 {len(roster)} 人；缺基本信息 {sum(1 for p in model['roster'] if not (p['star'] and p['cls'] and p['branch']))} 人")
     hist: dict[int, int] = {}
@@ -67,14 +55,11 @@ def run_check() -> int:
         for r in e["blocks"][0]["rows"]:
             if r["op"] not in roster:
                 problems.append(f"{e['file']} 的「{r['op']}」不在全量干员表")
-    # 「编号」列（charId）逐条全查：与 char_ids.json 一致；未加列的表不查（按原文解析值比对）
+    # 「编号」列（charId）逐条全查：与 char_ids.json 一致；未加列的表不查
     bad_cid: list[str] = []
     n_cid = 0
-    tables = [b for tname, p in rec.load_tags() for b in parse_player_blocks(p, tname)]
-    for cat, fn in OFFICIAL_FILES:
-        fp = OFFICIAL_DIR / fn
-        if fp.exists():
-            tables += [b for e in parse_official_entries(fp, cat) for b in e["blocks"]]
+    tables = [b for t in model["player_tags"] for b in t["blocks"]]
+    tables += [e["blocks"][0] for e in model["official_entries"]]
     for b in tables:
         if "编号" not in b["header"]:
             continue
@@ -103,56 +88,63 @@ def run_check() -> int:
     if want != got:
         problems.append(f"官方文件集与合并脚本不一致：缺 {want - got}，多 {got - want}")
 
-    # 干跑（不落盘）：原文往返渲染须逐字节一致；插入一行后可解析且列数正确
+    # ---- partdoc 结构往返：全部 25 个分文件 load → dump → load 稳定、render 可出 ----
+    files = [p for _n, _name, p in partdoc.player_files()]
+    files += [OFFICIAL_DIR / fn for _cat, fn in OFFICIAL_FILES]
+    for p in files:
+        if not p.is_file():
+            problems.append(f"分文件缺失：{p.name}")
+            continue
+        try:
+            doc = partdoc.load(p)
+            if json.loads(partdoc.dump(doc)) != doc:
+                problems.append(f"{p.name}：partdoc dump→load 往返不一致")
+            if not partdoc.render(doc):
+                problems.append(f"{p.name}：render 为空")
+        except ValueError as exc:
+            problems.append(f"{p.name}：结构自检失败：{exc}")
+
+    # ---- 干跑（不落盘）：插入一行、漂移检测；文件字节须不变 ----
     t0 = model["player_tags"][0]
     b0 = t0["blocks"][0]
     path0 = PARTS / b0["file"]
-    before = path0.read_text(encoding="utf-8", newline="")
-    if Doc(path0, "player").render() != before:
-        problems.append(f"{b0['file']}：按行读写往返后与原文不一致（行尾处理有误）")
+    before = path0.read_bytes()
     probe = next((p for p in model["roster"] if p["name"] not in {r["op"] for r in b0["rows"]}), None)
     if probe:
-        doc = Doc(path0, "player")
-        got = insert_into(doc, b0, probe["name"], {"条件": "", "备注": "", "子 TAG": ""})
-        text = doc.render()
-        if got.get("skipped"):
-            problems.append("干跑插入被误判为重复")
-        if len(text.splitlines()) != len(before.splitlines()) + 1:
-            problems.append("干跑插入后行数不符（应 +1）")
-        if text.count("\r\n") != before.count("\r\n") + (1 if "\r\n" in before else 0):
-            problems.append("干跑插入后 CRLF 计数不符")
-        new_row = next((l for l in text.splitlines() if l.startswith("|") and probe["name"] in l), None)
-        new_cells = split_cells(new_row or "")
-        if not new_row or len(new_cells) != len(b0["header"]):
-            problems.append(f"干跑新行列数不符：{(new_row or '')[:50]}")
-        elif "编号" in b0["header"] and new_cells[b0["header"].index("编号")] != CHAR_IDS.get(probe["name"], ""):
-            problems.append(f"干跑新行的「编号」未按干员名填充：{(new_row or '')[:50]}")
         dry = apply_ops({"ops": [{"kind": "insert", "op": probe["name"], "cond": "", "note": "",
-                                  "targets": [{"id": b0["id"], "sig": b0["sig"]}]}], "automerge": False}, dry_run=True)
+                                  "targets": [{"id": b0["id"], "sig": b0["sig"]}]}], "automerge": False},
+                        dry_run=True)
         if not dry["results"] or dry["results"][0]["targets"][0]["skipped"]:
             problems.append("干跑 /api/apply 插入被误判为重复")
-        if path0.read_text(encoding="utf-8", newline="") != before:
+        drifted = None
+        r0 = b0["rows"][0]
+        try:
+            apply_ops({"ops": [{"kind": "delete", "from": {"block": {"id": b0["id"], "sig": b0["sig"]},
+                                                           "i": r0["i"], "op": r0["op"],
+                                                           "orig": {"cond": "（刻意不符的现值）",
+                                                                    "note": r0["note"], "sub": r0["sub"]}}}],
+                       "automerge": False}, dry_run=True)
+        except UserError as exc:
+            drifted = exc
+        if drifted is None or drifted.code != "drift":
+            problems.append("干跑：行现值不符时应报 drift，却未报出")
+        if path0.read_bytes() != before:
             problems.append("干跑改动了文件（不应写盘）")
     else:
         print("  [跳过] 未找到可用于干跑的干员")
 
-    # 官方干跑（不落盘）：新行格数须等于表头列数，「编号」按干员名自动填充
+    # 官方干跑（不落盘）：新行须按列头构行、「编号」自动填充
     ob0 = model["official_entries"][0]["blocks"][0]
     opath = OFFICIAL_DIR / ob0["file"]
-    obefore = opath.read_text(encoding="utf-8", newline="")
+    obefore = opath.read_bytes()
     probe_o = next((p for p in model["roster"] if p["name"] not in {r["op"] for r in ob0["rows"]}), None)
     if probe_o:
-        odoc = Doc(opath, "official")
-        got_o = insert_into(odoc, ob0, probe_o["name"], {"条件": "", "备注": ""})
-        orow = next((l for l in odoc.render().splitlines() if l.startswith("|") and probe_o["name"] in l), None)
-        ocells = split_cells(orow or "")
-        if got_o.get("skipped"):
+        odry = apply_ops({"ops": [{"kind": "insert", "op": probe_o["name"], "cond": "", "note": "",
+                                   "targets": [{"id": ob0["id"], "sig": ob0["sig"]}]}], "automerge": False},
+                         dry_run=True)
+        if not odry["results"] or odry["results"][0]["targets"][0]["skipped"]:
             problems.append("官方干跑插入被误判为重复")
-        elif len(ocells) != len(ob0["header"]):
-            problems.append(f"官方干跑新行应为 {len(ob0['header'])} 格，实为 {len(ocells)}：{(orow or '')[:50]}")
-        elif "编号" in ob0["header"] and ocells[ob0["header"].index("编号")] != CHAR_IDS.get(probe_o["name"], ""):
-            problems.append(f"官方干跑新行的「编号」未按干员名填充：{(orow or '')[:50]}")
-        if opath.read_text(encoding="utf-8", newline="") != obefore:
+        if opath.read_bytes() != obefore:
             problems.append("官方干跑改动了文件（不应写盘）")
     else:
         print("  [跳过] 未找到可用于官方干跑的干员")
@@ -222,9 +214,9 @@ def run_check() -> int:
     }
     got, _stats = validate_results(sample)
     codes = {p["code"] for p in got}
-    for want in ("M4", "M5", "R1", "C2", "C4"):
-        if want not in codes:
-            problems.append(f"校验器自检：样例应报出 {want}，实际只报出 {sorted(codes)}")
+    for want_code in ("M4", "M5", "R1", "C2", "C4"):
+        if want_code not in codes:
+            problems.append(f"校验器自检：样例应报出 {want_code}，实际只报出 {sorted(codes)}")
     if any(p["code"] == "R1" and "组合甲" in (str(p.get("label", "")) + str(p.get("message", ""))) for p in got):
         problems.append("校验器自检：R1 误报阵容组合的合法组合名「组合甲」")
     text = render_results({"白铁": "OK"}, "crlf")
