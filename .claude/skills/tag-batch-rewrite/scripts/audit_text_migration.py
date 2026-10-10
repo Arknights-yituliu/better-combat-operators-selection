@@ -39,6 +39,9 @@ SCAN = ["agent_workspace/tag_pipeline/player_tags", "agent_workspace/tag_pipelin
 PART_RE = re.compile(r"^(?:\d{2}|[A-I])-[^/]*\.json$")
 
 # 有意为之、已复核的数字变化：键＝「文件名｜干员」，值＝(应放行的令牌, 理由)。
+# 令牌含两类：数字令牌（条件＋备注里消失的数字）与依据令牌（依据列里消失的完整引用串，
+# 形如 `乌尔比安/乌尔比安.md:113,117,128,130`）。依据守恒同样按令牌集合比对——
+# 重爬语料后行号平移（如 113→115）会令旧引用串整串消失，属须显式放行的有意改动。
 # 与 crawlers/strip_prts_noncombat.py 的 ACCEPTED 同一约定：每加一条都是一次显式裁定。
 ACCEPTED: dict[str, tuple[set[str], str]] = {
     'agent_workspace/tag_pipeline/player_tags/12-阵容组合.json｜144': ({'144'}, '’’深海色行的原锚点不支撑断言，改锚属性表与天赋行’’'),
@@ -437,6 +440,12 @@ ACCEPTED: dict[str, tuple[set[str], str]] = {
     '03-吃拐一轮秒.json｜蕾缪安': ({'100', '120', '1201', '1467', '4', '46', '64343'}, '第八批裁定落地（《待裁定.md》：决战歼灭全表改口径——判定取最高 15 秒窗口、成绩改全时长、计数按 round、元素爆发固定点计入；03 段数／次数类去面板与号角倾泻重算；远距控制配合放宽与四项纳入；慢热成员行与计击口径等）带来的有意数字改动；随之消失的数字均为被改写或删除内容的原文数字'),
     '02-次数对策.json｜令': ({'60'}, 'DoT 跳数循环裁定轮内中间态登记（最终口径：施加型 DoT 按 [间隔]-[伤害] 循环、尾击计入、跳数＝⌊覆盖时长÷结算间隔⌋；施加一击无伤害者另计 1 次首击；技能/装置/状态自身间隔伤害不套循环）；回改后本条不再触发'),
     '02-次数对策.json｜浊心斯卡蒂': ({'40'}, 'DoT 跳数循环裁定轮内中间态登记（最终口径：施加型 DoT 按 [间隔]-[伤害] 循环、尾击计入、跳数＝⌊覆盖时长÷结算间隔⌋；施加一击无伤害者另计 1 次首击；技能/装置/状态自身间隔伤害不套循环）；回改后本条不再触发'),
+    # 2026-10 版本更新：乌尔比安 CRU-Y「“前路”」折入三行（按绝对贡献取 Y3：固定攻击 +150＞X3 +120；语料 乌尔比安/乌尔比安.md:175-199）；
+    # 同时刻有重爬致行号平移 +2 的人工重锚（113/117/128→115/119/132、65→67、131→133），旧引用串随重锚消失，一并放行。
+    '04-远程消耗.json｜乌尔比安': ({'1694', '6098', '9757', '乌尔比安/乌尔比安.md:113,117,128,130'}, '折入 Y模组3级（CRU-Y）：面板 1694→1844（新增 Y3 固定攻击+150）、有效攻击力 6098→6638.4、船锚伤害 9757→10621 随面板重算；旧引用串因重爬重锚（113,117,128→115,119,132）而消失——引用仍指向同一处原文；随之消失的数字均为旧档位组成式与旧伤害值的原文数字'),
+    '08-拐杖.json｜乌尔比安': ({'135', '15', '30', '乌尔比安/乌尔比安.md:63,65'}, '折入 Y模组3级（CRU-Y）：其他【深海猎人】获得 50%→60%（每层 +15→+22.8、潜能5 时 +135→+228 等），自身每层攻击 +30→+38；旧引用串因重爬重锚（65→67）与依据增补（64,65,175-199 另起一段）而消失——引用仍指向同一处原文；随之消失的数字均为旧档位数值的原文数字'),
+    '08-拐杖.json｜黍': ({'黍/黍.md:64,131'}, '折入 Y模组3级（GUA-Y）：依据增补（65,66,176-200 另起一段）；旧引用串因重爬重锚（131→133）而消失——引用仍指向同一处原文；备注数值 +12→+16 为档位更新、旧值以「（基础 +12）」保留，故无数字令牌丢失'),
+    '12-阵容组合.json｜乌尔比安': ({'120', '15', '30', '600', '乌尔比安/乌尔比安.md:63,65'}, '折入 Y模组3级（CRU-Y）：数值换为该档（自身每层生命上限 +120→+150、攻击 +30→+38；其他【深海猎人】每层 +60→+90 生命上限／+15→+22.8 攻击力、满层 +600→+900；同 08-拐杖 行）；旧引用串因重爬重锚（65→67）与依据增补而消失——引用仍指向同一处原文；随之消失的数字均为旧档位数值的原文数字'),
 }
 SKIP_NAMES = {"_brief.md", "_recalc_brief.md"}
 NUM_RE = re.compile(r"\d+(?:\.\d+)?")
@@ -526,13 +535,16 @@ def main() -> int:
                 n_changed += 1
                 where = f"{path.name}｜{op}"
                 allow, why = ACCEPTED.get(f"{path.name}｜{op}", (set(), ""))
-                miss = numbers(ocond + onote) - numbers(ncond + nnote) - allow
+                lost_num_set = numbers(ocond + onote) - numbers(ncond + nnote)
+                lost_ref_set = set(EVREF_RE.findall(oref)) - set(EVREF_RE.findall(nref))
+                miss = lost_num_set - allow
                 if miss:
                     lost_num.append(f"{where}：{sorted(miss)}")
-                elif allow & (numbers(ocond + onote) - numbers(ncond + nnote)):
+                miss_ref = lost_ref_set - allow
+                if miss_ref:
+                    lost_ref.append(f"{where}：{sorted(miss_ref)}")
+                if not miss and not miss_ref and allow & (lost_num_set | lost_ref_set):
                     accepted.append(f"{where}：{why}")
-                if set(EVREF_RE.findall(oref)) - set(EVREF_RE.findall(nref)):
-                    lost_ref.append(where)
                 for pattern, what in BANNED:
                     if pattern.search(nnote):
                         banned.append(f"{where}：{what}")

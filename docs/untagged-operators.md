@@ -1,7 +1,7 @@
 # 未归入任何 TAG 的干员
 
 > 本文件自动生成，勿手改：由 `tools/generate_results.py` 在生成 `results/operator-tags.json` 时同步写出（命令见 `docs/output-standard.md` §7）。
-> 口径：全量干员（`docs/operators.txt`，431 名）− 结果 JSON `operators[]`（400 名）＝ **31 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
+> 口径：全量干员（`docs/operators.txt`，434 名）− 结果 JSON `operators[]`（403 名）＝ **31 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
 > 官方设定 TAG 的「无 TAG 干员」名单（`docs/official-tags-members.md` §3）中已有部分被玩家体感 TAG 收录，故本表与其不完全重合；某干员一旦进入任一成员表，重新生成时自动移出本表。
 > 构成（按职业）：狙击 9、术师 6、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
 

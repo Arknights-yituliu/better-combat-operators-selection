@@ -360,6 +360,34 @@ ACCEPTED = {
     # （PRTS 语料未动，映射为恒等），放行。
     ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "56"),
     ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "57"),
+    # 2026-10 版本更新（新干员 克莱门莎／旅骨／德·托莱多；乌尔比安 CRU-Y「“前路”」、黍 GUA-Y「好时节」）：
+    # 重爬乌尔比安/黍 后，PRTS 天赋表新增「精英2 Y模组2级/3级」行（各 +2 行、插入于天赋小节中段），
+    # 其后全部行号平移 +2；受影响引用已逐行人工比对原文并重锚到新行号（锚点仍指同一处原文，
+    # 属重爬场景的必做重锚，非漏改）。按位置比对的审计以 HEAD 值为期望、需对旧值显式放行。
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "113"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "117"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "128"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "113"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "117"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "128"),
+    ("agent_workspace/tag_pipeline/player_tags/07-充电.json", "66"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "65"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "131"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "66"),
+    # 09-保人 黍行同时修正「黍\黍.md」反斜杠与重锚 112→114（键内反斜杠已在 numbers_by_key 归一，
+    # 56/58 不再触发；此处只需放行重锚消失的 112）。
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "112"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "65"),
+    # 2026-10 版本更新续：13-高档控制「阻挡数5」排除行的乌尔比安/其余四家拆成两句（乌尔比安经
+    # 2技能＋Y模组3级叠层加阻挡至 4、其余维持 3），引用紧前方的「→ 3（」变为「→ 4（」并新增
+    # 「→ 3（」，键分词随之变形（旧键「3（乌尔比安/乌尔比安.md」不再存在）；引用本身已随重爬
+    # 重锚指向同一处原文（33＝阻挡数行、102-111→104-113），属键分词误报，逐条放行。
+    ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "33"),
+    ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "111"),
+    # 《特殊机制》页快照重抓（免疫传送对齐三家）：页面漂移使「移动创伤每跳伤害机制」整句
+    # 由 :373 移至 :399，02-次数对策 三行（歌蕾蒂娅/温蒂/夜魔）引用人工重锚至新行号——
+    # 锚点仍指同一句原文，按位置比对的审计需对旧值显式放行。
+    ("agent_workspace/tag_pipeline/player_tags/02-次数对策.json", "373"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
@@ -563,10 +591,15 @@ def numbers_by_key(text):
     Comparing numbers rather than atom strings is what makes `:54-56` and
     `:54,55,56` equivalent — the rewriter keeps a contiguous range as a range, so a
     literal string comparison would flag every untouched range as stale.
+
+    键内反斜杠先归一为斜杠：`look_up()` 解析时本就等价（历史写法 `黍\\黍.md` 与
+    `黍/黍.md` 指向同一个语料文件），若在此不归一，依据列的斜杠写法统一会被误报为
+    整键消失，每个行号原子各报一条。注意审计读的是**原始文件文本**（JSON 序列化后），
+    字面反斜杠在文本中以「\\」两字符出现，故按两字符序列折叠为「/」。
     """
     out = {}
     for m in CITE_RE.finditer(text):
-        key = m.group(1).strip()
+        key = m.group(1).strip().replace("\\\\", "/")
         got = out.setdefault(key, set())
         for piece in SPLIT_RE.split(m.group(2)):
             if piece in ("，", ",", "、", "/"):
