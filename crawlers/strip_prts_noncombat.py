@@ -388,6 +388,11 @@ ACCEPTED = {
     # 由 :373 移至 :399，02-次数对策 三行（歌蕾蒂娅/温蒂/夜魔）引用人工重锚至新行号——
     # 锚点仍指同一句原文，按位置比对的审计需对旧值显式放行。
     ("agent_workspace/tag_pipeline/player_tags/02-次数对策.json", "373"),
+    # 司霆惊蛰 2技能 纳入轮（2026-10-10）：原「明确排除」条目（技能名误记「浩气长存」、按 10 格
+    # 归小范围档）整条删除，其证据引用 35／36（两行本非该断言的支撑行）随条目移除——
+    # 属有意为之的条目移除，引用指向的原文仍在（PRTS 语料未动、映射为恒等），显式放行。
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.json", "35"),
+    ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.json", "36"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
