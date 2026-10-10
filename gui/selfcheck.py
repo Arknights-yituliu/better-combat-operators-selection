@@ -6,9 +6,10 @@ from __future__ import annotations
 import json
 
 import partdoc
-from .config import CHAR_IDS, OFFICIAL_DIR, OFFICIAL_FILES, PARTS, STATIC_DIR
+from .config import CHAR_IDS, OFFICIAL_DIR, OFFICIAL_FILES, PARTS, STATIC_DIR, rec
 from .errors import UserError
 from .model import build_model
+from .rec_sync import preview_sync, sync_recommend
 from .results_json import RESULTS_DIR, render_results, safe_name, validate_results
 from .writeback import apply_ops, doc_registry
 
@@ -232,14 +233,45 @@ def run_check() -> int:
         problems.append("render_results 的 CRLF / BOM 处理有误")
     if json.loads(text) != {"白铁": "OK"} or '"白铁"' not in text:
         problems.append("render_results 往返解析不一致或未保持 ensure_ascii=False")
+    # ---- 荐同步（rec_sync）：重算幂等、BySub 与荐文件同源、官方 TAG 不动 ----
+    probe = {"version": "v1", "updated": "2026-01-01", "operators": [], "tags": [
+        {"id": "P01", "name": "决战歼灭", "source": "player", "members": [
+            {"operator": "甲", "condition": "无", "subTags": [{"group": "子 TAG", "value": "小范围"}]}]},
+        {"id": "A_x", "name": "自检占位官方", "source": "official", "category": "A 控制·异常", "members": []}]}
+    first = sync_recommend(probe)
+    again = sync_recommend(probe)
+    if again["tags"]:
+        problems.append("rec_sync 自检：重算应幂等（第二次不应再报变化）")
+    pt, ot = probe["tags"][0], probe["tags"][1]
+    if not isinstance(pt.get("recommended"), list) or not isinstance(pt.get("recommendedFallback"), list):
+        problems.append("rec_sync 自检：玩家 TAG 应补齐 recommended／recommendedFallback 数组")
+    want = rec.load_recommend().get("决战歼灭/小范围")
+    got = next((s for s in pt.get("recommendedBySub", []) if s.get("value") == "小范围"), None)
+    if want and (not got or got["names"] != want):
+        problems.append("rec_sync 自检：recommendedBySub 未按 _recommend.json 生成")
+    elif not want and got:
+        problems.append("rec_sync 自检：荐文件无该键时不应生成 recommendedBySub")
+    if any(k in ot for k in ("recommended", "recommendedFallback", "recommendedBySub", "recommendedFallbackBySub")):
+        problems.append("rec_sync 自检：官方 TAG 不应被写入荐字段")
+    print(f"荐同步自检：重算 {'有' if first['tags'] else '无'} 变化，幂等通过")
+
     target = RESULTS_DIR / "operator-tags.json"
     if target.exists():
         raw = target.read_text(encoding="utf-8-sig", newline="")
         try:
-            probs, st = validate_results(json.loads(raw))
+            doc = json.loads(raw)
+            probs, st = validate_results(doc)
             n_err = sum(1 for p in probs if p["level"] == "error")
             print(f"结果 JSON：results/operator-tags.json（{len(raw)} 字符）→ {n_err} 错误 / {len(probs) - n_err} 提醒"
                   f"；operators {st['operators']} / tags {st['tags']} / 关系 {st['members']}")
+            sync = preview_sync(doc)
+            if sync["tags"] or sync["notes"]:
+                names = "、".join(t["name"] for t in sync["tags"])
+                print(f"  [荐待同步] 荐字段与荐文件不一致：{names or '（仅提示）'}"
+                      f"{'；' + '；'.join(sync['notes']) if sync['notes'] else ''}"
+                      "（GUI「结果 JSON」页保存时按荐文件重算，或重跑 tools/generate_results.py）")
+            else:
+                print("  荐字段与荐文件一致。")
         except Exception as exc:  # noqa: BLE001
             problems.append(f"results/operator-tags.json 解析失败：{exc}")
     else:

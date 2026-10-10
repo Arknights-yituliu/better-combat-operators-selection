@@ -11,6 +11,7 @@ import re
 import time
 import urllib.parse
 
+from . import rec_sync
 from .config import ROOT
 from .errors import UserError
 from .md import write_atomic
@@ -73,15 +74,16 @@ def load_results(payload: dict) -> dict:
     raw = blob.decode("utf-8-sig")  # 顺手吃掉 BOM
     eol = "crlf" if "\r\n" in raw else "lf"
     text = raw.replace("\r\n", "\n")
-    parsed, error = True, ""
+    parsed, error, doc = True, "", None
     try:
-        json.loads(text)
+        doc = json.loads(text)
     except Exception as exc:  # noqa: BLE001
         parsed, error = False, str(exc)
     st = path.stat()
     return {"ok": True, "file": name, "text": text, "parsed": parsed, "error": error, "eol": eol,
             "mtime_ns": st.st_mtime_ns, "size": st.st_size,
-            "digest": hashlib.sha1(blob).hexdigest()[:12], "today": today_str()}
+            "digest": hashlib.sha1(blob).hexdigest()[:12], "today": today_str(),
+            "recommend_sync": rec_sync.preview_sync(doc) if parsed else {"tags": [], "notes": []}}
 
 
 def render_results(doc, eol: str = "crlf") -> str:
@@ -534,15 +536,29 @@ def check_results(payload: dict) -> dict:
     try:
         doc = json.loads(text)
     except Exception as exc:  # noqa: BLE001
-        return {"ok": True, "parsed": False, "stats": None,
+        return {"ok": True, "parsed": False, "stats": None, "recommend_sync": {"tags": [], "notes": []},
                 "problems": [{"level": "error", "code": "parse", "path": "", "loc": [], "label": "",
                               "message": f"JSON 解析失败：{exc}"}]}
     problems, stats = validate_results(doc)
-    return {"ok": True, "parsed": True, "problems": problems, "stats": stats}
+    sync = rec_sync.preview_sync(doc)
+    head = []
+    for item in sync["tags"]:
+        head.append({"level": "warn", "code": "R8", "path": f"tags[{item['index']}]",
+                     "loc": ["tags", item["index"]], "label": item["name"],
+                     "message": "荐字段与 _recommend.json／_recommend_fallback.json 不一致；"
+                                "保存时将按荐文件重算：" + "；".join(item["changes"])})
+    for note in sync["notes"]:
+        head.append({"level": "warn", "code": "R8", "path": "tags", "loc": [],
+                     "label": "", "message": note})
+    return {"ok": True, "parsed": True, "problems": head + problems, "stats": stats,
+            "recommend_sync": sync}
 
 
 def save_results(payload: dict) -> dict:
-    """把内存中的文本写回 results/。只有「不是合法 JSON」才硬拦，规范问题只列不挡。"""
+    """把内存中的文本写回 results/。只有「不是合法 JSON」才硬拦，规范问题只列不挡。
+
+    写盘前按 _recommend.json／_recommend_fallback.json 重算各玩家 TAG 的荐字段
+    （荐的唯一维护处是两份荐文件，见 docs/output-standard.md §6），并在返回里带重算报告。"""
     name = safe_name(payload.get("file", ""))
     text = payload.get("text", "")
     if not isinstance(text, str) or len(text) > 8_000_000:
@@ -572,6 +588,7 @@ def save_results(payload: dict) -> dict:
             drift = (st.st_mtime_ns, st.st_size) != (int(expect.get("mtime_ns", -1)), int(expect.get("size", -1)))
         if drift:
             raise UserError("文件已被外部改动，请重新载入，或确认后强制覆盖", "drift")
+    sync = rec_sync.sync_recommend(doc)  # 荐字段按荐文件重算（源：_recommend.json／_recommend_fallback.json）
     out_lf = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
     text_out = out_lf.replace("\n", "\r\n") if eol == "crlf" else out_lf
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -585,4 +602,5 @@ def save_results(payload: dict) -> dict:
             "mtime_ns": st.st_mtime_ns, "size": st.st_size,
             "digest": hashlib.sha1(text_out.encode("utf-8")).hexdigest()[:12], "eol": eol,
             "normalized": out_lf != text, "saved": {"text": out_lf},
-            "problems": problems, "stats": stats, "today": today_str()}
+            "problems": problems, "stats": stats, "today": today_str(),
+            "recommend_sync": sync}

@@ -115,7 +115,8 @@ Read only what the task needs; the two member docs and the two results JSONs are
 #     recomputes official 条目头);
 #   「结果 JSON」= load results/*.json into memory (or start from a spec-shaped skeleton), edit with
 #     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
-#     written until 保存, and validation against docs/output-standard.md only warns, never blocks.
+#     written until 保存, and validation against docs/output-standard.md only warns, never blocks;
+#     保存时按 _recommend.json／_recommend_fallback.json 重算各玩家 TAG 的荐字段（面板内荐只读）。
 .venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
 .venv/Scripts/python.exe -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
 

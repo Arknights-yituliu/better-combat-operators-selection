@@ -870,6 +870,10 @@ async function resLoadDialog() {
               resSet(doc, j);
               renderResults();
               toast("已载入 results/" + j.file + "（" + (j.eol === "crlf" ? "CRLF" : "LF") + "）");
+              const rs = j.recommend_sync || {};
+              if ((rs.tags || []).length) toast("该文件的荐字段与 _recommend.json 不一致（" +
+                rs.tags.map(x => x.name).join("、") + "）；保存时将按荐文件重算", true);
+              for (const n of (rs.notes || [])) toast(n, true);
               if (RES.shape !== "ok") toast("该文件不是结果 JSON（缺 tags/operators），已切到源码视图", true);
             } catch (e) { toast(e.message, true); }
           };
@@ -1224,33 +1228,46 @@ function renderResPanel() {
   g.appendChild(kv("name", nameEl));
   g.appendChild(kv("source", roText(String(t.source || "—"))));
   if (t.source === "official") g.appendChild(kv("category", selectEl(t.category, RES_CATS, v => { t.category = v; })));
-  else if (t.source === "player") g.appendChild(kv("recommended", roText(Array.isArray(t.recommended) ? t.recommended.length + " 人" : "（缺字段）")));
+  else if (t.source === "player") {
+    const n = (Array.isArray(t.recommended) ? t.recommended.length : 0) +
+      (Array.isArray(t.recommendedBySub) ? t.recommendedBySub.reduce((a, s) => a + ((s.names || []).length), 0) : 0);
+    g.appendChild(kv("recommended", roText(n + " 人")));
+  }
   g.appendChild(kv("members", roText(String((t.members || []).length) + " 人")));
   box.appendChild(g);
 
   if (t.source === "player") {
     const g2 = document.createElement("div");
     g2.className = "pgroup";
-    g2.innerHTML = "<h4>荐</h4>";
-    const rec = Array.isArray(t.recommended) ? t.recommended : null;
-    if (!rec) g2.innerHTML += "<div class='hint'>缺 recommended 字段（点「按规范整理」可补空数组）。</div>";
-    else if (!rec.length) g2.innerHTML += "<div class='hint'>暂无。</div>";
-    else {
-      const comboSet = new Set((t.members || []).filter(m => m && m.combo).map(m => String(m.combo)));
-      rec.forEach((name, k) => {
-        const row = document.createElement("div");
-        row.className = "subrow";
-        const s = document.createElement("span"); s.style.flex = "1";
-        s.innerHTML = esc(name) + (comboSet.has(String(name)) ? " <span class='chip'>组合</span>" : "");
-        row.appendChild(s);
-        row.appendChild(miniBtn("×", "取消荐", () => { rec.splice(k, 1); resMark(); renderResults(); }));
-        g2.appendChild(row);
-      });
+    g2.innerHTML = "<h4>荐</h4><div class='hint'>源＝_recommend.json（在「荐」页维护）；本页只读展示，保存时按荐文件重算。</div>";
+    const bySub = Array.isArray(t.recommendedBySub) ? t.recommendedBySub : [];
+    const fbBySub = Array.isArray(t.recommendedFallbackBySub) ? t.recommendedFallbackBySub : [];
+    const rec = Array.isArray(t.recommended) ? t.recommended : [];
+    const subsAny = (t.members || []).some(m => m && Array.isArray(m.subTags) && m.subTags.length);
+    const rows = [];
+    if (bySub.length || fbBySub.length || subsAny) {
+      const primary = new Map(bySub.map(s => [String(s.value || ""), (s.names || []).map(String)]));
+      const fb = new Map(fbBySub.map(s => [String(s.value || ""), (s.names || []).map(String)]));
+      for (const v of [...new Set([...primary.keys(), ...fb.keys()])]) {
+        const p = primary.get(v) || [], f = fb.get(v) || [];
+        rows.push({v, names: p.length ? p : f, fb: !p.length && !!f.length});
+      }
+    } else {
+      rec.forEach(n => rows.push({v: "", names: [String(n)], fb: false}));
     }
-    const add = document.createElement("div");
-    add.style.marginTop = "6px";
-    add.appendChild(miniBtn("＋ 加荐", "只能从本 TAG 的成员里选", () => recAddDialog(RES.sel.tag)));
-    g2.appendChild(add);
+    if (!rows.length) g2.innerHTML += "<div class='hint'>暂无。</div>";
+    const comboSet = new Set((t.members || []).filter(m => m && m.combo).map(m => String(m.combo)));
+    for (const r of rows) {
+      const row = document.createElement("div");
+      row.className = "subrow";
+      const s = document.createElement("span");
+      s.style.flex = "1";
+      s.innerHTML = (r.v ? esc(r.v) + "：" : "") +
+        r.names.map(n => esc(n) + (comboSet.has(n) ? " <span class='chip'>组合</span>" : "")).join("、") +
+        (r.fb ? "（兜底）" : "");
+      row.appendChild(s);
+      g2.appendChild(row);
+    }
     box.appendChild(g2);
   }
 
@@ -1411,16 +1428,13 @@ function comboCard(t, m) {
     resMark(); renderResults();
   }, dis);
   acts.append(move("↑ 上移", -1, RES.sel.mi <= 0), move("↓ 下移", 1, RES.sel.mi >= (t.members || []).length - 1));
-  const recArr = Array.isArray(t.recommended) ? t.recommended : null;
   const comboName = String(m.combo || "");
-  const inRec = recArr ? recArr.includes(comboName) : false;
-  acts.appendChild(miniBtn(inRec ? "移出荐" : "加入荐", "组合名与干员名混排、互相独立（规范 §6）", () => {
-    if (!recArr) return toast("本 TAG 缺 recommended 数组（可用「按规范整理」补空数组）");
-    if (!comboName) return toast("组合名为空，先填 combo", true);
-    const i = recArr.indexOf(comboName);
-    if (i >= 0) recArr.splice(i, 1); else recArr.push(comboName);
-    resMark(); renderResults();
-  }));
+  const recNames = new Set();
+  (Array.isArray(t.recommended) ? t.recommended : []).forEach(n => recNames.add(String(n)));
+  for (const fld of ("recommendedBySub", "recommendedFallbackBySub")) {
+    (Array.isArray(t[fld]) ? t[fld] : []).forEach(s => (s.names || []).forEach(n => recNames.add(String(n))));
+  }
+  acts.appendChild(roText(recNames.has(comboName) ? "组合已在荐名单中（荐在「荐」页维护）" : "组合不在荐名单中（荐在「荐」页维护）"));
   acts.appendChild(miniBtn("删除组合", "", () => {
     if (!confirm("删除组合「" + String(m.combo || "") + "」（含 " + provs.length + " 名提供者）？\n（只改内存，保存前不会写盘）")) return;
     t.members.splice(RES.sel.mi, 1);
@@ -1518,25 +1532,6 @@ function addMemberDialog(ti) {
     RES.sel.mi = t.members.length - 1;
     resMark(); renderResults();
     toast("已加成员（条件留空，保存前请补上）");
-  });
-}
-function recAddDialog(ti) {
-  const t = RES.doc.tags[ti];
-  const rec = Array.isArray(t.recommended) ? t.recommended : [];
-  let names;
-  if (t.id === "P12") {  // 阵容组合：组合名与单个提供者都可设荐（两者独立、可混排）
-    const combos = (t.members || []).filter(m => m && m.combo && !rec.includes(String(m.combo)))
-      .map(m => ({label: "组合：" + m.combo + "（" + ((m.providers || []).length) + " 名提供者）", value: String(m.combo)}));
-    const provs = [...new Set((t.members || []).flatMap(m => (m.providers || []).map(p => String(p.operator || ""))))]
-      .filter(n => n && !rec.includes(n));
-    names = combos.concat(provs);
-  } else {
-    names = (t.members || []).map(m => String(m.operator || "")).filter(n => n && !rec.includes(n));
-  }
-  pickDialog("给「" + String(t.name || "") + "」加荐", names, name => {
-    t.recommended = Array.isArray(t.recommended) ? t.recommended : [];
-    t.recommended.push(name);
-    resMark(); renderResults();
   });
 }
 function addOperatorDialog() {
@@ -1729,6 +1724,13 @@ async function resSaveDialog() {
     if (ok && j.parsed && errs) ok.textContent = "仍有 " + errs + " 个问题，仍然保存";
     if (ok && !j.parsed) { ok.disabled = true; ok.textContent = "JSON 解析失败，无法保存"; }
   }
+  if (j && j.recommend_sync && j.recommend_sync.tags.length) {
+    // 荐字段将按荐文件重算：视为内容有变化，放开 version / updated 的更新
+    const mb = document.querySelector("#mbump");
+    if (mb && next) { mb.disabled = false; mb.checked = true; }
+    const chg = document.querySelector("#mchg");
+    if (chg) chg.textContent = "内容有变化（荐字段将按 _recommend.json 重算）。";
+  }
 }
 function bindProblemClicks(box, problems) {
   box.querySelectorAll(".mprob[data-k]").forEach(el => {
@@ -1788,8 +1790,8 @@ async function resDoSave(card) {
       mode, file, text: serialize(out), eol: RES.eol,
       expect: mode === "overwrite" ? RES.expect : null, force,
     });
-    RES.doc = out;
-    RES.base = j.saved.text;
+    RES.doc = JSON.parse(j.saved.text);   // 采用服务端写出的版本（荐字段已按荐文件重算）
+    RES.base = serialize(RES.doc);
     RES.file = j.file;
     RES.expect = {digest: j.digest, mtime_ns: j.mtime_ns, size: j.size};
     RES.dirty = false;
@@ -1801,6 +1803,10 @@ async function resDoSave(card) {
     closeModal();
     renderResults();
     toast("已保存 results/" + j.file + (j.created ? "（新建）" : "（覆盖）") + " · " + Math.round(j.bytes / 1024) + " KB");
+    const rs = j.recommend_sync || {};
+    if ((rs.tags || []).length) toast("荐已按 _recommend.json 重算：" +
+      rs.tags.map(x => x.name + "（" + x.changes.join("；") + "）").join("；"));
+    for (const n of (rs.notes || [])) toast(n, true);
   } catch (e) {
     if (e.code === "drift") toast("文件已被外部改动：可勾「强制覆盖」再保存，或重新载入", true);
     else toast(e.message, true);

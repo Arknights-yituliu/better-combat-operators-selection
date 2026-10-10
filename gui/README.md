@@ -15,7 +15,7 @@ the 荐 lists, the member tables of every TAG (both TAG systems), and the final
 |---|---|---|---|
 | Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `agent_workspace/tag_pipeline/player_tags/_recommend.json` (immediately) |
 | Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
-| Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options | only when you press **保存…** |
+| Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options; saving recomputes each player TAG's 荐 fields from `_recommend.json` | only when you press **保存…** |
 
 Data conventions (what belongs in 条件 vs 备注, TAG criteria, the output schema) live in
 `docs/concept.md`, `docs/output-standard.md`, `docs/player-tags-specify.md` and the per-TAG part
@@ -234,6 +234,8 @@ validating never touch the disk. Only **保存…** writes.
   mode with a warning; nothing can be edited structurally.
 * If a previous session left an unsaved draft in `localStorage`, a banner offers to restore or
   discard it — it is never restored automatically.
+* If the file's 荐 fields differ from `_recommend.json` / `_recommend_fallback.json`, a toast warns
+  on load that saving will recompute them (see §6.4).
 
 ### 6.2 Editing
 
@@ -243,14 +245,15 @@ refused (you stay in the source view, with the error shown).
 
 * **Structured** — `按干员` / `按 TAG` toggles the mode.
   * TAG mode: left = `tags[]`, middle = its members, right = the TAG panel (`id` and `source` are
-    read-only; `name` editable; `category` dropdown for official TAGs; the 荐 editor — `× 取消荐` /
-    `＋ 加荐` — for player TAGs) plus the selected member's card
+    read-only; `name` editable; `category` dropdown for official TAGs; a **read-only 荐 view** for
+    player TAGs — per sub-TAG names, fallback entries marked, with a note that the source of truth
+    is `_recommend.json` and saving recomputes it) plus the selected member's card
     (condition / remark / subTags / prtsUrl, add & remove members, reorder).
   * 阵容组合 (P12) members are **combo entries**: the card edits `combo` / `condition` / `remark` /
     `beneficiaries` and the nested provider rows (`operator` / `condition` / `remark` / `prtsUrl`);
     buttons: `＋ 加组合`, `＋ 提供者`, `删除组合` (format: `docs/output-standard.md` §4.2).
-    The 荐 editor's `＋ 加荐` dialog offers combo entries (value＝combo name) plus individual
-    providers, and each combo card has an `加入荐 / 移出荐` quick toggle.
+    Each combo card shows read-only whether the combo is currently in a 荐 list (荐 is maintained
+    on the 荐 tab; saving recomputes it).
   * Operator mode: a searchable, paginated `operators[]` list; the card edits all seven fields;
     `从全量干员表补全` fills them from the crawled PRTS data; renaming cascades through members and
     荐; `新增干员条目` picks from the full roster; `删除条目` warns when references remain.
@@ -275,7 +278,14 @@ refused (you stay in the source view, with the error shown).
   one you loaded** additionally requires ticking a confirmation checkbox.
 * **Version** — if the content changed (ignoring `version`/`updated`), the dialog offers to set
   `updated` to today and bump `version` (`v1` → `v2`, any number of digits; unparsable values are
-  left for you to type). Ticking the box off is allowed and only shows a warning.
+  left for you to type). Ticking the box off is allowed and only shows a warning. A pending 荐
+  recompute counts as a content change too.
+* **荐 fields** — before writing, every player TAG's `recommended` / `recommendedFallback` /
+  `recommendedBySub` / `recommendedFallbackBySub` is recomputed from `_recommend.json` /
+  `_recommend_fallback.json` with the generator's own rule (`rec_fields()` in
+  `tools/generate_results.py`) — that is why a 覆盖保存 picks up 荐 added on the 荐 tab. The dialog
+  lists the differences up front (as `R8` warnings, click to jump), the post-save toast reports what
+  was recomputed, and the in-memory document adopts the written version.
 * **Problems** — the same validation list, each entry clickable to jump to the offending card.
   Warnings and spec errors never block saving; the one hard refusal is text that is not valid JSON
   (you would be writing a broken deliverable).
@@ -335,6 +345,8 @@ gui/
   recommends.py  荐 store helpers, apply_recommend, prune_recommend
   merges.py      subprocess wrappers for the two merge scripts
   results_json.py  filename whitelist, load/render/validate/check/save for results/*.json
+  rec_sync.py    recompute a results doc's 荐 fields from the 荐 files (generator-identical;
+                 called on save; load/check use it for the drift notice)
   writeback.py   doc_registry, block resolution, apply_ops, save_cell
   model.py       the /api/data model
   server.py      Handler, routes, token, LOCK, static assets

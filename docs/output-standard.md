@@ -244,10 +244,11 @@ python tools/recommend.py --fallback add 充电 白铁       # 添加兜底荐
 python tools/recommend.py --fallback remove 充电 白铁    # 移除兜底荐
 
 python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与子作用域切换编辑（左键加荐 / 右键取消）；
-                                        #   「人工归纳」页摘取干员并入 TAG 并编辑「条件」「备注」
+                                        #   「人工归纳」页摘取干员并入 TAG 并编辑「条件」「备注」；
+                                        #   「结果 JSON」页编辑产物，保存时按两份荐文件重算荐字段
 ```
 
-- 两份名单只维护在 `_recommend.json` / `_recommend_fallback.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` / `recommendedFallback` 字段，重新生成不会丢失。
+- 两份名单只维护在 `_recommend.json` / `_recommend_fallback.json`（不写进名单文档）；生成结果 JSON 时按 TAG 名合并进 `recommended` / `recommendedFallback` 字段，重新生成不会丢失。「结果 JSON」页保存时同样按两份荐文件重算荐字段（面板内荐为只读展示），覆盖保存后产物与荐文件一致。
 - 面板中「荐」页只负责增删荐（点「详情」在右栏查看干员信息卡片）；「条件」「备注」在「人工归纳」页维护（按「块＋行下标＋行现值」结构化写回分文件对应行，保存后自动重新合并名单文档）。「人工归纳」页还可增删成员行：扩展＝新行条件/备注留空，移动＝把源行的条件/备注/依据带到新行并删除源行，移除＝直接删除该行；官方分文件的条目头「（N 人 · 首现 日期）」为渲染期派生值，无需重算。
 
 ## 7. 数据来源、生成与发布

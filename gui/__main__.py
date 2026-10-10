@@ -12,7 +12,9 @@
 「结果 JSON」  编辑 results/ 下的结果 JSON（规范：docs/output-standard.md）：
     · 「加载…」选 results/*.json，或「新建骨架」起一份符合规范的空文档；
     · 编辑只发生在内存（结构化卡片 + 源码视图共用同一份数据），点「保存…」才写盘，
-      保存可选「覆盖已有文件」或「新建自定义文件名」，写盘前按规范列出问题但不阻断。
+      保存可选「覆盖已有文件」或「新建自定义文件名」，写盘前按规范列出问题但不阻断；
+    · 保存时按 _recommend.json／_recommend_fallback.json 重算各玩家 TAG 的荐字段
+      （面板内荐只读展示；荐的增删在「荐」页做）。
 
 写入的文件（前两页即时落盘，「结果 JSON」页仅在点保存时写）：
     agent_workspace/tag_pipeline/player_tags/_recommend.json   （荐）
