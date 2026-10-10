@@ -60,7 +60,7 @@ function matches(name, q) { return !q || name.toLowerCase().includes(q); }
 async function load(fresh) {
   DATA = await (await fetch("/api/data" + (fresh ? "?fresh=1" : ""))).json();
   hydrate();
-  if (DATA.stale.length) toast("有 " + DATA.stale.length + " 条荐已不在成员表中，请核对", true);
+  if (DATA.stale.length) toast("有 " + DATA.stale.length + " 条荐已不在成员表或所在子 TAG 中，请核对", true);
   renderAll();
 }
 function hydrate() {
@@ -116,6 +116,12 @@ function ensureScope(t) {
     if (alt) ST.zhen.scope = alt.scope;
   }
 }
+function scopePool(t, scope) {
+  // 选中子作用域 → 该作用域内的干员名集合；TAG 级、或该作用域没有成员数据时返回 null（不按作用域过滤）
+  if (!scope) return null;
+  const names = (t.scope_members || {})[scope];
+  return names ? new Set(names) : null;
+}
 function viewOps() {
   if (ST.zhen.tag === "__all__") {
     const names = [...new Set(DATA.player_tags.flatMap(t => t.blocks.flatMap(b => b.rows.map(r => r.op))))];
@@ -132,9 +138,12 @@ function viewOps() {
   // 有荐/无荐两组，各自按实装时间倒序（同日按拼音序）；无日期者排组尾
   const dates = new Map((DATA.roster || []).map(p => [p.name, p.date || ""]));
   const byLaunch = (a, b) => (dates.get(b) || "").localeCompare(dates.get(a) || "") || a.localeCompare(b, "zh");
+  // 候选只列本子作用域的成员（荐不能给到不属于该子 TAG 的干员）；已设的荐照列，便于右键取消
+  const pool = scopePool(t, ST.zhen.scope || null);
   const recs = [...sc.ops].sort(byLaunch).map(op => ({op, rec: true, rows: allRowsOf(op)}));
   const members = [...new Set(t.blocks.flatMap(b => b.rows.map(r => r.op)))]
-    .filter(op => !sc.ops.includes(op)).sort(byLaunch).map(op => ({op, rec: false, rows: allRowsOf(op)}));
+    .filter(op => (!pool || pool.has(op)) && !sc.ops.includes(op))
+    .sort(byLaunch).map(op => ({op, rec: false, rows: allRowsOf(op)}));
   return recs.concat(members);
 }
 function scopeBar(t) {

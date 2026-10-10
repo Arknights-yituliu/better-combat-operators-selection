@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from .config import rec
 from .errors import UserError
+from .tags import scope_members
 
 
 def prune_recommend(removed: dict[str, set[str]]) -> dict[str, list[str]]:
@@ -54,6 +55,13 @@ def apply_recommend(payload: dict) -> dict:
     if action in ("add", "remove"):
         if action == "add" and op not in rec.recommendable_members(dict(tags)[tag]):
             raise UserError(f"「{op}」不是「{tag}」的成员或组合名，不能设为荐")
+        if action == "add" and scope is not None:
+            pool = scope_members(dict(tags)[tag]).get(scope)
+            if pool is not None and op not in pool:
+                raise UserError(
+                    f"「{op}」不在「{tag}／{scope}」这个子 TAG 的成员中（它在本 TAG 下的记录属于别的子 TAG），"
+                    f"不能设为该子 TAG 的荐"
+                )
         if action == "add":
             if op in ops:
                 return {"ok": True, "noop": "已是荐", "key": key, "recommend": {k: v for k, v in data.items() if v}}

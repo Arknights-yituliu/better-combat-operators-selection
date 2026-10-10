@@ -70,6 +70,37 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
     return blocks
 
 
+def scope_members(path: pathlib.Path) -> dict[str, list[str]]:
+    """子作用域取值 → 该作用域内的干员名（按行出现顺序去重）。
+
+    「子作用域」＝荐下沉用的子 TAG 取值（`_recommend.json` 键 `TAG/取值`）。判定与
+    产物同源：直接用生成器 `tools/generate_results.py` 的 `player_subtags()`
+    （取值＝行级 subTags 的 value，规则见 docs/output-standard.md §4.3），
+    因此与 `results/operator-tags.json` 的 `recommendedBySub` 取值逐条一致。
+    阵容组合（12）的行不带 subTags（其作用域取自组合元数据），返回空表。
+
+    生成器只能就地导入：它以脚本方式运行时（`__main__`）会再以模块名导入一次自己，
+    若改由 config 顶层导入，则在 `gui.roster → gui.config` 处形成循环。
+    """
+    import generate_results as gen  # noqa: PLC0415  （tools/ 已在 .config 引导进 sys.path）
+
+    out: dict[str, list[str]] = {}
+    if path.name.startswith("12-"):
+        return out
+    num = path.name[:2]
+    for t in partdoc.iter_member_tables(partdoc.load(path)):
+        cols = t["columns"]
+        ci, ni = cols.index("条件"), cols.index("备注")
+        for cells in t["rows"]:
+            clean = [gen.clean_cell(c) for c in cells]
+            op = clean[0]
+            for s in gen.player_subtags(num, t["h3"], t["h4"], cols, clean, clean[ci], clean[ni])[1]:
+                names = out.setdefault(s["value"], [])
+                if op not in names:
+                    names.append(op)
+    return out
+
+
 def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
     """官方分文件 → 条目（定义行 + 唯一成员表 = 一个区块）。"""
     doc = partdoc.load(path)

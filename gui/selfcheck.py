@@ -76,10 +76,18 @@ def run_check() -> int:
 
     for s in model["stale"]:
         kind = s.get("kind", "op")
-        label = "悬空子作用域" if kind == "scope" else "悬空荐"
+        label = {"scope": "悬空子作用域", "scope-member": "荐不在该子作用域内"}.get(kind, "悬空荐")
         print(f"  [{label}] {s['tag']} -> {s['op']}")
     for t in model["unknown_tags"]:
         print(f"  [未知 TAG] {t}")
+
+    # 子作用域：分文件推导出、而结果 JSON 里没有的取值——作用域栏取自产物，未重生成前点不到（只提示，不判问题）
+    for t in model["player_tags"]:
+        known_scopes = {s["scope"] for s in t.get("rec_scopes", []) if s.get("scope")}
+        missing = [v for v in (t.get("scope_members") or {}) if v not in known_scopes]
+        if missing:
+            print(f"  [作用域未同步] {t['name']}：分文件有「{'、'.join(missing)}」，"
+                  f"results/operator-tags.json 里没有（重生成后作用域栏才会出现）")
 
     # 注册表一致性：官方文件集须与合并脚本一致
     reg = doc_registry()

@@ -78,6 +78,10 @@ order in `_recommend.json` has no meaning.
    **Right-click** → removes it. Both act immediately and are written to `_recommend.json`.
 3. The list shows two groups — 荐（N 人） first, then 其余成员（N 人） — each sorted by release date
    descending (same-day entries by pinyin). 荐 rows carry a 荐 badge and the amber highlight.
+   With a sub-TAG in the scope bar selected, both groups list **only that sub-TAG's members**
+   (the count line is `N / N 人`), so a 荐 cannot be given to an operator whose record under this
+   TAG belongs to another sub-TAG. 荐 already stored under the selected scope stay listed even if
+   they no longer qualify, so you can right-click them away.
 4. Every row has a `详情` (Details) button: it renders that operator's info card (name / charId /
    rarity / class·branch / faction / release date / PRTS link) plus read-only 条件 / 备注 record
    cards — the selected TAG's records, or every player TAG's records under `全部干员` — in the
@@ -87,13 +91,22 @@ order in `_recommend.json` has no meaning.
 Notes and failure modes:
 
 * Only members of the TAG's main tables can become 荐 (the panel refuses otherwise) — that is what
-  keeps `tools/recommend.py check` clean.
+  keeps `tools/recommend.py check` clean. Inside a sub-TAG scope the bar is higher: the operator
+  must be a member **of that sub-TAG**, otherwise the add is refused with
+  `「X」不在「TAG／子值」这个子 TAG 的成员中…`.
+* Sub-TAG membership is read from the **part files** with the generator's own rule
+  (`player_subtags()` in `tools/generate_results.py` — sub-table heading, 范围／子 TAG cell, or the
+  备注 prefix, see `docs/output-standard.md` §4.3), the same code that fills `subTags` in
+  `results/operator-tags.json`. A row added on 人工归纳 can therefore be recommended right away;
+  no regeneration needed.
 * If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
-  prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐.
+  prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐. A 荐 that
+  stays a TAG member but is no longer inside its sub-TAG is reported as `荐不在该子作用域内`
+  (toast on load, listed by `--check`); it keeps showing in that scope's list so you can remove it.
 * 阵容组合 (P12) is edited **per category (势力／用法)**: the scope bar switches the view; the combo header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Providers within a combo by release date.
-* 荐 scoping: for player TAGs **with sub-TAGs**, the scope bar switches between the sub-TAG lists only — there is **no TAG-level scope** (TAG level cannot hold 荐; the panel refuses TAG-level adds and defaults to a sub-scope). Entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
+* 荐 scoping: for player TAGs **with sub-TAGs**, the scope bar switches between the sub-TAG lists only — there is **no TAG-level scope** (TAG level cannot hold 薦; the panel refuses TAG-level adds and defaults to a sub-scope). The operator list is confined to the selected sub-TAG's members, and so is every 荐 you can give there. Entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
 * 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
-* The CLI equivalent is `tools/recommend.py list|add|remove|check`; both write the same `_recommend.json`.
+* The CLI equivalent is `tools/recommend.py list|add|remove|check`; both write the same `_recommend.json`. The CLI validates TAG-level membership and the scope *value*; the stricter sub-TAG membership check lives in the panel (and in its `--check` report).
 
 ---
 

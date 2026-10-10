@@ -7,7 +7,7 @@ import re
 
 from .config import CHAR_IDS, rec
 from .roster import load_roster
-from .tags import load_official_entries, parse_player_blocks
+from .tags import load_official_entries, parse_player_blocks, scope_members
 
 
 def fill_cid(blocks: list[dict]) -> None:
@@ -21,6 +21,7 @@ def fill_cid(blocks: list[dict]) -> None:
 def build_model(fresh: bool = False) -> dict:
     recommend = rec.load_recommend()
     player_tags = []
+    scope_members_of: dict[str, dict[str, list[str]]] = {}
     for name, path in rec.load_tags():
         blocks = parse_player_blocks(path, name)
         fill_cid(blocks)
@@ -34,12 +35,15 @@ def build_model(fresh: bool = False) -> dict:
             for op in ops:
                 if op not in union:
                     union.append(op)
+        sm = scope_members(path)  # 各子作用域的成员（荐页过滤 + 荐的归属校验）
+        scope_members_of[name] = sm
         player_tags.append({
             "num": path.name[:2],
             "name": name,
             "file": path.name,
             "recommend": union,  # 各作用域并集（徽标/计数用）
             "rec_scopes": [{"scope": v, "ops": scope_ops[v]} for v in scope_ops],  # 荐页编辑用
+            "scope_members": sm,  # 子作用域 → 该作用域内的干员（荐页据此只列本作用域的干员）
             "blocks": blocks,
         })
     official_entries = load_official_entries()
@@ -65,9 +69,13 @@ def build_model(fresh: bool = False) -> dict:
             continue
         if scope is not None and scope not in (rec.tag_scope_values(tag) or []):
             stale.append({"tag": key, "op": scope, "kind": "scope"})
+        pool = (scope_members_of.get(tag) or {}).get(scope) if scope is not None else None
         for op in ops:
             if op not in members_of[tag]:
                 stale.append({"tag": key, "op": op, "kind": "op"})
+            elif pool is not None and op not in pool:
+                # 荐落在了本 TAG、但不在所选子作用域内的干员上（荐页只列该作用域的干员，故须核对）
+                stale.append({"tag": key, "op": op, "kind": "scope-member"})
     return {
         "player_tags": player_tags,
         "official_entries": official_entries,
