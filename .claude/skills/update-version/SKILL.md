@@ -3,24 +3,28 @@ name: update-version
 description: Incrementally fold a game-version update into the TAG system — the developer provides a new operator's info and/or modules newly added to existing operators; refresh only the changed operators, fold new modules into the affected rows (模组档位), then run the cross-operator impact checklist (new faction members, new enablers, new ally-facing hooks). Use when the developer announces a version/patch update, new modules on existing operators, or asks to update affected entries without re-scanning the whole corpus. Never a full-table rescan.
 ---
 
-# Apply a version update (版本增量更新)
+# Apply a version update（版本增量更新）
 
-Fixed pipeline: **refresh what changed → judge the new operator → fold new modules into affected rows → run the cross-operator impact checklist → merge docs only.**
+> **常规版本更新走「快线」**：新会话唯一开工必读＝`docs/version-update-quickstart.md`（七步流程、预核验清单、验证最低集、审核规则）。本文件是快线的**管线细则**——折模组规则（§3）与跨干员影响清单全文（§4）在此。
+> **结构性更改**（改评定标准／全库重扫／增删 TAG／改计算规则正本）不走快线，按各自流程（扫描类先读 `docs/scan-protocol.md`）。
 
-## 0. Inputs
+Fixed pipeline: **refresh what changed → judge the new operator → fold new modules into affected rows → run the cross-operator impact checklist → 裁定门 → merge & generate → checks.**
+
+## 0. Inputs and efficiency rules
 
 - The developer provides one or both of: **new operator(s)** (PRTS link(s) or a manual description, judged as in `add-new-operator`), and **new modules on existing operators** (a list such as `干员名 — X模组2/3级，效果…`, or a link to the module).
-- Efficiency rule: this skill exists because a full-table rescan is expensive. Touch **only** the operators involved and the existing entries the update can affect (§4). Do not re-judge unrelated operators or TAGs.
-- Batch all developer questions into **one** AskUserQuestion round at the end (same as `add-new-operator`).
+- 效率铁律：只碰更新涉及的干员与本清单命中的既有条目；**不开前置调研／方案代理**（快线文档就是路线图）；**不通读长文档**（rulings 走节级目录、评标只读目标 TAG、glossary 按词查）；**不手写一次性回填脚本**（插行/改依据/正文行/新子表走 `.claude/skills/tag-batch-rewrite/scripts/apply_ops.py`）。
+- Batch **all** developer questions into **one** AskUserQuestion round at the end（审核规则：**有你认为的待裁定项 → 先裁定、裁定折入前不生成结果文件；没有 → 产物后审核**）。
 
 ## 1. Refresh only what changed
 
-1. New operator → follow `add-new-operator` §1: `docs/operators.txt` → `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"` → `crawlers/crawl_ranges.py --only "干员名"` → add 上线时间 to `player_tags/_launch_dates.json` → verify per `crawl-prts-operator/SKILL.md` → "Verify after crawling".
-2. New module on an existing operator → the PRTS page changed, so **re-crawl that operator with `--force`**: `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名" --force`; re-run `crawlers/crawl_ranges.py --only "干员名"` if the module touches ranges/grids (`攻击范围.md`). Verify the same way.
+1. New operator → follow `add-new-operator` §1（含 `docs/operators.txt` 顶部插入、`crawl_prts.py --only`、`crawl_ranges.py --only`、`_launch_dates.json` 与 `char_ids.json` 登记——charId 取法见快线第 1 步、`tools/prts_stats.py` 重建）。
+2. New module on an existing operator → the PRTS page changed, so **re-crawl that operator with `--force`**: `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名" --force`; re-run `crawlers/crawl_ranges.py --only "干员名"` if the module touches ranges/grids (`攻击范围.md`).
+3. 两者都按 `crawl-prts-operator/SKILL.md` → "Verify after crawling" 验收；**重爬既有干员另做 `git diff` 白名单核验与行号平移预案**（PRTS 会在天赋表插入模组档位行、令其后行号平移；人工重锚＋`strip_prts_noncombat.ACCEPTED` 登记，**不跑 `--fix-stale`**——详见快线第 1 步）。
 
 ## 2. Judge the new operator
 
-Follow `add-new-operator` §2–§3 (机制词表粗筛 → 官方设定 TAG → 玩家体感 TAG → ask about mechanics no TAG covers). Apply `docs/player-tags-members.md` §0: **多项特性只要各自符合评定标准都要写**; **模组档位**（条件写模组名+等级、备注取该档位数值）; 「（待验证）」范围.
+Follow `add-new-operator` §2–§3（机制词表粗筛 → 官方设定 TAG → 玩家体感 TAG → 就问无 TAG 覆盖的机制）。Apply `docs/player-tags-members.md` §0：**多项特性只要各自符合评定标准都要写**；**模组档位**（条件写模组名+等级、备注取该档位数值）；推算值按既定规则直接给出。判前先过快线的**预核验清单**（每单随发到子代理）。
 
 ## 3. Fold new modules into the affected rows
 
@@ -28,7 +32,7 @@ For each new module on an existing operator:
 
 1. Locate **every** row of that operator across `player_tags/NN-*.json` (11 files) and `official_tags/[A-I]-*.json`.
 2. Judge per row whether the module **enhances the capability that row judges**:
-   - Yes → 条件 adds the module name + level, 备注 switches to that tier's values (recompute derived numbers; keep the「（待验证）」rule for 攻速/间隔换算与倍率相乘类推算值), 依据 gains the module's `文件:行号`. The module's `※` hidden-mechanic lines are collected in `docs/module-hidden-mechanics.md` — check it before judging a tier's effect (thresholds like 距离增伤的门槛格数 live only there).
+   - Yes → 条件 adds the module name + level, 备注 switches to that tier's values (recompute derived numbers), 依据 gains the module's `文件:行号`（依据列**只可整段追加**、不可改同一引用串——守恒审计按完整引用串比对）. The module's `※` hidden-mechanic lines are collected in `docs/module-hidden-mechanics.md` — **涉模组档位时按需查**（thresholds like 距离增伤的门槛格数 live only there）。
    - Several modules → each TAG row picks the module serving **its own** capability (worked precedent: 温蒂 — 10-大力推拉 uses PUS-Y 推力档, 07-充电 uses PUS-X 技力档; 空弦 — 02 uses MAR-X, 05 uses MAR-Y, 07 uses X2/X3 + ISW-α, 08 uses ISW-α). Two modules enhancing the same capability → list both routes (precedent: 迷迭香「X模组1级 或 ISW-α模组1级」).
    - Irrelevant modules stay unmentioned; vague phrasing like「X模组更佳／可选」must be replaced by explicit tiers + values (or dropped if irrelevant).
 3. Official rows follow the official rules (只记原文；**模式限定模组不计**；条件写模组名+等级、备注引原文档位).
@@ -54,18 +58,21 @@ A new operator / module can change **existing** entries of **other** operators. 
 15. ✅ **攻速下限覆写/抗削弱/抵抗净化** → 官方「抗削弱」（I 类「全场光环」按条目内评定标准例外执行）.
 16. ⚠️ **召唤物/装置（假性耦合）**：计入持有者本身（`_brief` 铁律 3），**不算跨干员依赖**；但如果新效果作用于**其他干员的装置/被引用状态**（如「持有装置屏障的干员」），则复核引用该状态的行（凯瑟琳行等）.
 
-When a dimension hits: re-verify each affected row against the PRTS text (`文件:行号`), update 条件/备注/依据; check 边界与排除记录 whose rationale no longer holds (a near-miss may now qualify, or an exclusion may need re-wording). 评定标准 are developer-owned — if the update makes a rule ambiguous, route to AskUserQuestion instead of rewriting criteria.
+When a dimension hits: re-verify each affected row against the PRTS text (`文件:行号`), update 条件/备注/依据; check 边界与排除记录 whose rationale no longer holds (a near-miss may now qualify, or an exclusion may need re-wording). 评定标准 are developer-owned — if the update makes a rule ambiguous, route to the AskUserQuestion round instead of rewriting criteria.
 
 ## 5. Finish
 
-1. Run `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py` and `.../official_tags/_merge_official_to_docs.py`; confirm 总览 row counts changed as expected (`git diff --stat` = only the touched files + the two merged docs + `_launch_dates.json`).
-2. `tools/recommend.py check` — if a 荐-bearing entry moved/vanished, the dangling 荐 surfaces here; report it to the developer (荐 由开发者维护).
-3. `tools/generate_results.py` only when the developer asks; never commit unless asked.
-4. Known drift: the dictionary layer (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv}`) is **not** maintained entry-by-entry, yet some part files cite its counts as cross-anchors (08/09/12) — if the update invalidates an anchor, report it instead of silently editing the anchor text.
+1. 回填：既有行条件/备注 → `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py`；插行/改依据/正文行替换与插入/新建子表 → `scripts/apply_ops.py`（先 `--dry-run`）。
+2. 合并：`player_tags/_merge_to_docs.py` 与 `official_tags/_merge_official_to_docs.py`；`git diff --stat` 只应含被改分文件＋两份合并文档＋登记簿（`_launch_dates.json`/`char_ids.json` 等）。
+3. **审核规则与结果文件**：存在待裁定项 → 先一轮 AskUserQuestion、**裁定折入前不生成结果文件**；无 → 直接产物链、**产物后审核**。生成时成员变化须递增 `tools/generate_results.py` 的 `VERSION`（同步 `docs/untagged-operators.md`）。
+4. 校验最低集：`tools/run_all_checks.py`；按改动触发——改依据/行号 → `crawlers/strip_prts_noncombat.py --audit`；改条件/备注 → `audit_text_migration.py`（预期数字/依据变化先登记 `ACCEPTED`）；档位取舍 → `REVIEWED_TIERS`。`tools/recommend.py check` 报告悬空荐（荐由开发者维护，只报告）。
+5. Known drift: the dictionary layer (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv}`) is **not** maintained entry-by-entry, yet some part files cite its counts as cross-anchors (08/09/12) — if the update invalidates an anchor, report it instead of silently editing the anchor text.
+6. 不提交（除开发者另行要求）。
 
 ## Do not
 
 - Do not rescan or re-judge operators the update doesn't touch.
 - Do not classify from model memory — every judgment cites `文件:行号`; unknown items are `[待考]` → that file's `## 待开发者确认`.
+- Do not open exploration/plan agents for a routine update, do not read long docs whole (rulings 走目录、评标只读目标 TAG), do not hand-write one-off apply scripts (用 `apply_ops.py`).
 - Do not create TAGs unilaterally; do not edit `docs/player-tags-specify.md` (developer-owned).
 - Do not write dates, round labels or edit traces; do not commit unless asked.

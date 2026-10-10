@@ -21,6 +21,7 @@
 | 文档 | 内容 |
 |---|---|
 | `agent-primer.md` | 作业记忆包：游戏常识、仓库作业常识、反面清单（新会话与子代理开工必读） |
+| `version-update-quickstart.md` | **版本更新快线**：非结构性更新（新干员/新模组）的唯一开工必读——七步流程、预核验清单、验证最低集与审核规则 |
 | `scan-protocol.md` | 全表扫描流程：名单文件、逐人决断、独立复核 |
 | `mechanism-understanding.md` | 机制常识正典——判别原则以它为准 |
 | `verification-complaints.md` | 历史判断陷阱记录（计数与举例以现行文件为准） |

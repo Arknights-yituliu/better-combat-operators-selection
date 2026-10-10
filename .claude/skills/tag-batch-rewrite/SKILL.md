@@ -1,6 +1,6 @@
 ---
 name: tag-batch-rewrite
-description: 批量改写／复算 TAG 条目的回填与守恒审计流程。Use when a batch of tag-rewrite outputs (agent_workspace/_out/<批名>.json) must be applied back to the part files, or after any 条件/备注 rearrangement when 数字/依据 conservation must be verified. 触发词：回填、批次回填、_apply_batch、audit_text_migration、守恒审计。
+description: 批量改写／复算 TAG 条目的回填与守恒审计流程。Use when a batch of tag-rewrite outputs (agent_workspace/_out/<批名>.json) must be applied back to the part files, or after any 条件/备注 rearrangement when 数字/依据 conservation must be verified. 触发词：回填、批次回填、_apply_batch、apply_ops、audit_text_migration、守恒审计。
 ---
 
 # 批量回填与守恒审计（tag-batch-rewrite）
@@ -23,7 +23,7 @@ description: 批量改写／复算 TAG 条目的回填与守恒审计流程。Us
 - 产出 JSON 的键＝干员名；同一分文件内同名多行时写成 `干员名（子表名）`。
 - 脚本按「干员」列名**结构化定位**行、只设「条件」「备注」两个字段；其余字段（编号/子 TAG/范围/依据）原样保留。同名多行（01 真言、02 两子表同名干员等）取文档序最后一处，键写 `干员（子表名）` 可对块标题消歧。
 - `--keep-prefix` 从当前行取出并保留行首机器协议前缀（插拔容错的 `救急路径：`、`子 TAG：`）；不带则整批丢子 TAG。
-- 回填不会增删成员行；新增/移除行走 GUI 或按实装倒序手工插入。
+- `_apply_batch` 不增删成员行；**插行／改依据／正文行替换与插入／新建子表**改用 `scripts/apply_ops.py`（输入 JSON 五类操作，默认 dry-run、逐条断言；先 `--dry-run` 再 `--write`；`--root` 可指向副本做冒烟）——勿再手写一次性回填脚本。
 - 脚本读工作区文件时按实际换行处理，输出沿用原文件的换行风格。
 
 ## 守恒审计：`audit_text_migration.py`

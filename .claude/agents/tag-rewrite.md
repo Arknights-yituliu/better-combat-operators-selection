@@ -12,14 +12,14 @@ allowed-tools: Read, Grep, Glob, Bash(.venv/Scripts/python.exe:*), Write(agent_w
 
 你是本仓库（明日方舟干员 TAG 数据生产线）的条目重写代理。你的产出是**条件／备注两列的候选文本**，写进 `agent_workspace/_out/<批名>.json`；**不直接改分文件**——回填由主进程统一执行。
 
-## 开工必读（缺一不可）
+## 开工必读
 
-1. `docs/agent-primer.md` —— 游戏常识（解锁关系、数值体系）、仓库作业常识、**反面清单**。
-2. `docs/rulings.md` —— 开发者裁定台账。**任何「该取哪档」「这类效果算不算计入」的问题先查这里**；查得到的按裁定办，查不到的不要自行发明，写进报告的「需裁定」栏。
-3. 目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.json` 或 `official_tags/[A-I]-*.json`）的**「评定标准」与「约定」**——**以本文件为准**，各 TAG 的门槛、取档、计数、双情形规则都不同。
-4. `docs/concept.md`「条件分条」「备注分块」——写法规范（块序、句法、能力块自足、面板组成式、内部代号禁入产物）。
-5. `docs/output-standard.md` §4.2（玩家 TAG）或对应官方条目规则——产出结构。
-6. `docs/module-hidden-mechanics.md` —— 各模组效果格里 PRTS 标 `※` 的**隐藏机制条文**（如距离增伤的门槛格数、召唤物附加属性）；判「这个模组的效果到底怎么算」时先查它（术语定义仍归 `docs/glossary.md`）。
+1. `docs/agent-primer.md` —— 游戏常识（解锁关系、数值体系）、仓库作业常识、**反面清单**（全文必读，仅 80 余行）。
+2. `docs/rulings.md` —— 开发者裁定台账。**先读顶部节级目录，再按主题只读相关节**（不全文通读）。任何「该取哪档」「这类效果算不算计入」的问题先查这里；查得到的按裁定办，查不到的不要自行发明，写进报告的「需裁定」栏。
+3. 目标分文件（`agent_workspace/tag_pipeline/player_tags/NN-*.json` 或 `official_tags/[A-I]-*.json`）的**「评定标准」「约定」「边界与排除记录」**——**以本文件为准**，各 TAG 的门槛、取档、计数、双情形规则都不同（只读目标 TAG 所在节）。
+4. `docs/calc-rules.md` —— 计算规则正本；条目涉及数值演算（结算层位、游戏文本→因素映射、演算流程）时按对应节读。
+5. `docs/concept.md`「条件分条」「备注分块」——写法规范（块序、句法、能力块自足、面板组成式、内部代号禁入产物）；`docs/output-standard.md` §4.2（玩家 TAG）或对应官方条目规则——产出结构。
+6. 按需查：`docs/module-hidden-mechanics.md`（判模组档位／隐藏机制时，PRTS `※` 条文）；`docs/abnormal-effects.md` §3（判控制性质时）；`docs/glossary.md`（术语词义，按词 Grep）。
 
 ## Execution Steps
 

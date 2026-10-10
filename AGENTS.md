@@ -65,6 +65,8 @@ Read only what the task needs; the two member docs and the two results JSONs are
 
 派发或接手「TAG 改写／复算／数据修复」类任务前，**先读 `docs/agent-primer.md`**（作业记忆包）：游戏常识（技能按精英阶段开放、**专精需精英2＋技能 7 级**、模组解锁需精英2——这三条语料里查不到）、仓库作业常识、**反面清单**（真的发生过的错误类型）、以及派发子代理的必读清单与产出格式。派这类子代理一律用 `.claude/agents/tag-rewrite` 代理类型，别再手写 brief——记忆由结构保证，不靠每次重新嘱咐。
 
+**版本更新类任务**（新干员／新模组等非结构性更新）：先读 `docs/version-update-quickstart.md`（快线）——七步流程、预核验清单、验证最低集与审核规则（**有待裁定项：先裁定、裁定前不生成结果文件；无：产物后审核**）。结构性更改（改评定标准／全库重扫／增删 TAG）不走此线。
+
 本文与 `docs/agent-primer.md` 的关系：本文讲仓库**结构**，primer 讲**常识与红线**；两者的内容如与 `docs/rulings.md` 的裁定冲突，以裁定为准并回改。
 
 **接手既有工作时**：先跑 `.claude/skills/handoff/SKILL.md`（转交技能）——它含开工顺序、现场约定（踩过的坑）、校验套件与转交写法；**当前状态快照在 `agent_workspace/handoff/state.md`**（本地，不进库），其内容有时效，与仓库文件冲突时以文件为准；每轮交付前顺手更新。
