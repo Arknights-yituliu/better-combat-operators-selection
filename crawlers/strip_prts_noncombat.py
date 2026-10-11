@@ -58,6 +58,10 @@ REF_EXCLUDE = {"docs/player-tags-members.md"}
 # points at. Each is (source file, HEAD-side atom). --audit reports anything not
 # listed here, so adding to this set is the deliberate act of accepting a deviation.
 ACCEPTED = {
+    # 元素损伤 EP（元素值）机制修正轮：03-吃拐一轮秒.json 的 折光 慢热行按裁定移出成员表，
+    # 其依据中的两处引用随整行删除消失——属有意为之的整行移除（裁定见 docs/rulings.md §十六）。
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "84"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "124"),
     # tag-part/1 迁移：`_brief.md` §4 的产出模板由 md 表格示例改为 JSON 骨架，旧模板中的示例
     # 引用（`维什戴尔/维什戴尔.md:133`）随整块替换移除——属有意为之的文档改写。
     ("agent_workspace/tag_pipeline/player_tags/_brief.md", "133"),

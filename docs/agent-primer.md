@@ -27,7 +27,7 @@
 - **模组取档**：按**绝对贡献**取「对本 TAG 有帮助的最高档」——不得因更高档拉低比值／稀释均值而改取低档；**多条通用模组之间平权**、取成绩更高者；持**特限证章**（模式限定模组）者，通用线与特限线**分别计算**、UI 分别展示且特限线优先（`docs/ui-render-rules.md`），无特限证章者默认各模组增伤条件均满足、取更高者并把条件写进条件；潜能的取档判据同模组（`docs/rulings.md`「模组取档」「特限模组与通用模组：分别计算、特限优先展示」「潜能取档」）。**计算规则只作用于玩家体感 TAG**。
 
 ### 术语
-游戏机制名词（过载、元素损伤、屏障/护盾/闪避、吟唱、魔力…）一律以 `docs/glossary.md` 为准；机制判别原则与易错对照见 `docs/mechanism-understanding.md`（**判别原则以它为准**，其中的计数与举例如有出入以现行文件为准）；已知的判断陷阱见 `docs/verification-complaints.md`；**各模组的「※」隐藏机制条文**（模组效果格里 PRTS 标 `※` 的补充说明，如距离增伤的门槛格数）查 `docs/module-hidden-mechanics.md`（由 `tools/module_notes.py --emit` 从 `docs/temp.txt` 生成，含按干员／按类别两套索引）。
+游戏机制名词（过载、元素损伤、屏障/护盾/闪避、吟唱、魔力…）一律以 `docs/glossary.md` 为准；机制判别原则与易错对照见 `docs/mechanism-understanding.md`（**判别原则以它为准**，其中的计数与举例如有出入以现行文件为准）；已知的判断陷阱见 `docs/verification-complaints.md`；**各模组的「※」隐藏机制条文**（模组效果格里 PRTS 标 `※` 的补充说明，如距离增伤的门槛格数）查 `docs/module-hidden-mechanics.md`（由 `tools/module_notes.py --emit` 从 `docs/temp.txt` 生成，含按干员／按类别两套索引）。**元素损伤按元素值（EP）机制**：初始满值（普通/精英 1000、领袖 2000）、爆发冷却内不可累积、结束重置后重积——涉爆条节奏的演算先读 `docs/mechanism-understanding.md`「元素值（EP）与爆条节奏」。
 
 ## 一之二、扫描类作业必读（不漏扫）
 
