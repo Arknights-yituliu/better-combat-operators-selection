@@ -45,7 +45,7 @@ PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v27"
+VERSION = "v28"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -96,6 +96,8 @@ CLOSERS = {"）", ")", "」", "】"}    # 闭括号宽窄混用（`（…）`）
 # 块标签只能是能力名或保留块类，绝不会以引号开头（`「…」：` 是引文正文，不是标签）
 BLOCK_HINT_RE = re.compile(r"^(?:成绩|计算|说明)[：\s]")
 ABILITY_HEAD_RE = re.compile(r"^(?:第[一二三]天赋|[0-9一二三]技能|召唤物|装置|特性|模组)")
+# 备注的条自报来源时可用的来源词（docs/concept.md「备注分块」的能力条自报来源）；模组代号亦视作来源
+SOURCE_TOKEN_RE = re.compile(r"分支特性|分支信息|第[一二三]天赋|天赋|[0-9一二三]技能|模组|召唤物|装置|[A-Z]{2,4}-[A-Za-zΔαβ]")
 
 
 def _strip_brackets(s: str) -> str:
@@ -279,6 +281,18 @@ def lint_text(tag: str, op: str, cond: str, remark: str) -> None:
     for label in labels:
         if re.fullmatch(r"[0-9一二三]技能", label):
             rep(f"块标签「{label}」未点名技能（应写「{label}「技能名」」）")
+    # 备注首条自报来源（docs/concept.md「备注分块」）：无块标签的备注里，首条以「开头者必须自带来源词
+    # （模组代号视作来源；「」后紧跟 指/为/是 等解说词的属术语解释、非能力陈述，不报）
+    for blk in parse_blocks(remark):
+        if blk.get("label"):
+            continue
+        items = blk.get("items") or []
+        if not items or items[0].get("label"):
+            continue
+        text = items[0].get("text", "")
+        if text.startswith("「") and not SOURCE_TOKEN_RE.search(text) \
+                and not re.match(r"「[^」]*」\s*(?:指|为|是|即|表示|则|＝|=|。)", text):
+            rep(f"备注首条以「开头但未点名来源：{text[:24]}…")
     if any(l.startswith("成绩") for l in labels) and not labels[0].startswith("成绩"):
         rep("成绩块未排在首位（块序应为 成绩→能力→计算→说明）")
     tail = [i for i, l in enumerate(labels) if l in ("计算", "说明")]
