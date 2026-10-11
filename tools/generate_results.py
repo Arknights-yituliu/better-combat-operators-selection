@@ -45,7 +45,7 @@ PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v26"
+VERSION = "v27"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -117,11 +117,16 @@ def _strip_brackets(s: str) -> str:
 def block_hint(chunk: str) -> bool:
     """块首像能力名却不是标签？——`第一天赋「X」（…）：…` 这类带限定语的块名被退回正文时，
     lint 必须报出来（否则整块静默降级成一段正文）。引文式散文（`第一天赋「X」的额外伤害…`）
-    没有紧跟的 `：`，不会误报。"""
+    没有紧跟的 `：`，不会误报。
+
+    只看**首条内、且括号外**的 `：`：块标签不得含 `；`（见 `BLOCK_LABEL_BAD`），故真标签的 `：` 必在首条之内；
+    而 `第二天赋「…」；…；说明：…` 这类「条内点名的引文在前、条标签在后」的正文，其 `：` 属后面的条；
+    `3技能「…期间持有：无敌…」` 这类引文内部的 `：` 也不是标签——两者都不该报。"""
     if BLOCK_HINT_RE.match(chunk):
         return True
-    m = ABILITY_HEAD_RE.match(chunk)
-    return bool(m) and chunk[len(m.group(0)):].startswith(("「", "（", "(")) and "：" in chunk[:48]
+    head = split_top(chunk, ITEM_SEP)[0]
+    m = ABILITY_HEAD_RE.match(head)
+    return bool(m) and head[len(m.group(0)):].startswith(("「", "（", "(")) and "：" in _strip_brackets(head)[:48]
 TEXT_PROBLEMS: list[str] = []       # 文本 lint 报告（只报告、不阻断；即存量待重排清单）
 
 
@@ -161,9 +166,26 @@ def balanced(text: str) -> bool:
     return not stack
 
 
+def _top_index(text: str, ch: str) -> int:
+    """第一个**括号外**的 ch 的下标（括号内不切，同 `split_top`）；无则 -1。
+
+    `标签：正文` 的 `：` 与块标签的句读判据一样，只认括号外的：引文、技能名里的 `：`
+    （如 `第一天赋「…灼痕效果：攻击力-10%……」`）不是标签分隔符。
+    """
+    depth = 0
+    for i, c in enumerate(text):
+        if c in BRACKETS:
+            depth += 1
+        elif c in CLOSERS:
+            depth = max(0, depth - 1)
+        elif depth == 0 and c == ch:
+            return i
+    return -1
+
+
 def split_block_label(chunk: str) -> tuple[str, str]:
     """块的 `标签：正文` → (标签, 正文)；不合规的标签一律留作正文。"""
-    i = chunk.find("：")
+    i = _top_index(chunk, "：")
     if i <= 0:
         return "", chunk
     head = chunk[:i].strip()
