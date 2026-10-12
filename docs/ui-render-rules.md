@@ -5,7 +5,7 @@
 > 数据快照：以 `results/operator-tags.json`（干员数／TAG 数／成员条目／组合／荐）与 `results/combat_glossary.json`（章节与术语数）的当前内容为准，本文不另行记数。
 > 定位：本文记录**消费端当前怎样读取与展示结果 JSON**，作为源项目后续改动的核对清单 —— 修改 JSON 结构、字段语义或名单规则时，对照 §8 判断前端是否需要同步。JSON 本身的格式规范见 `docs/output-standard.md`，荐的评定标准见其 §6，本文只讲"前端怎么用"。
 > 维护：前端页面的渲染规则一变，本文同步更新。
-> 最近一次同步：2026-09-25（子 TAG 多选由并集改为交集（§4.2）、官方生存类 TAG 新增「作用范围」子 TAG 组并同步数据副本 v4；同日另有：组合与组内提供者改为「荐优先 + 实装时间降序」、术语副本同步到 11 节 119 条、补记结果区窗口化）。
+> 最近一次同步：2026-10-13（结果 JSON 的行内标记改按 HTML 白名单渲染：`<strong>`／`<code>` 两个标签放行、md 语法由源项目生成器转写——criteria／glossary 两个生成器与 §5.5／§7 同步更新；2026-09-25 一次为：子 TAG 多选由并集改为交集（§4.2）、官方生存类 TAG 新增「作用范围」子 TAG 组并同步数据副本 v4；同日另有：组合与组内提供者改为「荐优先 + 实装时间降序」、术语副本同步到 11 节 119 条、补记结果区窗口化）。
 
 ---
 
@@ -168,6 +168,7 @@
 ### 5.5 玩家 TAG 文案（悬浮说明＋评定标准抽屉）
 
 - **数据文件**：`src/static/json/combat/player-tags-criteria.json`（源项目 `results/player-tags-criteria.json`，源文件 `docs/player-tags-criteria.md`，生成脚本 `tools/criteria_to_json.py`）。结构＝`intro{text,items}` ＋ `tags[{id,name,intro,sections[{label,note?,items}],subs[{group,value,intro,sections}]}]` ＋ `terms[{name,text}]`；列表可一层嵌套（`items` 元素为字符串或 `{text,items}`）。
+- **行内标记**：文本字段（正文、括注 `note`、术语释义）可携带 HTML 行内标签 `<strong>`／`<code>`——源文件用 md 的 `**…**`／反引号书写，由生成脚本转写（结果 JSON 不使用 md 语法）。抽屉渲染时只放行这两个标签，其余 `<`、`>`、`&`、`"` 一律按字面转义（如 `<3`、`「<塔纳托斯>」` 不受影响）。
 - **挂载位置**：筛选面板内的**玩家体感 TAG 与子 TAG chips**（候选列表、已选列表、子 TAG 面板；P12 的「势力/用法」分类 chips 同样有说明，组合名 chips 不挂）。官方设定 TAG 不挂。tooltip 内提供**「查看评定标准详情」**（tooltip 为 `interactive`、内容可点击），点击打开评定标准抽屉并滚动到对应 TAG／子 TAG；「玩家体感 TAG」分组标题旁另有常驻入口「查看评定标准」。
 - **取用键**：顶级按 `tagId`（取其 `intro` 字段作悬浮文案）；子项按 `tagId|group|value`。找不到文案时显示占位（前端当前为「（暂无说明）」）。
 - **抽屉**：`src/components/tools/BetterCombatCriteriaDrawer.vue`（`el-drawer` 右侧）。顶部搜索框按条目名与正文过滤（点击结果跳转）；正文里 `terms` 内的术语点击弹解释（ElNotification，最长优先匹配）；从 tooltip 进入时清空搜索并滚动高亮目标。
@@ -228,7 +229,7 @@
 ## 7. 备注/条件文本内的术语标注
 
 - 术语表来自 `combat_glossary.json` 的全部 `sections[].terms[]`，按 `name` 长度**降序**拼成正则（保证「凋亡损伤·我方」先于「凋亡损伤」命中）；
-- 匹配前先做 HTML 转义（`& < > "`），因此**备注里可以直接写尖括号原文**（如 `<塔纳托斯>`），前端会按字面展示而不会被当成标签吞掉；
+- 匹配前先做 HTML 转义（`& < > "`），但**白名单放行结果 JSON 的行内标签 `<strong>`／`<code>`**（由源项目生成器从 md 转写，见 §5.5）；除此之外的 `<`、`>` 仍按字面展示——备注里可以直接写尖括号原文（如 `<塔纳托斯>`），以及 `<3`、`>2.0` 这类比较符号，都不会被当成标签吞掉；
 - 命中的词包成 `<span data-combat-term="术语名">`，渲染为**天蓝色 + 灰色下划线 + 手型光标**；
 - 点击（事件委托）弹出浮窗：标题＝术语名，内容＝`definition` ＋ `notes` 列表；
 - 标注单元是**条/块的正文 `text`**（以及条件的每个 chip），块标签与条标签不参与匹配。

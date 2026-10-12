@@ -265,7 +265,7 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 **机读字典与一致性**：`catalog.json` 是脚本唯一读取的 TAG 字典（手写维护，name 必须与分模块条目标题逐字一致）；`merged.json`（干员→TAG id，id 按 catalog 顺序）与 `final_lists.tsv`（TAG→成员）由 `agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts` 从分模块重建，改 TAG 结构后需重跑；`deterministic.json` 为基础属性快照，不随 TAG 变化。各处的 TAG 数／关系数一律以 `docs/official-tags-members.md` §3 为准，其它文档不另行记数。
 
 1. 生成脚本：`tools/generate_results.py`。读两份名单文档＋字典／charId 映射／实装时间／荐文件，按本规范合成 `results/operator-tags.json`（CRLF、2 空格缩进、`ensure_ascii=False`）；`--check` 只生成到内存并跑规范校验，`--report` 另打印逐 TAG 计数。同一次运行另写出**辅助名单** `docs/untagged-operators.md`（`docs/operators.txt` 全量 − `operators[]`，即未进任何成员表的干员）。
-2. 生成时顺带做文本规范化（不改变含义）：去 markdown 强调标记与 `文件:行号` 证据；生产文档路径引用改写为产品表述（`08-拐杖.json` → `「拐杖」TAG`、`_brief.md` §x → 删除、PRTS 素材路径 → 删除）；备注开头的结构性前缀（「子 TAG：…。」「救急路径：…」，可连续多个）折入 `subTags` 后不再保留；`remark` 按 `｜`（块）与 `；`（条）解析为 §4.2 的块数组。
+2. 生成时顺带做文本规范化（不改变含义）：去 markdown 强调标记与 `文件:行号` 证据（源单元格里的 `**` 只作编辑标记、不进产物；产物的文本不使用 md 语法，行内强调用 HTML 白名单标签 `<strong>`／`<code>` 书写——前端按白名单渲染，见 `docs/ui-render-rules.md` §7）；生产文档路径引用改写为产品表述（`08-拐杖.json` → `「拐杖」TAG`、`_brief.md` §x → 删除、PRTS 素材路径 → 删除）；备注开头的结构性前缀（「子 TAG：…。」「救急路径：…」，可连续多个）折入 `subTags` 后不再保留；`remark` 按 `｜`（块）与 `；`（条）解析为 §4.2 的块数组。
 3. 文本 lint：生成时按 `docs/concept.md`「备注分块」的禁用项检查源单元格（`★` 分类标记、`备注：`／`PRTS 备注：` 等前缀、`（下详）` 类悬空引用、`S2` 类简写、UI 指令文字），`--check` 逐条列出、不阻断写出——报告即存量待重排清单。
 
 发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 复制到 UI 项目。
