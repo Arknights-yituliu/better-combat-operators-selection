@@ -165,13 +165,15 @@
 
 页面固定展示四块说明：使用说明 / 关于「荐」（定义与判定方式，含「兜底名单」一句）/ 阵容组合的荐（含"带荐优先练、不带荐但已打算练则优先练组内带荐干员"两条）/ 免责说明（主观评定、可能不完整、不构成抽卡建议）。文案写死在页面里，**不来自 JSON**；若 `docs/output-standard.md` §6 的荐规则调整，需要同步改页面文案与 `src/utils/seo.js` 里的页面描述。
 
-### 5.5 玩家 TAG 悬浮说明（tooltip）
+### 5.5 玩家 TAG 文案（悬浮说明＋评定标准抽屉）
 
-- **数据文件**：`src/static/json/combat/player-tags-explain.json`（源项目 `results/player-tags-explain.json`，源文件 `docs/player-tags-explain.md`，生成脚本 `tools/explain_to_json.py`）。结构＝`tags[{id,name,text}]` ＋ `subs[{tagId,group,value,text}]`。
-- **挂载位置**：筛选面板内的**玩家体感 TAG 与子 TAG chips**（候选列表、已选列表、子 TAG 面板；P12 的「势力/用法」分类 chips 同样有说明，组合名 chips 不挂）。官方设定 TAG 不挂。
-- **取用键**：顶级按 `tagId`；子项按 `tagId|group|value`。找不到文案时显示占位（前端当前为「（暂无说明）」）。
-- **内容要求**：人话版说明、不使用源项目内部词汇，游戏术语随文解释（撰写规范见源文件头部注释）；源项目新增/改动 TAG 或子 TAG 时，必须同步更新该源文件并重跑生成脚本（覆盖校验会列出缺失/多余项）。
-- **触发**：Vuetify `v-tooltip`，悬停/聚焦触发，内容为标题＋正文（＋P12 的「只能单独选择」注记）。
+- **数据文件**：`src/static/json/combat/player-tags-criteria.json`（源项目 `results/player-tags-criteria.json`，源文件 `docs/player-tags-criteria.md`，生成脚本 `tools/criteria_to_json.py`）。结构＝`intro{text,items}` ＋ `tags[{id,name,intro,sections[{label,note?,items}],subs[{group,value,intro,sections}]}]` ＋ `terms[{name,text}]`；列表可一层嵌套（`items` 元素为字符串或 `{text,items}`）。
+- **挂载位置**：筛选面板内的**玩家体感 TAG 与子 TAG chips**（候选列表、已选列表、子 TAG 面板；P12 的「势力/用法」分类 chips 同样有说明，组合名 chips 不挂）。官方设定 TAG 不挂。tooltip 内提供**「查看评定标准详情」**（tooltip 为 `interactive`、内容可点击），点击打开评定标准抽屉并滚动到对应 TAG／子 TAG；「玩家体感 TAG」分组标题旁另有常驻入口「查看评定标准」。
+- **取用键**：顶级按 `tagId`（取其 `intro` 字段作悬浮文案）；子项按 `tagId|group|value`。找不到文案时显示占位（前端当前为「（暂无说明）」）。
+- **抽屉**：`src/components/tools/BetterCombatCriteriaDrawer.vue`（`el-drawer` 右侧）。顶部搜索框按条目名与正文过滤（点击结果跳转）；正文里 `terms` 内的术语点击弹解释（ElNotification，最长优先匹配）；从 tooltip 进入时清空搜索并滚动高亮目标。
+- **主题与入口样式**：抽屉跟随站点明暗主题——页面 `setTheme` 把 `html` 的 class 切为 `dark`／`light`（`--c-*` 变量挂在 `v-app` 上、teleport 到 body 的抽屉取不到），抽屉以 `modal-class="bcd-modal"` 挂两套变量（浅色底 `#fff`／深色底 `#222`，强调色浅色 `#1867C0`、深色 `#8fc3ff`），开抽屉状态下切换主题即时生效。入口「查看评定标准」为 Vuetify `tonal` 小按钮（随 Vuetify 主题自动换色）；tooltip 内「查看评定标准详情」为「分隔线＋右侧箭头」的整行页脚（tooltip 恒为深色底，悬停浅蓝底）——两处均不使用「蓝字＋下划线」。
+- **移动端（≤700px）**：页面右下角固钉按钮（`.bcf-fab-wrap`）——普通态提供「回到顶部／定位筛选栏／定位干员列表」（两个定位各自独立、不联动 TAG 变更，用户可连续编辑多个 TAG），抽屉打开时切换为「回到顶部（抽屉内）／关闭评定细则」；到页面顶部自动隐藏、桌面不显示（媒体查询）。定位口径：目标元素（`.bcf-filter`／`.bcf-stats`）顶部对齐到顶栏下沿（顶栏高度运行时测量 `.v-app-bar`）。抽屉头部另有随主题的关闭 ×（`bcd-close`）；抽屉组件经 `defineExpose` 暴露 `scrollBodyToTop()` 供固钉调用。
+- **内容要求**：每节首段＝人话版说明（不使用源项目内部词汇、游戏术语随文解释）；正文＝严谨层（精确条件、计算式、收录/不收录对照例子），正文用到的术语必须在 `terms` 中有定义（撰写规范见源文件头部注释）；源项目新增/改动 TAG 或子 TAG 时，必须同步更新该源文件并重跑生成脚本（覆盖校验会列出缺失/多余项；术语、数字守卫与分文件指纹同批校验）。
 
 ### 5.6 ArkDPS 引用与「数据来源」
 
@@ -258,7 +260,7 @@
 改完 `results/operator-tags.json` 后，按改动类型快速过一遍：
 
 1. **新增/移动成员或提供者** → 确认该干员在 `operators[]`（约定 1）；确认 `condition` 写全硬性前提（详情卡片直接展示原文，并按 `；` 拆条渲染，故 `；` 只能切在并列要求之间）。
-2. **新增/改子 TAG** → 一般无需改前端，`subTags` 组名与取值是自由的（约定 11）；**子 TAG 多选为交集，与 §4.2 一致**（前端的干员级命中判定与详情卡条目过滤都按该语义实现，改数据时对照本条）。**阵容组合（P12）**：组合条目的 `subTags`＝分类（`势力`／`用法`），前端子面板显示「势力/用法」分类 chips ＋ 组合名 chips（多选取交集：分类按条目的 `subTags` 过滤、组合名按名过滤）；新增分类时同步 `player-tags-explain.json` 文案与前端分类顺序常量（当前顺序：势力、用法）。
+2. **新增/改子 TAG** → 一般无需改前端，`subTags` 组名与取值是自由的（约定 11）；**子 TAG 多选为交集，与 §4.2 一致**（前端的干员级命中判定与详情卡条目过滤都按该语义实现，改数据时对照本条）。**阵容组合（P12）**：组合条目的 `subTags`＝分类（`势力`／`用法`），前端子面板显示「势力/用法」分类 chips ＋ 组合名 chips（多选取交集：分类按条目的 `subTags` 过滤、组合名按名过滤）；新增分类时同步 `player-tags-criteria.json` 文案与前端分类顺序常量（当前顺序：势力、用法）。
 3. **改荐名单** → 干员级荐要满足"多选取交集"的展示语义：只在部分 TAG 有荐的干员，在选择多个 TAG 时会不显示（这是设计预期，不是 bug）。P12 的荐元素只能是组合名或该组合的提供者名（约定 8）。**兜底荐**（`recommendedFallback`）只在 `recommended` 为空数组时被前端取用；两份名单的元素都必须是成员；使用兜底名单时悬浮提示改用实力向文案（§5.1）。
 4. **新增 TAG** → 给一个稳定、唯一的 `id`；`source` 取 `official` / `player`；官方 TAG 目前不带 `recommended`（约定 7）。若新增的 TAG 需要"只能单独选择"这类特殊交互，需要在 `docs/ui-render-rules.md` 与前端页面同时登记。**现状提醒**：新增了玩家 TAG `P13`（高档控制，子 TAG＝大力推拉／阻挡数5／长效控制／远距控制）；原 `P10`（大力推拉）、`P11`（阻挡数5）已**退役**——前端若存有以旧 id 记录的选择状态，需按 id 失效处理（退役 id 不复用）。
 5. **改 `operators[]` 字段** → 对照 §2.1 确认前端用到的字段仍然存在。注意 `releaseDate` 不只是展示：它决定组合内提供者的排序（§5.2），改动或缺失会直接改变列表顺序。

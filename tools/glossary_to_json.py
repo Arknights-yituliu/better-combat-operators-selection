@@ -11,6 +11,9 @@
     例外：Fever 的术语名与释义写在同一行（"Fever Fever累计至450点时，…"），
     当术语名下一行不是释义时按首个半角空格拆分。
 
+行内标记：释义与备注可按 md 写 `**强调**`、`反引号代码`，写出前转写为 HTML 行内标签
+（`<strong>`／`<code>`）——结果 JSON 不携带 md 语法（前端按白名单渲染，见 docs/ui-render-rules.md §7）。
+
 校验：章节名必须命中 SECTIONS；每个术语必须有非空释义；备注续行必须紧跟备注。
 不满足则直接报错，绝不静默产出错的 JSON。
 """
@@ -19,6 +22,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -29,6 +33,19 @@ TITLE = "战斗术语"
 SECTIONS = ["状态", "技能相关", "元素相关", "干员分类", "杂项机制",
             "基础机制", "额外术语", "战场效果", "伤害机制", "复用机制", "特殊计算"]
 NOTE_MARK = "※"
+
+
+# 行内 md → HTML 行内标签（结果 JSON 不携带 md；前端白名单渲染，见 docs/ui-render-rules.md §7）
+MD_CODE_RE = re.compile(r"`([^`\n]+?)`")
+MD_STRONG_RE = re.compile(r"\*\*(.+?)\*\*")
+
+
+def md_inline(text: str) -> str:
+    """源文件里写 `**强调**`、`反引号代码`，写出前转写为 `<strong>`／`<code>`。"""
+    if not text:
+        return text
+    text = MD_CODE_RE.sub(r"<code>\1</code>", text)
+    return MD_STRONG_RE.sub(r"<strong>\1</strong>", text)
 
 
 def split_blocks(text: str) -> list[list[str]]:
@@ -70,9 +87,9 @@ def parse_term(lines: list[str]) -> dict:
     if any(not n for n in notes):
         raise SystemExit(f"术语 {name!r} 存在空备注")
 
-    term: dict = {"name": name, "definition": definition}
+    term: dict = {"name": name, "definition": md_inline(definition)}
     if notes:
-        term["notes"] = notes
+        term["notes"] = [md_inline(n) for n in notes]
     return term
 
 

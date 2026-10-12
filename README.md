@@ -8,7 +8,7 @@
 |---|---|
 | `results/operator-tags.json` | 主产物：干员 × TAG × 条件／备注，含职业／分支／势力／实装时间、PRTS 深链与 TAG 说明数据；由独立的筛选 UI 项目消费 |
 | `results/combat_glossary.json` | 战斗术语表（由 `docs/glossary.md` 生成） |
-| `results/player-tags-explain.json` | 玩家 TAG 的通俗说明（悬浮提示文案） |
+| `results/player-tags-criteria.json` | 玩家 TAG 评定标准（悬浮说明＋「查看评定标准详情」抽屉文案，由 `docs/player-tags-criteria.md` 生成） |
 | `gui/` | 本地网页版维护面板：荐名单 / 人工归纳（名单与条件备注编辑）/ 结果 JSON 编辑 |
 | `docs/` | 判定规范、计算规则、裁定台账、术语表与文档索引 |
 | `agent_workspace/` | TAG 判定文件与机读字典（工作区索引见 `agent_workspace/README.md`） |

@@ -13,7 +13,7 @@
 | `rulings.md` | 裁定台账：开发者对判断类问题的裁定逐条留痕（先查它，再提问） |
 | `term-map.md` | 代称映射表：自创代称／缩写／自编号的含义与查阅位置 |
 | `glossary.md` | 游戏术语表（前 5 节手写，后 6 节由 `crawlers/crawl_special_mechanics.py --apply` 追加） |
-| `player-tags-explain.md` | 玩家 TAG 的通俗说明源文件（生成 `results/player-tags-explain.json`） |
+| `player-tags-criteria.md` | 玩家 TAG 评定标准（严谨版）源文件：通俗说明＋精确条件＋计算式＋对照例子（前端悬浮说明＋评定标准抽屉文案；生成 `results/player-tags-criteria.json`；撰写要求见其文件头） |
 | `operators.txt` | 干员与 PRTS 页面链接清单（爬虫的输入） |
 
 ## 判定作业（agent 与维护者）
