@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
 import os
 import pathlib
@@ -281,6 +282,7 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
     # ---- tags[] ----
     ids: dict[str, int] = {}
     prev_cat = ""
+    cats_seen: set[str] = set()
     seen_player = False
     stats = {"operators": len(raw_ops), "tags": len(raw_tags), "members": 0, "official": 0, "player": 0,
              "recommended": 0, "recommendedFallback": 0,
@@ -318,9 +320,10 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
             else:
                 if seen_player:
                     add("warn", "G12", f"tags[{ti}].source", plc + ["source"], label, "官方 TAG 出现在玩家 TAG 之后（规范：官方在前）")
-                elif prev_cat and cat < prev_cat:
-                    add("warn", "G12", f"tags[{ti}].category", plc + ["category"], label, f"官方 TAG 未按类别 A→I 排列（{cat} 排在 {prev_cat} 之后）")
-                prev_cat = max(prev_cat, cat) if prev_cat else cat
+                elif prev_cat and cat != prev_cat and cat in cats_seen:
+                    add("warn", "G12", f"tags[{ti}].category", plc + ["category"], label, f"同一类别「{cat}」的 TAG 不相邻（类别序由 tag_order.json 决定，但同类须连续）")
+                cats_seen.add(cat)
+                prev_cat = cat
             if "recommended" in tag:
                 add("error", "G8", f"tags[{ti}].recommended", plc + ["recommended"], label, "官方 TAG 不应有 recommended 字段")
         elif src == "player":
@@ -330,12 +333,43 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                 add("warn", "G9", f"tags[{ti}].recommended", plc + ["recommended"], label, "玩家 TAG 缺少 recommended（无荐时也应为空数组）")
         for key in tag:
             if key not in ("id", "name", "source", "category", "recommended", "recommendedFallback",
-                           "recommendedBySub", "recommendedFallbackBySub", "members"):
+                           "recommendedBySub", "recommendedFallbackBySub", "subOrder", "members"):
                 add("warn", "G11", f"tags[{ti}].{key}", plc + [key], label, f"规范之外的字段「{key}」")
         members = tag.get("members")
         if not isinstance(members, list):
             add("error", "G2", f"tags[{ti}].members", plc + ["members"], label, "members 必须是数组")
             members = []
+        # subOrder：子 TAG 取值的展示顺序（由 tag_order.json 投影；前端筛选项据此排序）
+        sub_raw = tag.get("subOrder")
+        if src == "official" and sub_raw is not None:
+            add("error", "G15", f"tags[{ti}].subOrder", plc + ["subOrder"], label, "官方 TAG 不应带 subOrder")
+        elif sub_raw is not None:
+            if not isinstance(sub_raw, list) or not sub_raw:
+                add("error", "G15", f"tags[{ti}].subOrder", plc + ["subOrder"], label, "subOrder 应为非空数组（无取值时省略该字段）")
+            else:
+                pairs, ok = [], True
+                for k, s in enumerate(sub_raw):
+                    if not isinstance(s, dict) or not str(s.get("group") or "").strip() or not str(s.get("value") or "").strip():
+                        add("error", "G15", f"tags[{ti}].subOrder[{k}]", plc + ["subOrder", k], label, "元素应为含非空 group 与 value 的对象")
+                        ok = False
+                        continue
+                    kv = (str(s["group"]), str(s["value"]))
+                    if kv in pairs:
+                        add("error", "G15", f"tags[{ti}].subOrder[{k}]", plc + ["subOrder", k], label, f"取值「{kv[0]}／{kv[1]}」在 subOrder 中重复")
+                        ok = False
+                    pairs.append(kv)
+                if ok:
+                    have = set()
+                    for m in members:
+                        if isinstance(m, dict):
+                            for s in m.get("subTags") or []:
+                                if isinstance(s, dict):
+                                    have.add((str(s.get("group") or ""), str(s.get("value") or "")))
+                    for kv in pairs:
+                        if kv not in have:
+                            add("error", "G16", f"tags[{ti}].subOrder", plc + ["subOrder"], label, f"subOrder 的取值「{kv[0]}／{kv[1]}」在任何成员上都不存在")
+                    for kv in sorted(have - set(pairs)):
+                        add("warn", "G16", f"tags[{ti}].subOrder", plc + ["subOrder"], label, f"成员用到的取值「{kv[0]}／{kv[1]}」未登记在 subOrder")
         subs_any = any(isinstance(m, dict) and m.get("subTags") for m in members)
         seen: dict[str, set] = {}  # 干员名 → 已占用的末端子 TAG 集合（无子 TAG 者以 ("", "", "") 记）
         combo_names: dict[str, int] = {}  # 阵容组合（P12）：组合名 → 首次出现的成员序号
@@ -550,8 +584,30 @@ def check_results(payload: dict) -> dict:
     for note in sync["notes"]:
         head.append({"level": "warn", "code": "R8", "path": "tags", "loc": [],
                      "label": "", "message": note})
+    order_note = _order_drift(doc)
+    if order_note:
+        head.append(order_note)
     return {"ok": True, "parsed": True, "problems": head + problems, "stats": stats,
             "recommend_sync": sync}
+
+
+def _order_drift(doc: dict) -> dict | None:
+    """提交的文档顺序与 tag_order.json 不一致时给一条提示（保存时会自动重排）。"""
+    if not isinstance(doc.get("tags"), list):
+        return None
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT / "tools"))
+        import tag_order as _to  # noqa: PLC0415
+        want = copy.deepcopy(doc)
+        _to.apply(want, _to.load())
+    except Exception:  # noqa: BLE001
+        return None
+    if want == doc:
+        return None
+    return {"level": "warn", "code": "O17", "path": "tags", "loc": [], "label": "",
+            "message": "TAG／子 TAG 顺序与 agent_workspace/tag_pipeline/tag_order.json 不一致；"
+                       "保存时会按该文件重排（或在「TAG 排序」页调整）"}
 
 
 def save_results(payload: dict) -> dict:
@@ -588,6 +644,17 @@ def save_results(payload: dict) -> dict:
             drift = (st.st_mtime_ns, st.st_size) != (int(expect.get("mtime_ns", -1)), int(expect.get("size", -1)))
         if drift:
             raise UserError("文件已被外部改动，请重新载入，或确认后强制覆盖", "drift")
+    sort_sync = {"changes": {}, "changed": False}
+    if isinstance(doc.get("tags"), list):  # 只对 operator-tags 形态生效（本页也能载入别处产物）
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(ROOT / "tools"))
+            import tag_order as _to  # noqa: PLC0415
+            _before = copy.deepcopy(doc)
+            _c = _to.apply(doc, _to.load())
+            sort_sync = {"changes": _c, "changed": doc != _before}
+        except Exception:  # noqa: BLE001  顺序文件不可用时不阻断保存
+            pass
     sync = rec_sync.sync_recommend(doc)  # 荐字段按荐文件重算（源：_recommend.json／_recommend_fallback.json）
     out_lf = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
     text_out = out_lf.replace("\n", "\r\n") if eol == "crlf" else out_lf
@@ -603,4 +670,4 @@ def save_results(payload: dict) -> dict:
             "digest": hashlib.sha1(text_out.encode("utf-8")).hexdigest()[:12], "eol": eol,
             "normalized": out_lf != text, "saved": {"text": out_lf},
             "problems": problems, "stats": stats, "today": today_str(),
-            "recommend_sync": sync}
+            "recommend_sync": sync, "order_sync": sort_sync}

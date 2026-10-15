@@ -12,6 +12,7 @@ recommended／recommendedFallback／recommendedBySub／recommendedFallbackBySub
 from __future__ import annotations
 
 import copy
+import re
 
 from .config import rec
 
@@ -122,7 +123,9 @@ def sync_recommend(doc) -> dict:
             continue
         name = str(t.get("name") or "")
         members = _clean_members(t.get("members"))
-        want = gen.rec_fields(name, members, rec_map, fb_map)
+        # id 形如 "P13" → 编号 "13"，供 rec_fields 查顺序文件排列子 TAG；取不到则不影响顺序
+        tag_no = re.sub(r"^\D+", "", str(t.get("id") or ""))
+        want = gen.rec_fields(tag_no, name, members, rec_map, fb_map)
         changes = []
         for field in ("recommended", "recommendedFallback"):
             w = list(want.get(field, []))

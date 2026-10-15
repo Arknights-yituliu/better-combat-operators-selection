@@ -34,6 +34,9 @@ GLOSSARY = ROOT / "docs" / "glossary.md"
 RESULTS = ROOT / "results" / "operator-tags.json"
 OUT = ROOT / "results" / "player-tags-criteria.json"
 PARTS_DIR = ROOT / "agent_workspace" / "tag_pipeline" / "player_tags"
+PIPE = ROOT / "agent_workspace" / "tag_pipeline"
+sys.path.insert(0, str(PIPE))
+import tag_order  # noqa: E402  （TAG 展示顺序的唯一维护处）
 
 NOTE = "玩家体感 TAG 评定标准（前端「查看评定标准详情」抽屉文案）；源文件 docs/player-tags-criteria.md，生成脚本 tools/criteria_to_json.py"
 
@@ -251,8 +254,20 @@ def main() -> int:
             problems.append(f"缺少子项说明：{name} · {pair[0]} / {pair[1]}")
         for pair in sorted(have - expected_subs[name]):
             problems.append(f"子项说明多于产物：{name} · {pair[0]} / {pair[1]}")
-    # id 排序保持文档顺序：文档顺序与 tag_ids 对齐后重排按 id 数字序
-    tags_out.sort(key=lambda t: int(t["id"][1:]))
+    # 顺序：TAG 序与子项序都按 tag_order.json（文档章节序＝编辑序，允许与产物序不同；
+    # 上面的覆盖校验是集合比较，故与本重排互不影响）
+    order = tag_order.load()
+    rank_p = tag_order.player_rank(order)
+    tags_out.sort(key=lambda t: rank_p.get(str(t.get("id") or ""), len(rank_p)))
+    for t in tags_out:
+        rank = tag_order.sub_rank(order, str(t.get("id") or ""))
+        if not rank:
+            continue
+        subs = t.get("subs") or []
+        idx = sorted(range(len(subs)),
+                     key=lambda j: (rank.get((str(subs[j].get("group") or ""), str(subs[j].get("value") or "")), len(rank)), j))
+        if idx != list(range(len(subs))):
+            t["subs"] = [subs[j] for j in idx]
 
     # ---- 术语校验 ----
     body_text = doc_text

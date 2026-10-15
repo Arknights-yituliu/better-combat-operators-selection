@@ -49,6 +49,17 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 PARTS = ROOT / "agent_workspace" / "tag_pipeline" / "player_tags"
 sys.path.insert(0, str(PARTS.parent))
 import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
+import tag_order  # noqa: E402  （TAG 展示顺序的唯一维护处）
+
+
+def _tag_order() -> dict:
+    """顺序文件（惰性加载：坏文件不应在 import 期炸掉本模块）。"""
+    try:
+        return tag_order.load()
+    except tag_order.OrderError:
+        return tag_order.empty_order()
+
+
 RECOMMEND = PARTS / "_recommend.json"
 RECOMMEND_FALLBACK = PARTS / "_recommend_fallback.json"
 
@@ -62,7 +73,10 @@ def load_tags() -> list[tuple[str, str, pathlib.Path]]:
         m = re.fullmatch(r"(\d{2})-(.+)\.json", path.name)
         if m:
             out.append((int(m.group(1)), m.group(2), path))
-    out.sort(key=lambda t: t[0])
+    order = _tag_order()
+    rank = tag_order.player_rank(order)
+    # 顺序文件的玩家 TAG 序（未登记的回退到编号序，置于末尾）
+    out.sort(key=lambda t: (rank.get(f"P{t[0]}", len(rank)), t[0]))
     return [(name, path) for _, name, path in out]
 
 
@@ -136,9 +150,6 @@ def split_key(key: str) -> tuple[str, str | None]:
     return tag, (scope if sep else None)
 
 
-# 01 决战歼灭：子 TAG 排列顺序（范围轴＋伤害轴；与 tools/generate_results.py 的 P01_SUB_ORDER 同步）
-P01_SUB_ORDER = ["小范围", "大范围", "主物理伤害", "主法术伤害", "主真实伤害", "主弱点伤害",
-                 "物法混伤", "物真混伤", "物元混伤", "法元混伤"]
 
 _SUB_CACHE: dict[str, list[str]] | None = None
 
@@ -159,8 +170,15 @@ def tag_scope_values(tag_name: str) -> list[str] | None:
                     for s in m.get("subTags", []):
                         if s.get("value") and s["value"] not in vals:
                             vals.append(s["value"])
-                if t["name"] == "决战歼灭":  # 作用域栏顺序与生成器的 P01_SUB_ORDER 同步
-                    vals.sort(key=lambda v: P01_SUB_ORDER.index(v) if v in P01_SUB_ORDER else len(P01_SUB_ORDER))
+                rank = tag_order.sub_rank(_tag_order(), str(t.get("id") or ""))
+                if rank:  # 作用域栏顺序与 tag_order.json 同步（按 id，改名不丢位）
+                    kv = [(str(s.get("group") or ""), str(s.get("value") or "")) for s in
+                          (x for m in t.get("members", []) for x in m.get("subTags", []))]
+                    pos = {}
+                    for g, v in kv:
+                        if v not in pos or rank.get((g, v), len(rank)) < pos[v]:
+                            pos[v] = rank.get((g, v), len(rank))
+                    vals.sort(key=lambda v: pos.get(v, len(rank)))
                 _SUB_CACHE[t["name"]] = vals
     return _SUB_CACHE.get(tag_name)
 

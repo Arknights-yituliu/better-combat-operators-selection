@@ -397,6 +397,30 @@ ACCEPTED = {
     # 属有意为之的条目移除，引用指向的原文仍在（PRTS 语料未动、映射为恒等），显式放行。
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.json", "35"),
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.json", "36"),
+    # 降低敌方伤害（敌方向子 TAG）轮（2026-10-14）：09-保人 新增「敌方减攻」「敌方失能」两个子 TAG、
+    # 08-拐杖 新增「减益类型」组，两者都要改写既有「边界与排除记录」里若干条 bullet 的散文（把
+    # 「属对敌、不计入本 TAG」改为「归本 TAG 的子 TAG」、把已入表的干员从排除名单里移出、把
+    # 「未计入」句改为指向新子 TAG）。这些 bullet 里的引用**本身未动、仍指向同一处原文**，但审计的
+    # 键分词会把引用**紧前方的散文**并入键名，键随文字改动而变 → 误报「失效」——与本文件内前述
+    # 「键分词误报」诸条同类（引用未失效的显式放行）。裁定见 docs/rulings.md §二十一。
+    # 08：减防/削抗条里 丰川祥子 Y模组「颂乐音符」的忽视防御力/法术抗性部分（属「无视/穿透不收」的举例）。
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "57"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "58"),
+    # 09：遥（浮空→敌方失能）、引星棘刺（敌攻速-→敌方减攻）、焰尾（晕眩→敌方失能）、
+    # 可颂（晕眩→敌方失能）、缇缇（对敌沉睡→敌方失能）五条 bullet 的散文改写。
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "54"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "55"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "56"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "57"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "63"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "64"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "96"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "98"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "103"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "107"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "122"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "130"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "132"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.

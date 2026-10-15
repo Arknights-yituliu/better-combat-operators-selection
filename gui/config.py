@@ -15,6 +15,8 @@ PARTS = rec.PARTS
 PIPE = PARTS.parent
 sys.path.insert(0, str(PIPE))
 import partdoc  # noqa: E402  （分文件 JSON 的唯一读写实现）
+import tag_order  # noqa: E402  （TAG 展示顺序的唯一维护处）
+ORDER_FILE = tag_order.ORDER_FILE
 OFFICIAL_DIR = PIPE / "official_tags"
 PRTS_DIR = ROOT / "material_datas" / "PRTS"
 ROSTER_FILE = ROOT / "docs" / "operators.txt"

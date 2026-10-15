@@ -39,13 +39,14 @@ from gui.md import is_sep_row, split_cells          # noqa: E402
 from gui.roster import launch_date, parse_prts_brief  # noqa: E402
 from gui import results_json as rj                   # noqa: E402
 import partdoc                                       # noqa: E402  （分文件 JSON 的唯一读写实现）
+import tag_order                                     # noqa: E402  （TAG 展示顺序的唯一维护处）
 import _merge_official_to_docs as offm               # noqa: E402  （官方分模块清单 FILES 的唯一来源）
 
 PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v29"
+VERSION = "v31"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -630,9 +631,14 @@ def parse_official(catalog: dict, idx: PrtsIndex) -> tuple[list[dict], list[dict
 
 P05_PATH_RE = re.compile(r"^救急路径[:：]([^；。]*)[；；]?")
 
-# 01 决战歼灭：子 TAG 排列顺序（范围轴＋伤害轴；与 tools/recommend.py 的 P01_SUB_ORDER 同步）
-P01_SUB_ORDER = ["小范围", "大范围", "主物理伤害", "主法术伤害", "主真实伤害", "主弱点伤害",
-                 "物法混伤", "物真混伤", "物元混伤", "法元混伤"]
+def _tag_order():
+    """顺序文件（惰性加载：坏文件不应在本模块 import 期炸掉 audit_text_migration 等调用方）。"""
+    import tag_order
+    try:
+        return tag_order.load()
+    except tag_order.OrderError as exc:
+        sys.stderr.write(f"⚠ tag_order.json 有误，本次按产物现有顺序生成：{exc}\n")
+        return tag_order.empty_order()
 
 def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list[str],
                    cond: str, remark: str) -> tuple[str, list[dict]]:
@@ -647,7 +653,7 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
             subs.append(item)
 
     if tag_no == "01":
-        # 子表标题＝伤害类型；「范围」列＝范围轴；每行恰两个值，按 P01_SUB_ORDER 排序
+        # 子表标题＝伤害类型；「范围」列＝范围轴；每行恰两个值（取值序由 tag_order.json 统一决定）
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
@@ -655,13 +661,12 @@ def player_subtags(tag_no: str, h3: str, h4: str, header: list[str], cells: list
             v = cells[header.index("范围")].strip()
             if v:
                 add("子 TAG", v)
-        subs.sort(key=lambda s: P01_SUB_ORDER.index(s["value"]) if s["value"] in P01_SUB_ORDER else len(P01_SUB_ORDER))
     elif tag_no in ("02", "03", "06"):
         # 子表标题即子 TAG：02 多段·间隔／03 聚爆·连射·慢热／06 编入·部署
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
-    elif tag_no == "13":          # 高档控制：子表标题即子 TAG（大力推拉／阻挡数5／长效控制／远距控制／硬控／软控）
+    elif tag_no == "13":          # 高档控制：子表标题即子 TAG（长效控制／硬控／软控／远距控制／纯御天花板／阻挡数5／大力推拉）
         for v in re.split(r"[、＋+]", h3):
             if v.strip():
                 add("子 TAG", v.strip())
@@ -719,13 +724,12 @@ def collect_sub_scopes(members: list[dict]) -> list[tuple[str, str]]:
     return out
 
 
-def rec_fields(tag_name: str, members: list[dict],
+def rec_fields(tag_no: str, tag_name: str, members: list[dict],
                rec_map: dict[str, list[str]], fb_map: dict[str, list[str]]) -> dict:
     """荐字段：有子 TAG 的顶级 TAG → recommendedBySub（荐下沉到子 TAG）；
     无子 TAG 的维持 TAG 级 recommended/recommendedFallback。"""
     scopes = collect_sub_scopes(members)
-    if tag_name == "决战歼灭":  # 范围轴＋伤害轴按 P01_SUB_ORDER 排列（见 docs/output-standard.md §4.3）
-        scopes.sort(key=lambda gv: P01_SUB_ORDER.index(gv[1]) if gv[1] in P01_SUB_ORDER else len(P01_SUB_ORDER))
+    scopes = tag_order.sort_scopes(_tag_order(), f"P{tag_no}", scopes)  # 取值序见 agent_workspace/tag_pipeline/tag_order.json
     out: dict = {}
     if not scopes:
         out["recommended"] = list(rec_map.get(tag_name, []))
@@ -823,7 +827,7 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
         else:
             members = per_tag[t["no"]]
             members.sort(key=lambda m: launch_date(m["operator"]) or "", reverse=True)
-        rec = rec_fields(t["name"], members, recommend, recommend_fallback)
+        rec = rec_fields(t["no"], t["name"], members, recommend, recommend_fallback)
         item = {"id": f"P{t['no']}", "name": t["name"], "source": "player"}
         item.update(rec)
         item["members"] = members
@@ -913,12 +917,16 @@ def build() -> dict:
     official, ops_a = parse_official(catalog, idx)
     player, ops_b = parse_player(idx)
     operators = build_operators(ops_a, ops_b)
-    return {
+    doc = {
         "version": VERSION,
         "updated": rj.today_str(),
         "operators": operators,
         "tags": official + player,
     }
+    # 顺序：一次排序、两个入口——生成时在此套用 `tag_order.json`，只改顺序时跑 tools/apply_tag_order.py。
+    # 放在 validate 之前（校验的就是将要落盘的形态），故 --check 不会去校验一个永不落盘的中间态。
+    tag_order.apply(doc, _tag_order())
+    return doc
 
 
 def main() -> int:

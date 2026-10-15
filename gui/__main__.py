@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""干员 TAG 名单维护面板（本地网页版）。三个页签：
+"""干员 TAG 名单维护面板（本地网页版）。四个页签：
 
 「荐」  只管玩家体感 TAG 的荐：左键干员 = 加荐，右键 = 取消荐；点「详情」在右栏查看干员信息卡片（含条件/备注，只读）。
 「人工归纳」  上半筛选（左 TAG 树 / 右干员列表）、下半临时区、右侧全量干员摘选区：
@@ -9,6 +9,10 @@
     · 选中 TAG 子表（区块）后点临时区条目即并入；Ctrl 多选可一次并入多个区块，
       移动只允许落到一个区块。
     · 干员卡片内点击 条件 / 备注 即可编辑（Enter/✓ 保存，Esc/× 取消，不自动保存）。
+「TAG 排序」  拖拽维护 TAG 的展示顺序（顺序文件 agent_workspace/tag_pipeline/tag_order.json）：
+    · 官方设定 TAG＝类别序＋类别内 TAG 序（TAG 不跨类拖）；玩家体感 TAG＝TAG 序＋每 TAG 的子 TAG 取值序；
+    · 保存后按该顺序重排 results/operator-tags.json 与 results/player-tags-criteria.json
+      （只更新 updated，不递增 version）；未登记的项排在各段末尾并标「未登记」。
 「结果 JSON」  编辑 results/ 下的结果 JSON（规范：docs/output-standard.md）：
     · 「加载…」选 results/*.json，或「新建骨架」起一份符合规范的空文档；
     · 编辑只发生在内存（结构化卡片 + 源码视图共用同一份数据），点「保存…」才写盘，
@@ -16,11 +20,12 @@
     · 保存时按 _recommend.json／_recommend_fallback.json 重算各玩家 TAG 的荐字段
       （面板内荐只读展示；荐的增删在「荐」页做）。
 
-写入的文件（前两页即时落盘，「结果 JSON」页仅在点保存时写）：
+写入的文件（「荐」「人工归纳」「TAG 排序」即时落盘，「结果 JSON」页仅在点保存时写）：
     agent_workspace/tag_pipeline/player_tags/_recommend.json   （荐）
     agent_workspace/tag_pipeline/player_tags/NN-*.json         （成员行增删、条件/备注）
     agent_workspace/tag_pipeline/official_tags/[A-I]-*.json    （成员行增删、条件/备注；条目头为渲染期派生）
-    results/*.json                                             （结果 JSON 页保存）
+    agent_workspace/tag_pipeline/tag_order.json                （TAG 排序页）
+    results/*.json                                             （结果 JSON 页保存；TAG 排序页保存时也会按顺序重排）
     docs/player-tags-members.md、docs/official-tags-members.md 由合并脚本重新生成（只读）。
 
 用法：

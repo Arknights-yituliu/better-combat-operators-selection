@@ -14,6 +14,7 @@ from .errors import UserError
 from .merges import run_merge
 from .model import build_model
 from .recommends import apply_recommend
+from .order import load_order, save_order, sort_product_text
 from .results_json import check_results, list_results, load_results, save_results
 from .writeback import apply_ops, save_row
 
@@ -106,6 +107,12 @@ class Handler(BaseHTTPRequestHandler):
                     self._json(check_results(payload))
                 elif path == "/api/results/save":
                     self._json(save_results(payload))
+                elif path == "/api/tag-order/load":
+                    self._json(load_order(payload))
+                elif path == "/api/tag-order/save":
+                    self._json(save_order(payload))
+                elif path == "/api/results/sort":
+                    self._json(sort_product_text(payload))
                 elif path == "/api/merge":
                     self._json(run_merge(payload.get("which", "both")))
                 else:

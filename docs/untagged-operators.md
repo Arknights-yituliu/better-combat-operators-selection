@@ -1,9 +1,9 @@
 # 未归入任何 TAG 的干员
 
 > 本文件自动生成，勿手改：由 `tools/generate_results.py` 在生成 `results/operator-tags.json` 时同步写出（命令见 `docs/output-standard.md` §7）。
-> 口径：全量干员（`docs/operators.txt`，434 名）− 结果 JSON `operators[]`（403 名）＝ **31 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
+> 口径：全量干员（`docs/operators.txt`，434 名）− 结果 JSON `operators[]`（404 名）＝ **30 名**未出现在任何官方设定 TAG／玩家体感 TAG 的成员表中。
 > 官方设定 TAG 的「无 TAG 干员」名单（`docs/official-tags-members.md` §3）中已有部分被玩家体感 TAG 收录，故本表与其不完全重合；某干员一旦进入任一成员表，重新生成时自动移出本表。
-> 构成（按职业）：狙击 9、术师 6、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
+> 构成（按职业）：狙击 8、术师 6、医疗 5、重装 5、近卫 5、先锋 1；名单按实装时间倒序。
 
 | 干员 | 编号 | 星级 | 职业·分支 | 实装时间 |
 |---|---|---|---|---|
@@ -28,7 +28,6 @@
 | [白金](https://prts.wiki/w/%E7%99%BD%E9%87%91) | char_204_platnm | 5 | 狙击·速射手 | 2019-04-30 |
 | [玫兰莎](https://prts.wiki/w/%E7%8E%AB%E5%85%B0%E8%8E%8E) | char_208_melan | 3 | 近卫·无畏者 | 2019-04-30 |
 | [炎熔](https://prts.wiki/w/%E7%82%8E%E7%86%94) | char_121_lava | 3 | 术师·扩散术师 | 2019-04-30 |
-| [流星](https://prts.wiki/w/%E6%B5%81%E6%98%9F) | char_126_shotst | 4 | 狙击·速射手 | 2019-04-30 |
 | [末药](https://prts.wiki/w/%E6%9C%AB%E8%8D%AF) | char_117_myrrh | 4 | 医疗·医师 | 2019-04-30 |
 | [暴行](https://prts.wiki/w/%E6%9A%B4%E8%A1%8C) | char_230_savage | 5 | 近卫·强攻手 | 2019-04-30 |
 | [巡林者](https://prts.wiki/w/%E5%B7%A1%E6%9E%97%E8%80%85) | char_503_rang | 2 | 狙击·速射手 | 2019-04-30 |

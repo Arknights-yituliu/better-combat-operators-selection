@@ -1,0 +1,697 @@
+{
+  "format": "tag-order/1",
+  "note": "TAG 展示顺序的唯一维护处（手写权威源）。官方类＝类别序＋类内 TAG 序；玩家类＝TAG 序＋每 TAG 的子 TAG 取值序（键为 组＋值）。一律按 id 索引，改名不丢位置；未登记的 TAG／取值会被追加到所属段末尾。改本文件后跑 tools/apply_tag_order.py 投影到两处产物；纯排序变化只更新 updated，不升 version。",
+  "official": {
+    "categories": [
+      {
+        "key": "A 控制·异常",
+        "tags": [
+          {
+            "id": "A_fear",
+            "name": "施加恐惧"
+          },
+          {
+            "id": "A_slow",
+            "name": "施加停顿"
+          },
+          {
+            "id": "A_levi",
+            "name": "施加浮空"
+          },
+          {
+            "id": "A_groundbind",
+            "name": "施加缚地"
+          },
+          {
+            "id": "A_weightless",
+            "name": "施加失重"
+          },
+          {
+            "id": "A_displace",
+            "name": "推拉位移（失衡位移）"
+          },
+          {
+            "id": "A_tremble",
+            "name": "施加战栗"
+          },
+          {
+            "id": "A_weaken",
+            "name": "施加虚弱"
+          },
+          {
+            "id": "A_stun",
+            "name": "施加晕眩"
+          },
+          {
+            "id": "A_sluggish",
+            "name": "施加迟钝"
+          },
+          {
+            "id": "A_bind",
+            "name": "施加束缚"
+          },
+          {
+            "id": "A_silence",
+            "name": "施加沉默"
+          },
+          {
+            "id": "A_mortalwound",
+            "name": "施加死亡宣告（重伤）"
+          },
+          {
+            "id": "A_sleep",
+            "name": "施加沉睡"
+          },
+          {
+            "id": "A_cold",
+            "name": "施加寒冷"
+          },
+          {
+            "id": "A_fragile",
+            "name": "施加脆弱（易伤）"
+          },
+          {
+            "id": "A_freeze",
+            "name": "施加冻结"
+          },
+          {
+            "id": "A_induct",
+            "name": "施加诱导"
+          },
+          {
+            "id": "A_palsy",
+            "name": "施加麻痹"
+          },
+          {
+            "id": "A_teleport",
+            "name": "传送敌人"
+          }
+        ]
+      },
+      {
+        "key": "B 伤害类型",
+        "tags": [
+          {
+            "id": "B_ign_def",
+            "name": "无视防御"
+          },
+          {
+            "id": "B_ign_res",
+            "name": "无视法术抗性"
+          },
+          {
+            "id": "B_true",
+            "name": "造成真实伤害"
+          },
+          {
+            "id": "B_percent",
+            "name": "造成百分比伤害"
+          },
+          {
+            "id": "B_weakpoint",
+            "name": "造成弱点伤害"
+          },
+          {
+            "id": "B_elmdmg_total",
+            "name": "造成元素损伤（顶层）"
+          },
+          {
+            "id": "B_apop",
+            "name": "造成凋亡损伤"
+          },
+          {
+            "id": "B_burn",
+            "name": "造成灼燃损伤"
+          },
+          {
+            "id": "B_neural",
+            "name": "造成神经损伤"
+          },
+          {
+            "id": "B_erosion",
+            "name": "造成侵蚀损伤"
+          },
+          {
+            "id": "B_elementdmg",
+            "name": "造成元素伤害"
+          },
+          {
+            "id": "B_dot",
+            "name": "施加持续伤害"
+          }
+        ]
+      },
+      {
+        "key": "C 生存与增益",
+        "tags": [
+          {
+            "id": "C_resist",
+            "name": "抵抗"
+          },
+          {
+            "id": "C_purify",
+            "name": "净化（解除异常）"
+          },
+          {
+            "id": "C_antitaunt",
+            "name": "降低被攻击优先级"
+          },
+          {
+            "id": "C_dodge",
+            "name": "闪避"
+          },
+          {
+            "id": "C_undead",
+            "name": "免死/复活/替身"
+          },
+          {
+            "id": "C_dmginhibit",
+            "name": "伤害减免/减伤"
+          },
+          {
+            "id": "C_barrier",
+            "name": "屏障（吸收值）"
+          },
+          {
+            "id": "C_shield",
+            "name": "护盾（按层抵挡）"
+          },
+          {
+            "id": "C_asylum",
+            "name": "庇护（物法减伤）"
+          },
+          {
+            "id": "C_camou",
+            "name": "迷彩"
+          },
+          {
+            "id": "C_invincible",
+            "name": "无敌"
+          },
+          {
+            "id": "C_immune_freez",
+            "name": "免疫冻结/寒冷"
+          },
+          {
+            "id": "C_immune_sleep",
+            "name": "免疫沉睡"
+          },
+          {
+            "id": "C_immune_stun",
+            "name": "免疫晕眩"
+          },
+          {
+            "id": "C_immune_misc",
+            "name": "其他异常免疫（小睡等）"
+          },
+          {
+            "id": "C_invis",
+            "name": "隐匿"
+          },
+          {
+            "id": "C_detect",
+            "name": "反隐（隐匿免疫）"
+          },
+          {
+            "id": "C_taunt",
+            "name": "嘲讽/吸引攻击"
+          },
+          {
+            "id": "C_inspire",
+            "name": "鼓舞"
+          },
+          {
+            "id": "C_limit",
+            "name": "抗削弱"
+          }
+        ]
+      },
+      {
+        "key": "D 部署与编队",
+        "tags": [
+          {
+            "id": "D_noslot",
+            "name": "不占用部署位"
+          },
+          {
+            "id": "D_fastre",
+            "name": "快速再部署"
+          },
+          {
+            "id": "D_move",
+            "name": "移动/特殊换位部署"
+          },
+          {
+            "id": "D_zone",
+            "name": "待部署区支援"
+          },
+          {
+            "id": "D_costback",
+            "name": "费用回复/返还"
+          },
+          {
+            "id": "D_team",
+            "name": "编队/阵营联动增益"
+          }
+        ]
+      },
+      {
+        "key": "E 技力与技能资源",
+        "tags": [
+          {
+            "id": "E_overdrive",
+            "name": "过载技能"
+          },
+          {
+            "id": "E_ammo",
+            "name": "弹药技能"
+          },
+          {
+            "id": "E_equip",
+            "name": "装备应变"
+          },
+          {
+            "id": "E_charge",
+            "name": "为他人回复技力（充电）"
+          },
+          {
+            "id": "E_reload",
+            "name": "补弹"
+          },
+          {
+            "id": "E_chant",
+            "name": "吟唱技能"
+          },
+          {
+            "id": "E_mana",
+            "name": "魔力（特殊技力）"
+          },
+          {
+            "id": "E_overcharge",
+            "name": "蓄力技能"
+          }
+        ]
+      },
+      {
+        "key": "F 治疗与支援",
+        "tags": [
+          {
+            "id": "F_ignorehealban",
+            "name": "无视禁疗的治疗"
+          },
+          {
+            "id": "F_overflow",
+            "name": "溢出治疗转化"
+          },
+          {
+            "id": "F_healzone",
+            "name": "范围持续治疗（光环/领域）"
+          },
+          {
+            "id": "F_elmheal",
+            "name": "元素损伤治疗/恢复"
+          }
+        ]
+      },
+      {
+        "key": "G 召唤物",
+        "tags": [
+          {
+            "id": "G_summons",
+            "name": "拥有召唤物"
+          },
+          {
+            "id": "G_refund",
+            "name": "召唤物退场返还/自动刷新"
+          },
+          {
+            "id": "G_bind",
+            "name": "技能-召唤物绑定"
+          }
+        ]
+      },
+      {
+        "key": "H 攻击行为特征",
+        "tags": [
+          {
+            "id": "H_noatk",
+            "name": "特性不攻击/依赖技能"
+          },
+          {
+            "id": "H_contatk",
+            "name": "持续攻击"
+          },
+          {
+            "id": "H_liftoff",
+            "name": "起飞/空中作战"
+          },
+          {
+            "id": "H_fullmap",
+            "name": "全图/全场攻击"
+          },
+          {
+            "id": "H_frames",
+            "name": "帧级结算"
+          }
+        ]
+      },
+      {
+        "key": "I 全场光环",
+        "tags": [
+          {
+            "id": "I_aura",
+            "name": "全场光环"
+          }
+        ]
+      }
+    ]
+  },
+  "player": [
+    {
+      "id": "P01",
+      "name": "决战歼灭",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "小范围"
+        },
+        {
+          "group": "子 TAG",
+          "value": "大范围"
+        },
+        {
+          "group": "子 TAG",
+          "value": "主物理伤害"
+        },
+        {
+          "group": "子 TAG",
+          "value": "主法术伤害"
+        },
+        {
+          "group": "子 TAG",
+          "value": "主真实伤害"
+        },
+        {
+          "group": "子 TAG",
+          "value": "主弱点伤害"
+        },
+        {
+          "group": "子 TAG",
+          "value": "物法混伤"
+        },
+        {
+          "group": "子 TAG",
+          "value": "物真混伤"
+        },
+        {
+          "group": "子 TAG",
+          "value": "物元混伤"
+        },
+        {
+          "group": "子 TAG",
+          "value": "法元混伤"
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "name": "次数对策",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "间隔伤害"
+        },
+        {
+          "group": "子 TAG",
+          "value": "多段伤害"
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "name": "吃拐一轮秒",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "连射"
+        },
+        {
+          "group": "子 TAG",
+          "value": "聚爆"
+        },
+        {
+          "group": "子 TAG",
+          "value": "慢热"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "name": "远程消耗",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "超远距离打击"
+        },
+        {
+          "group": "子 TAG",
+          "value": "远程部署型召唤物与装置"
+        },
+        {
+          "group": "远程部署型召唤物与装置",
+          "value": "召唤师 / 装置型召唤物"
+        },
+        {
+          "group": "子 TAG",
+          "value": "全场／无距离限制的触发式伤害"
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "name": "插拔容错",
+      "subs": [
+        {
+          "group": "救急路径",
+          "value": "部署即生效"
+        },
+        {
+          "group": "救急路径",
+          "value": "初动为满的落地点火"
+        },
+        {
+          "group": "救急路径",
+          "value": "低再部署循环"
+        },
+        {
+          "group": "救急路径",
+          "value": "能够实现重部署"
+        },
+        {
+          "group": "救急路径",
+          "value": "不占部署位"
+        },
+        {
+          "group": "救急路径",
+          "value": "远位蓄力"
+        },
+        {
+          "group": "承载方式",
+          "value": "召唤物承载"
+        },
+        {
+          "group": "救急路径",
+          "value": "撤退收益"
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "name": "初动增加",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "编入队伍"
+        },
+        {
+          "group": "子 TAG",
+          "value": "部署时点"
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "name": "充电",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "直接补充技力"
+        },
+        {
+          "group": "子 TAG",
+          "value": "技力回复速度加快"
+        },
+        {
+          "group": "子 TAG",
+          "value": "补弹"
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "name": "拐杖",
+      "subs": [
+        {
+          "group": "增益类型",
+          "value": "攻击力(加算)"
+        },
+        {
+          "group": "增益类型",
+          "value": "攻击力(倍率)"
+        },
+        {
+          "group": "增益类型",
+          "value": "攻击速度"
+        },
+        {
+          "group": "增益类型",
+          "value": "易伤(脆弱)"
+        },
+        {
+          "group": "增益类型",
+          "value": "附加伤害(友方)"
+        },
+        {
+          "group": "增益类型",
+          "value": "伤害提升(友方)"
+        },
+        {
+          "group": "减益类型",
+          "value": "削减敌方防御"
+        },
+        {
+          "group": "减益类型",
+          "value": "削减敌方法术抗性"
+        },
+        {
+          "group": "生效方式",
+          "value": "编入·携带"
+        },
+        {
+          "group": "生效方式",
+          "value": "部署时"
+        },
+        {
+          "group": "生效方式",
+          "value": "在场"
+        },
+        {
+          "group": "生效方式",
+          "value": "触发时"
+        },
+        {
+          "group": "生效方式",
+          "value": "技能开启时"
+        },
+        {
+          "group": "生效方式",
+          "value": "技能期间"
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "name": "保人",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "免死·锁血·伤害转移"
+        },
+        {
+          "group": "子 TAG",
+          "value": "闪避·迷彩"
+        },
+        {
+          "group": "子 TAG",
+          "value": "屏障·护盾"
+        },
+        {
+          "group": "子 TAG",
+          "value": "治疗·减免·防御·法抗·庇护"
+        },
+        {
+          "group": "子 TAG",
+          "value": "嘲讽·吸引火力·指定承伤"
+        },
+        {
+          "group": "子 TAG",
+          "value": "元素损伤防护"
+        },
+        {
+          "group": "子 TAG",
+          "value": "敌方减攻"
+        }
+      ]
+    },
+    {
+      "id": "P13",
+      "name": "高档控制",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "长效控制"
+        },
+        {
+          "group": "子 TAG",
+          "value": "远距控制"
+        },
+        {
+          "group": "子 TAG",
+          "value": "硬控"
+        },
+        {
+          "group": "子 TAG",
+          "value": "间歇硬控"
+        },
+        {
+          "group": "子 TAG",
+          "value": "软控"
+        },
+        {
+          "group": "子 TAG",
+          "value": "纯御天花板"
+        },
+        {
+          "group": "子 TAG",
+          "value": "阻挡数5"
+        },
+        {
+          "group": "子 TAG",
+          "value": "大力推拉"
+        },
+        {
+          "group": "远距控制",
+          "value": "独立达成"
+        },
+        {
+          "group": "远距控制",
+          "value": "需配合"
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "name": "阵容组合",
+      "subs": [
+        {
+          "group": "子 TAG",
+          "value": "势力"
+        },
+        {
+          "group": "子 TAG",
+          "value": "用法"
+        }
+      ]
+    }
+  ]
+}

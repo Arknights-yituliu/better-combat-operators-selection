@@ -3,7 +3,7 @@
 A local, single-user web panel for maintaining the operator TAG data of this repository:
 the 荐 lists, the member tables of every TAG (both TAG systems), and the final
 `results/*.json` deliverable. It is a plain Python `http.server` on `127.0.0.1`
-(stdlib only, no build step) serving three screens from `gui/static/`.
+(stdlib only, no build step) serving four screens from `gui/static/`.
 
 > The UI itself is in Chinese. This guide names every control in Chinese with an English gloss.
 
@@ -15,6 +15,7 @@ the 荐 lists, the member tables of every TAG (both TAG systems), and the final
 |---|---|---|---|
 | Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `agent_workspace/tag_pipeline/player_tags/_recommend.json` (immediately) |
 | Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
+| TAG order | TAG 排序 | Drag TAGs and sub-TAG values into the order you want (official categories, official TAGs within a category, player TAGs, each player TAG's sub-values); 保存排序 writes the order file and re-orders both products | `agent_workspace/tag_pipeline/tag_order.json`, plus `results/operator-tags.json` and `results/player-tags-criteria.json` when 保存后重排产物 is on (immediately) |
 | Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options; saving recomputes each player TAG's 荐 fields from `_recommend.json` | only when you press **保存…** |
 
 Data conventions (what belongs in 条件 vs 备注, TAG criteria, the output schema) live in
@@ -264,7 +265,10 @@ refused (you stay in the source view, with the error shown).
 * `校验` runs the `docs/output-standard.md` rules on the server and reports errors / warnings as a
   toast. It never edits anything.
 * `按规范整理` applies the mechanical rules after showing a summary of what it will change: sort
-  `tags[]` (official by category A→I, then players by `P01…P12`), sort `operators[]` by release date,
+  `tags[]` **by `tag_order.json`** (official by the file's category order, players by the file's TAG
+  order — this replaced an older rule that sorted players by numeric id, which wrongly put `P12`
+  before `P13`), re-emit each player TAG's `subOrder`, reorder every member's `subTags` and the
+  `recommendedBySub` lists, then sort `operators[]` by release date,
   drop empty `remark` / `subTags`, add missing `recommended` arrays. It deliberately does **not**
   reorder the members of 阵容组合 (that TAG is grouped by combo). Undo = reload the file.
 
@@ -297,6 +301,60 @@ Files are written as UTF-8 without BOM, `ensure_ascii=False`, two-space indent, 
 (the style of the existing `results/` files); an LF file stays LF.
 
 ---
+
+## 6b. Tab「TAG 排序」 — the display order
+
+The **display order** of everything the player sees — official TAG categories, the official TAGs
+inside each category, the player TAGs, and every player TAG's sub-TAG values — is kept in one
+hand-written file, `agent_workspace/tag_pipeline/tag_order.json` (format `tag-order/1`). This tab is
+the drag-and-drop editor for it; `tools/apply_tag_order.py` is the command-line equivalent, and
+`tools/generate_results.py` applies the same ordering while generating, so regenerating never
+scrambles the order.
+
+**Layout**: the page is a **card grid**, not a vertical list — one card per official category and one
+per player TAG, wrapping side by side (9 categories fit in ~3 rows at 1280 px). Each card holds its
+own draggable chips, so a whole category's TAGs are visible at once instead of one per screen row.
+A **pinned nav rail** sits on the right (collapsible via `收起`; the choice is remembered in
+`localStorage` under `ord.nav.v1`): click an official category or a player TAG there to scroll to its
+card and flash its header. The rail is a real column beside the scroller, so it never covers a card.
+
+**What you can drag**
+
+| Region | Draggable | Constraint |
+|---|---|---|
+| 官方设定 TAG | the category header (category order) | — |
+| 官方设定 TAG | a TAG chip (order inside its category) | **cannot leave its category** — `category` is a property of the TAG, not an ordering axis; a cross-category drop is refused |
+| 玩家体感 TAG | a TAG header (player TAG order) | — |
+| 玩家体感 TAG | the value chips under a TAG (that TAG's sub-value order) | stays within its TAG |
+
+Dropping a chip on the **blank part of a card** appends it to that card. Chips are also
+keyboard-movable (`Alt`+`←/→`, or `Alt`+`↑/↓` — same thing, since the cards wrap), because native
+HTML5 drag-and-drop is unusable with a keyboard; the keyboard path stays inside the chip's own array
+so it cannot break the two constraints above.
+
+**Unregistered and dead entries**
+
+* Rows the product has but the file does not → shown in the 未纳入顺序 tray, marked 未登记. They are
+  **not lost**: the fallback appends them to the end of their section, so the product stays valid
+  until you drag them where you want. `纳入全部未登记项` appends them all at once.
+* Entries the file has but the product no longer contains → marked 已失效 with a `×` to remove them.
+  Leaving them in makes `tools/apply_tag_order.py --check` fail, so the toolbar shows a count.
+* When a value lives inside a nested sub-TAG (e.g. 高档控制's 独立达成/需配合 under 远距控制), the row
+  shows the group it is keyed under — the file keys values by `(group, value)`, not by value alone.
+
+**Saving**
+
+`保存排序` validates the file, writes it atomically, and — with `保存后重排产物` on (default) —
+immediately re-projects the order onto `results/operator-tags.json` and
+`results/player-tags-criteria.json`. The client sends the digests it loaded so a file changed on disk
+is refused (`drift`), exactly like the 结果 JSON tab.
+
+**Version semantics**: reordering updates `updated` **only** — it never bumps `version`
+(`docs/output-standard.md` §1). The one exception was the release that introduced the `subOrder`
+field itself (a schema change, so it bumped once).
+
+Because order changes also affect the 结果 JSON tab (its in-memory copy is stale afterwards), that
+tab's loaded document is dropped when you save an order.
 
 ## 7. Why writes are safe (and when they are refused)
 
@@ -345,13 +403,15 @@ gui/
   recommends.py  荐 store helpers, apply_recommend, prune_recommend
   merges.py      subprocess wrappers for the two merge scripts
   results_json.py  filename whitelist, load/render/validate/check/save for results/*.json
+                 (also applies tag_order on save, and sorts on request for 「按规范整理」)
+  order.py       tag_order.json load/save + the view the 「TAG 排序」 tab drags
   rec_sync.py    recompute a results doc's 荐 fields from the 荐 files (generator-identical;
                  called on save; load/check use it for the drift notice)
   writeback.py   doc_registry, block resolution, apply_ops, save_cell
   model.py       the /api/data model
   server.py      Handler, routes, token, LOCK, static assets
   selfcheck.py   --check assertions
-  static/        index.html + app.css + app.js (a plain classic script; RES must stay global)
+  static/        index.html + app.css + app.js (a plain classic script; RES and ORD must stay global)
 ```
 
 Dependency direction is one-way: `config/errors/md` → data modules → `writeback/model` → `server`.
@@ -360,23 +420,30 @@ Dependency direction is one-way: `config/errors/md` → data modules → `writeb
 Things to keep in sync when you change the UI:
 
 1. **The DOM contract.** `--check` asserts that the ids/classes the acceptance scripts use still
-   exist and that `RES` is a top-level global. Renaming one without updating the scripts breaks the
+   exist and that `RES` / `ORD` are top-level globals. Renaming one without updating the scripts breaks the
    harness silently.
-2. **The skin.** `static/app.css` transcribes ak-ui's `--ak-*` tokens (MIT, © 2019 云游君 — the
+2. **Order.** Display order lives in `agent_workspace/tag_pipeline/tag_order.json` only. Do not
+   reintroduce per-TAG order constants (the deleted `P01/P08/P13_SUB_ORDER`): the generator, the CLI
+   and this panel all read the one file, and `tools/apply_tag_order.py --check` is what proves they
+   agree. Reordering the **markdown** member tables is a different thing and stays forbidden (see
+   `docs/rulings.md` §二十二).
+3. **The skin.** `static/app.css` transcribes ak-ui's `--ak-*` tokens (MIT, © 2019 云游君 — the
    header comment records provenance). Keep components to one cut corner **or** one signal bar, and
    use the tokens rather than new hard-coded colours. The density compromise (44 / 36 / 32 px) is
    documented at the top of the same file.
-3. **Static serving.** Only `index.html`, `app.css`, `app.js` are served, and `index.html` must
+4. **Static serving.** Only `index.html`, `app.css`, `app.js` are served, and `index.html` must
    contain exactly one `__TOKEN__` placeholder (the server substitutes the session token into
    `<meta name="x-token">`).
-4. **New tab checklist.** Add the `<main id="page-…" hidden>` block, a `.tab[data-tab]` button, a
+5. **New tab checklist.** Add the `<main id="page-…" hidden>` block, a `.tab[data-tab]` button, a
    branch in `setTab()`, a `render…()` call and (if it needs data) an endpoint in `server.py` plus a
-   contract entry in `selfcheck.py`.
-5. **Sub-TAG structure or representation changes.** After touching how a TAG stores its sub-TAGs
-   (sub-tables ↔ `子 TAG` column ↔ remark prefix), walk all three tabs once: 荐 (scope bar, add /
+   contract entry in `selfcheck.py`. If the page writes a new file, add it to the "写入的文件" list in
+   `gui/__main__.py` and to the 总览 table in §1.
+6. **Sub-TAG structure or representation changes.** After touching how a TAG stores its sub-TAGs
+   (sub-tables ↔ `子 TAG` column ↔ remark prefix), walk all four tabs once: 荐 (scope bar, add /
    remove), 人工归纳 (pick a sub-table → 并入 / move / remove; edit 条件 / 备注 / 子 TAG cells),
-   结果 JSON (load → 校验 → leave without saving). Then run `tools/run_all_checks.py`.
+   TAG 排序 (values of the affected TAG show up, drag one, save, undo), 结果 JSON (load → 校验 →
+   leave without saving). Then run `tools/run_all_checks.py`.
 
-Run `--check` and click through all three tabs after any change; the end-to-end Playwright scripts
+Run `--check` and click through all four tabs after any change; the end-to-end Playwright scripts
 used during development live outside the repo (in the OS temp directory) and drive the same DOM
 contract.

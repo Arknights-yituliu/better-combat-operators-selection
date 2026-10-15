@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 
 import partdoc
@@ -158,6 +159,27 @@ def run_check() -> int:
     else:
         print("  [跳过] 未找到可用于官方干跑的干员")
 
+    # ---- 排序层：顺序文件结构 ＋ 套用幂等 ----
+    try:
+        import tag_order  # noqa: PLC0415
+        order = tag_order.load()
+        oprobs = [p for p in tag_order.validate_order(order) if p["level"] == "error"]
+        for p in oprobs:
+            problems.append(f"顺序文件（tag_order.json）{p['path']}：{p['message']}")
+        rp = RESULTS_DIR / "operator-tags.json"
+        if rp.exists() and not oprobs:
+            doc = json.loads(rp.read_text(encoding="utf-8-sig"))
+            again = copy.deepcopy(doc)
+            tag_order.apply(again, order)
+            if again != doc:
+                print("[排序待同步] results/operator-tags.json 的顺序与 tag_order.json 不一致"
+                      "（跑 tools/apply_tag_order.py）")
+            dprobs = [p for p in tag_order.check_doc(doc, order) if p["level"] == "error"]
+            for p in dprobs[:5]:
+                print(f"[排序问题] {p['code']} {p['path']}：{p['message']}")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"排序层自检失败：{exc}")
+
     # ---- 静态资源与页面契约 ----
     html_path, css_path, js_path = STATIC_DIR / "index.html", STATIC_DIR / "app.css", STATIC_DIR / "app.js"
     if not STATIC_DIR.is_dir():
@@ -185,7 +207,7 @@ def run_check() -> int:
                     "psearch tsearch menu modal toast resdot resfile resstats rtcnt rtags rmembers rpanel resbody "
                     "resrc rstext rserr btnew btload btmode btsort btcheck btview btback btformat btsave btmerge "
                     "btreload btclear automerge automergewrap mok mforce mnew mver mupd mbump mprob modal-card "
-                    "row val editline tagline warnbar grouphdr blk stage-item kv dotid").split()
+                    "row val editline tagline warnbar grouphdr blk stage-item kv dotid ordbar orddot ordstats ordlist ordhint ordreload ordadopt ordsave ordapply ordbody ordnav ordnavtoggle ordnavlist").split()
         merged = html + js
         missing = [name for name in contract if (f'id="{name}"' not in merged and f"#{name}" not in merged
                                                  and f'"{name}"' not in merged and f"'{name}'" not in merged)]
@@ -193,6 +215,8 @@ def run_check() -> int:
             problems.append("页面缺少验收脚本依赖的契约名：" + "、".join(missing))
         if "const RES" not in js:
             problems.append("app.js 里 RES 必须是顶层全局（验收脚本用 page.evaluate 读它）")
+        if "const ORD" not in js:
+            problems.append("app.js 里 ORD 必须是顶层全局（「TAG 排序」页的状态）")
 
     # ---- 结果 JSON：文件名白名单 / 落盘格式 / 校验器自检 ----
     for bad in ("../x.json", "a/b.json", "a\\b.json", "x.txt", "con.json", "x.json ", ".hidden.json", "x", ""):

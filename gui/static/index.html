@@ -13,6 +13,7 @@
   <nav class="tabs">
     <button class="tab on" data-tab="zhen">荐</button>
     <button class="tab" data-tab="induce">人工归纳</button>
+    <button class="tab" data-tab="order">TAG 排序</button>
     <button class="tab" data-tab="results">结果 JSON</button>
   </nav>
   <span class="hint" id="hint"></span>
@@ -88,6 +89,26 @@
     <textarea id="rstext" spellcheck="false"></textarea>
     <div id="rserr"></div>
   </div>
+</main>
+<main id="page-order" hidden>
+  <div id="ordbar">
+    <span class="dot" id="orddot" title="有未保存的改动"></span>
+    <b>TAG 排序</b>
+    <span class="hint" id="ordstats"></span>
+    <span class="sp"></span>
+    <label class="hint"><input type="checkbox" id="ordapply" checked> 保存后重排产物</label>
+    <button id="ordreload">重新载入</button>
+    <button id="ordadopt">纳入全部未登记项</button>
+    <button id="ordsave" class="primary">保存排序</button>
+  </div>
+  <div id="ordbody">
+    <div id="ordlist"></div>
+    <aside id="ordnav" aria-label="TAG 排序导航">
+      <button id="ordnavtoggle" title="收起／展开导航">收起 ▸</button>
+      <div id="ordnavlist"></div>
+    </aside>
+  </div>
+  <div class="guide" id="ordhint" style="margin:8px"></div>
 </main>
 <div id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true"></div></div>
 <div id="toast"></div>

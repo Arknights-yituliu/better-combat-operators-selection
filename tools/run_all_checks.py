@@ -19,6 +19,7 @@ CHECKS: list[tuple[str, list[str]]] = [
     ("属性层覆盖率", [PY, "-X", "utf8", "tools/prts_stats.py", "--check"]),
     ("数值校准", [PY, "-X", "utf8", "tools/verify_numbers.py"]),
     ("生成规范与文本 lint", [PY, "-X", "utf8", "tools/generate_results.py", "--check"]),
+    ("排序层校验", [PY, "-X", "utf8", "tools/apply_tag_order.py", "--check"]),
     ("评定标准严谨版校验", [PY, "-X", "utf8", "tools/criteria_to_json.py", "--check"]),
     ("迁移守恒", [PY, "-X", "utf8", ".claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py"]),
     ("证据层审计", [PY, "-X", "utf8", "crawlers/strip_prts_noncombat.py", "--audit"]),

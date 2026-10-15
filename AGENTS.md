@@ -25,24 +25,26 @@ crawlers/crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md�
                         └─► docs/untagged-operators.md（未归 TAG 干员，随生成一并写出）
         player TAG 文案: docs/player-tags-criteria.md（严谨版源：通俗说明＋精确条件＋计算式＋对照例子）
                         └─► results/player-tags-criteria.json（tools/criteria_to_json.py；前端「查看评定标准详情」抽屉）
+        展示顺序:       agent_workspace/tag_pipeline/tag_order.json（手写：官方类别序／类内 TAG 序、玩家 TAG 序、每 TAG 取值序）
+                        └─► tools/apply_tag_order.py（只重排、不重生成）──► 两处 results/ 产物的顺序与玩家的 subOrder
 ```
 
 - `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links). 语料**只含作战信息**：章节级剧情（`干员档案`/`语音记录`/`干员密录`…）由 `STOP_SECTIONS` 整节丢弃，模组剧情、模组解锁任务、升级材料、`后勤技能` 由 `strip_noncombat()` 剥离（模组等级图标改写为 `**模组等级N**` 文本行，模组类型码保留为 `**ART-X**` 形式的文本行）。剥离压缩了行号，全仓库 `文件:行号` 引用随之整体平移，核对方式见下方 `crawlers/strip_prts_noncombat.py --audit`。
-- `agent_workspace/tag_pipeline/` — official-TAG machine-readable dicts (`catalog.json` = TAG dictionary — the only dict scripts read, `merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons — a snapshot that does not follow TAG changes; `merged.json` / `final_lists.tsv` rebuilt by `_merge_official_to_docs.py --sync-dicts`; `final_lists.tsv` = TAG→members)、`stats.json`（**机读属性层**：每干员的 E0–E2 满级攻击／信赖上限／潜能各档／模组各档固定属性，由 `tools/prts_stats.py` 从 PRTS 语料抽取；面板与档位的唯一取数处）与 `player_tags/` for the player-TAG workflow.
+- `agent_workspace/tag_pipeline/` — official-TAG machine-readable dicts (`catalog.json` = TAG dictionary — the only dict scripts read；另有一份**非字典**手写机读源 `tag_order.json` = TAG／取值的展示顺序（见数据流图），`merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons — a snapshot that does not follow TAG changes; `merged.json` / `final_lists.tsv` rebuilt by `_merge_official_to_docs.py --sync-dicts`; `final_lists.tsv` = TAG→members)、`stats.json`（**机读属性层**：每干员的 E0–E2 满级攻击／信赖上限／潜能各档／模组各档固定属性，由 `tools/prts_stats.py` 从 PRTS 语料抽取；面板与档位的唯一取数处）与 `player_tags/` for the player-TAG workflow.
 - `agent_workspace/` — agent 工作区（各子目录用途见 `agent_workspace/README.md`）：`tag_pipeline/` 为 TAG 判定文件与机读字典所在；`_out/` 为临时批次目录（本地，不进库）；`workdocs/` 存《待裁定.md》《待验证复算.md》等工作稿（本地，不进库，模板在 `docs/templates/`）；`handoff/` 存转交状态快照（本地，不进库）。
-- `crawlers/` — PRTS 爬取与语料剥离（`crawl_prts.py`、`crawl_ranges.py`、`crawl_special_mechanics.py`、`strip_prts_noncombat.py`）；`tools/` — 生成与校验工具（`prts_stats.py`、`verify_numbers.py`、`generate_results.py`、`glossary_to_json.py`、`criteria_to_json.py`、`module_notes.py`、`recommend.py`、`run_all_checks.py`、`sync_results.py`）。根目录只保留 GUI 入口 `recommend_gui.py` 与启动脚本。
+- `crawlers/` — PRTS 爬取与语料剥离（`crawl_prts.py`、`crawl_ranges.py`、`crawl_special_mechanics.py`、`strip_prts_noncombat.py`）；`tools/` — 生成与校验工具（`prts_stats.py`、`verify_numbers.py`、`generate_results.py`、`apply_tag_order.py`、`glossary_to_json.py`、`criteria_to_json.py`、`module_notes.py`、`recommend.py`、`run_all_checks.py`、`sync_results.py`）。根目录只保留 GUI 入口 `recommend_gui.py` 与启动脚本。
 - `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls (dated notes — their counts reflect the day they were written; current lists live in the member docs).
 - `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows (the one place those writing rules live); `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐); `docs/untagged-operators.md` — 未归入任何 TAG 的干员（auto-written by `tools/generate_results.py`: full roster minus `operators[]`). `docs/player-tags-specify.md` — 玩家 TAG 定义（开发者手改）; `docs/calc-rules.md` — 计算规则正本（结算层位与总式、游戏文本→因素映射、演算流程、未定项索引），数值门槛与术语只作指针指向 `docs/player-tags-specify.md`／`docs/glossary.md`; `docs/ui-render-rules.md` — 消费端（前端项目）渲染规则记录，改 JSON 结构时对照之.
-- `gui/` — the maintenance panel as a package: `config/errors/md` (leaf) → `tags/roster/recommends/merges/results_json` (data) → `writeback/model` (business) → `server/selfcheck/__main__`; page assets in `gui/static/` (`index.html` + `app.css` + `app.js`, styled with ak-ui dark tokens — see the CSS header for provenance and the density compromise). `recommend_gui.py` at the root is a thin entry point (`python -m gui` is equivalent). Usage guide (English): `gui/README.md`.
+- `gui/` — the maintenance panel as a package: `config/errors/md` (leaf) → `tags/roster/recommends/merges/results_json/order` (data) → `writeback/model` (business) → `server/selfcheck/__main__`; page assets in `gui/static/` (`index.html` + `app.css` + `app.js`, styled with ak-ui dark tokens — see the CSS header for provenance and the density compromise). `recommend_gui.py` at the root is a thin entry point (`python -m gui` is equivalent). Usage guide (English): `gui/README.md`.
 - The UI itself is **out of scope** for this repo (the panel above is a maintainer tool, not the product UI).
 
 ### File authority map (what to trust, what to edit)
 
 Read only what the task needs; the two member docs and the two results JSONs are large — read them by §／target TAG, never whole.
 
-**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md`）、**`docs/rulings.md`（裁定台账：开发者对判断类问题的裁定逐条留痕——裁定／理由／适用范围／折入位置；判断类问题先查它，别再问第二遍）**、`docs/term-map.md`（代称映射表：一切自创代称／缩写／自编号的含义与查阅位置，改动或新增代称时同步）、`agent_workspace/tag_pipeline/official_tags/[A-I]-*.json`（官方 TAG 定义与成员，tag-part/1 JSON，GUI 写回可改）、`agent_workspace/tag_pipeline/player_tags/NN-*.json`（玩家 TAG 判定＋证据，tag-part/1 JSON；`_brief.md` 为作业规范）、**`docs/player-tags-criteria.md`（玩家 TAG 评定标准严谨版：前端抽屉文案源，撰写要求见其文件头；由分文件评定标准转述、`tools/criteria_to_json.py` 校验指纹）**、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawlers/crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`。
+**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md`）、**`docs/rulings.md`（裁定台账：开发者对判断类问题的裁定逐条留痕——裁定／理由／适用范围／折入位置；判断类问题先查它，别再问第二遍）**、`docs/term-map.md`（代称映射表：一切自创代称／缩写／自编号的含义与查阅位置，改动或新增代称时同步）、`agent_workspace/tag_pipeline/official_tags/[A-I]-*.json`（官方 TAG 定义与成员，tag-part/1 JSON，GUI 写回可改）、`agent_workspace/tag_pipeline/player_tags/NN-*.json`（玩家 TAG 判定＋证据，tag-part/1 JSON；`_brief.md` 为作业规范）、**`docs/player-tags-criteria.md`（玩家 TAG 评定标准严谨版：前端抽屉文案源，撰写要求见其文件头；由分文件评定标准转述、`tools/criteria_to_json.py` 校验指纹）**、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawlers/crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`、**`agent_workspace/tag_pipeline/tag_order.json`（TAG／取值的展示顺序，唯一维护处；维护面板「TAG 排序」页或 `tools/apply_tag_order.py`）**。
 
-**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `tools/generate_results.py`；`results/combat_glossary.json` ← `tools/glossary_to_json.py`；`results/player-tags-criteria.json` ← `tools/criteria_to_json.py`；`docs/module-hidden-mechanics.md`（各模组「※」隐藏机制汇编）← `tools/module_notes.py --emit`（源＝`docs/temp.txt`）；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）。
+**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `docs/untagged-operators.md` ← `tools/generate_results.py`；`results/combat_glossary.json` ← `tools/glossary_to_json.py`；`results/player-tags-criteria.json` ← `tools/criteria_to_json.py`；`docs/module-hidden-mechanics.md`（各模组「※」隐藏机制汇编）← `tools/module_notes.py --emit`（源＝`docs/temp.txt`）；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）；`results/operator-tags.json` 与 `results/player-tags-criteria.json` 的**顺序**另有第二个写者 `tools/apply_tag_order.py`（只重排、不重生成）。
 
 **属性与数值工具（非生成链路，按需运行）**: `tools/prts_stats.py`（PRTS 语料 → `stats.json`，并提供 `panel_of()` 面板复算）与 `tools/verify_numbers.py`（对着 `stats.json` 校准产物里的面板／档位／恒等式／内部代号／因子覆盖）。两者与 `stats.json` 一样是**生成物**：改 `stats.json` 要改爬虫侧或重跑 `tools/prts_stats.py`，不手改。
 
@@ -110,18 +112,28 @@ Read only what the task needs; the two member docs and the two results JSONs are
 # Generate the final results JSON from both member docs (spec: docs/output-standard.md §7)
 .venv/Scripts/python.exe -X utf8 tools/generate_results.py          # --check / --report
 #   writes results/operator-tags.json; --check validates against the spec without writing
+#   applies tag_order.json ordering in memory, so regenerating never scrambles the display order
+
+# Re-order the two results products to the order kept in tag_order.json (re-order only, no regeneration)
+.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py           # 套用；无变化则不写盘（幂等）
+.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py --check   # 一致性校验（run_all_checks 的第 8 步用这个）
+.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py --seed    # 把产物有、顺序文件没登记的项补到各段末尾（--rebuild 整体重建）
 
 # Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
 .venv/Scripts/python.exe -X utf8 tools/recommend.py list|add|remove|check   # 例：tools/recommend.py add 充电 白铁
-# Local web panel, three tabs:
+# Local web panel, four tabs:
 #   「荐」= 荐 add/remove (详情 = info card + read-only 条件/备注 in the right column);
 #   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
 #     target 子表, and edit 条件/备注 (writes back to player_tags/NN-*.json and official_tags/[A-I]-*.json;
 #     recomputes official 条目头);
+#   「TAG 排序」= drag TAGs / sub-TAG values into the display order kept in
+#     agent_workspace/tag_pipeline/tag_order.json; saving re-projects the order onto both results
+#     products (updates `updated` only, never `version`);
 #   「结果 JSON」= load results/*.json into memory (or start from a spec-shaped skeleton), edit with
 #     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
 #     written until 保存, and validation against docs/output-standard.md only warns, never blocks;
-#     保存时按 _recommend.json／_recommend_fallback.json 重算各玩家 TAG 的荐字段（面板内荐只读）。
+#     保存时先按 tag_order.json 重排顺序、再按 _recommend.json／_recommend_fallback.json 重算各玩家
+#     TAG 的荐字段（面板内荐只读）。
 .venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
 .venv/Scripts/python.exe -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
 

@@ -45,6 +45,7 @@
 | `source` | 分成「官方设定 TAG」「玩家体感 TAG」两块；**荐资格只认 `player`** | — |
 | `category` | 官方 TAG 的分组小标题（现状 9 类，按 JSON 顺序） | 按「其它」归组 |
 | `members` | 筛选与详情的全部数据源 | 空数组合法 |
+| `subOrder` | **筛选条子 TAG chip 的排列顺序**：元素 `{group, value}`，按 `group\|value` 查位次（未命中的排末尾）。**玩家 TAG 才有**；缺该字段＝该 TAG 不建模取值序 | 回退「跨成员首次出现序」（`P01` 另有一张硬编码兜底表） |
 | `recommended` | 荐名单 | 缺省视为空数组（官方 TAG 现状无此字段） |
 
 ### 2.3 `members[]`
@@ -73,7 +74,7 @@
 | `opTagIds` | `干员名 → TAG id[]` | 未筛选时卡片上的 TAG chips、详情卡片的条目选择都用它 |
 | `recSets` | `tagId → Set(荐名单)` | — |
 | `recTagIdsByName` | `干员名/组合名 → 荐它的 TAG id[]` | 由 `recSets` 倒排，避免逐张卡片重复扫描全部 TAG |
-| `subOptionsByTag` | `tagId → [{key, group, value}]` | 由该 TAG 全部成员的 `subTags` 去重而来；**`P12` 的子项＝组合名**（`key = combo|组合名`），并按 §5.2 的组合顺序排列 |
+| `subOptionsByTag` | `tagId → [{key, group, value}]` | 由该 TAG 全部成员的 `subTags` 去重而来，**再按该 TAG 的 `subOrder` 排序**（缺 `subOrder` 时回退首次出现序）；**`P12` 的子项＝组合名**（`key = combo|组合名`），并按 §5.2 的组合顺序排列 |
 | `p12Combos` | `P12.members` 中带 `combo` 的条目 | 已按 §5.2 的组合顺序排好 |
 | `providersCharId` / `providersRarity` | `干员名 → charId / rarity` | 由 `operators[]` 建，用于组合卡片的提供者头像 |
 
@@ -253,6 +254,7 @@
 | 11 | `subTags` 的 `group` / `value` 是任意字符串 | 现状 8 个组名（作用范围 / 闪避类型 / 子 TAG / 远程部署型召唤物与装置 / 救急路径 / 承载方式 / 增益类型 / 生效方式） | 前端只做 `{group,value}` 去重与精确匹配，不解释其含义，新增组名无需改动 |
 | 12 | 同一 TAG 内同一干员可以有多条条目 | 是（偶有干员在同一 TAG 下存在多条） | 前端聚合为条目数组并列展示，不会被覆盖 |
 | 13 | `remark` 是块数组，每块 `items` 非空 | 是（由 `tools/generate_results.py` 解析保证） | 前端按 `remark.map(...)` 渲染；若退回字符串，函数内置了「单块单条」的降级分支；`items` 为空的块会渲染成空标题 |
+| 14 | **`subOrder` 是加法字段**：玩家 TAG 缺它时退回首次出现序（`P01` 另有硬编码兜底），官方 TAG 本就不带它 | 是 | 不重新同步副本则子 TAG chip 序不变（不会报错）——即「改了顺序但页面没变」时先查副本是否已更新 |
 
 ---
 

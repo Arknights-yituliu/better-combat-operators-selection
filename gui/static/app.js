@@ -758,6 +758,49 @@ const RES_CATS = ["A 控制·异常", "B 伤害类型", "C 生存与增益", "D 
   "F 治疗与支援", "G 召唤物", "H 攻击行为特征", "I 全场光环"];
 const RES_ANCHORS = ["", "#技能", "#天赋", "#模组", "#召唤物信息"];
 
+// ---------------------------------------------------------------- TAG 排序：状态
+
+// 顺序的唯一维护处是 agent_workspace/tag_pipeline/tag_order.json；本页只把它读出来、
+// 让开发者拖拽后写回，并可顺带把两处产物重排（服务端同一实现）。
+const ORD = {
+  order: null, view: null, stale: null, expect: null, loaded: false,
+  dirty: false, busy: false, drag: null,
+};
+
+async function ordLoad(force) {
+  if (ORD.dirty && !force && !confirm("「TAG 排序」有未保存的改动，重新载入会丢弃它们。继续？")) return;
+  const j = await api("/api/tag-order/load", {});
+  ORD.order = j.order; ORD.view = j.view; ORD.stale = j.stale;
+  ORD.expect = {digest: j.digest}; ORD.loaded = true; ORD.dirty = false;
+  renderOrder();
+  if (j.problems && j.problems.length) toast(`顺序文件有 ${j.problems.length} 条问题（见页底）`);
+}
+
+async function ordSave() {
+  if (!ORD.loaded || ORD.busy) return;
+  const apply = document.getElementById("ordapply").checked;
+  ORD.busy = true;
+  try {
+    const j = await api("/api/tag-order/save", {order: ORD.order, expect: ORD.expect, apply});
+    ORD.expect = {digest: j.digest}; ORD.dirty = false;
+    const a = j.applied && j.applied["operator-tags.json"];
+    const c = a && a.counts ? Object.entries(a.counts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join("、") : "";
+    toast(apply && a
+      ? (a.changed ? `已保存并重排产物（${c || "顺序调整"}）；version 未变、updated 已更新` : "已保存；产物本就符合该顺序，未写盘")
+      : "已保存排序文件（未重排产物）");
+    await ordLoad(true);
+    if (apply) { RES.doc = null; }   // 结果 JSON 页的内存副本已过期
+  } finally {
+    ORD.busy = false;
+    ordMark();
+  }
+}
+
+function ordMark() {
+  const d = document.getElementById("orddot");
+  if (d) d.classList.toggle("on", ORD.dirty);
+}
+
 const serialize = d => JSON.stringify(d, null, 2);
 function resShape(d) {
   if (d === null || typeof d !== "object" || Array.isArray(d)) return "notobject";
@@ -1590,13 +1633,19 @@ function renameOperator(i, value) {
 
 // ---- 文档级整理 / 校验
 
-function resSortAll() {
-  const doc = RES.doc;
-  const rank = t => (t.source === "official" ? 0 : 1) * 10000 +
-    (t.source === "official" ? Math.max(0, RES_CATS.indexOf(t.category)) : (parseInt(String(t.id || "").replace(/\D/g, ""), 10) || 99));
-  const ordered = doc.tags.map((t, i) => ({t, i})).sort((a, b) => rank(a.t) - rank(b.t));
-  const tagOrder = ordered.filter((x, k) => x.i !== k).length;
-  const opsSorted = doc.operators.slice().sort((a, b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || "")));
+async function resSortAll() {
+  if (RES.doc === null) return toast("先加载一个结果文件");
+  if (RES.view === "src" && !RES.srcParsed) return toast("源码视图里有未解析的错误，先修好再整理", true);
+  // 顺序（TAG／子 TAG／每条成员的 subTags）在服务端按 tag_order.json 重排——与生成器、命令行同一实现，
+  // 浏览器侧不再自带第二份排序算法（旧实现按玩家 id 数字序，会把 P12 排到 P13 前）。
+  const j = await api("/api/results/sort", {text: curText()});
+  const doc = JSON.parse(j.text);
+  const c = j.changes || {};
+  const orderChanges = (c.tags || 0) + (c.subOrder || 0) + (c.subTags || 0) + (c.recommendedBySub || 0);
+
+  // 下列机械项不依赖顺序文件，仍在本地做（与旧行为一致）
+  const opsSorted = doc.operators.slice().sort((x, y) =>
+    String(y.releaseDate || "").localeCompare(String(x.releaseDate || "")));
   const opOrder = opsSorted.filter((o, k) => doc.operators[k] !== o).length;
   let emptyRemark = 0, emptySub = 0, missingRec = 0;
   doc.tags.forEach(t => {
@@ -1606,12 +1655,13 @@ function resSortAll() {
     });
     if (t.source === "player" && !Array.isArray(t.recommended)) missingRec++;
   });
-  const total = tagOrder + opOrder + emptyRemark + emptySub + missingRec;
+  const total = orderChanges + opOrder + emptyRemark + emptySub + missingRec;
   if (!total) return toast("已经符合规范，无需整理");
-  if (!confirm("将调整：TAG 顺序 " + tagOrder + " 处、干员顺序 " + opOrder + " 处、删除空备注 " + emptyRemark +
-      " 处、删除空子 TAG " + emptySub + " 处、补 recommended " + missingRec + " 处。\n（只改内存，保存前不写盘；阵容组合 P12 的成员顺序不动）继续？")) return;
+  if (!confirm("将调整：TAG／子 TAG／成员子 TAG 顺序 " + orderChanges + " 处（按 TAG 排序文件）、干员顺序 " +
+      opOrder + " 处、删除空备注 " + emptyRemark + " 处、删除空子 TAG " + emptySub + " 处、补 recommended " +
+      missingRec + " 处。\n（只改内存，保存前不写盘；阵容组合 P12 的成员顺序不动）继续？")) return;
+
   const keepId = resTag() ? resTag().id : null;
-  doc.tags = ordered.map(x => x.t);
   doc.operators = opsSorted;
   doc.tags.forEach(t => {
     (t.members || []).forEach(m => {
@@ -1620,10 +1670,11 @@ function resSortAll() {
     });
     if (t.source === "player" && !Array.isArray(t.recommended)) t.recommended = [];
   });
+  RES.doc = doc;
   RES.sel.tag = keepId ? Math.max(0, doc.tags.findIndex(t => t.id === keepId)) : 0;
   RES.sel.mi = -1;
   resMark(); renderResults();
-  toast("已按规范整理（共 " + total + " 处）");
+  toast("已按规范整理（共 " + total + " 处，其中顺序 " + orderChanges + " 处）");
 }
 async function resDoCheck() {
   const text = curText();
@@ -1837,21 +1888,425 @@ function renderAll() {
   renderTags(); renderOps(); renderDetail();
   renderInd(); renderIndList(); renderPicker();
 }
+// ---------------------------------------------------------------- TAG 排序：渲染与拖拽
+
+// 卡片式布局：一张卡＝一个类别（官方）或一个 TAG（玩家），卡内是可拖的取值卡片。
+// 渲染只依赖 ORD.order 的**结构**＋按 id 建的显示索引；拖动只改 ORD.order，故两者天然同步。
+function ordIndex() {
+  const off = new Map(), pl = new Map();
+  const V = ORD.view || {official: [], player: []};
+  for (const c of V.official) for (const t of c.tags) off.set(t.id, t);
+  for (const t of V.player) pl.set(t.id, t);
+  return {off, pl};
+}
+
+function ordStats() {
+  const O = ORD.order;
+  if (!O) return "";
+  const nOff = O.official.categories.reduce((a, c) => a + c.tags.length, 0);
+  const nSub = O.player.reduce((a, t) => a + t.subs.length, 0);
+  return "官方 " + nOff + " 个 TAG／" + O.official.categories.length + " 类 · 玩家 " + O.player.length
+    + " 个 TAG · 取值 " + nSub + " 项";
+}
+
+function ordEl(tag, cls, attrs, kids) {
+  const d = document.createElement(tag);
+  if (cls) d.className = cls;
+  for (const k in attrs || {}) d.setAttribute(k, attrs[k]);
+  for (const k of kids || []) d.append(k);
+  return d;
+}
+function ordTxt(tag, cls, text) {
+  return ordEl(tag, cls, {}, [document.createTextNode(text)]);
+}
+
+function renderOrder() {
+  const box = document.getElementById("ordlist");
+  const stat = document.getElementById("ordstats");
+  box.textContent = "";
+  if (!ORD.loaded) { box.append(ordTxt("div", "guide", "正在载入…")); return; }
+  const O = ORD.order, idx = ordIndex();
+  const staleOff = new Set(ORD.stale.official), staleP = new Set(ORD.stale.player);
+  const staleSub = new Set(ORD.stale.subs.map(x => x.tag + "|" + x.group + "|" + x.value));
+  const miss = (ORD.view && ORD.view.missing) || {official: [], player: [], subs: []};
+
+  // ---- 官方设定 TAG：每类一张卡（卡头可拖＝类别序，卡内 TAG 可拖＝类内序） ----
+  const secOff = ordEl("div", "ordsec", {}, [
+    ordEl("h4", "", {}, [document.createTextNode("官方设定 TAG"),
+      ordTxt("span", "ordn", "类别可拖 · 类内 TAG 可拖（不跨类）")])]);
+  const gridOff = ordEl("div", "ordgrid", {});
+  O.official.categories.forEach((c, ci) => {
+    const chips = ordEl("div", "ordchips", {"data-drop": "cat", "data-ci": String(ci)});
+    c.tags.forEach((t, ti) => {
+      const v = idx.off.get(t.id) || {};
+      const gone = v.present === false || staleOff.has(t.id);
+      const item = ordEl("div", "orditem" + (gone ? " stale" : ""),
+        {draggable: "true", "data-kind": "otag", "data-ci": String(ci), "data-ti": String(ti), tabindex: "0"}, [
+          ordTxt("span", "ordgrip", "⋮⋮"),
+          ordTxt("span", "ordnm", v.name || t.name || t.id),
+          ordTxt("code", "", t.id),
+          ordTxt("span", "ordn", gone ? "已失效" : (v.members || 0) + " 人")]);
+      if (gone) {
+        const x = ordTxt("button", "ordx", "×");
+        x.type = "button";
+        x.title = "从顺序文件移除";
+        x.dataset.del = "otag"; x.dataset.ci = String(ci); x.dataset.ti = String(ti);
+        item.append(x);
+      }
+      chips.append(item);
+    });
+    const head = ordEl("div", "ordcat",
+      {draggable: "true", "data-kind": "cat", "data-ci": String(ci), tabindex: "0"},
+      [ordTxt("span", "ordgrip", "⋮⋮"), ordTxt("b", "", c.key),
+       ordTxt("span", "ordn", c.tags.length + " 个 TAG")]);
+    gridOff.append(ordEl("div", "ordgrp", {"data-ci": String(ci)}, [head, chips]));
+  });
+  secOff.append(gridOff);
+  box.append(secOff);
+
+  // ---- 玩家体感 TAG：每个 TAG 一张卡 ----
+  const secPl = ordEl("div", "ordsec", {}, [
+    ordEl("h4", "", {}, [document.createTextNode("玩家体感 TAG"),
+      ordTxt("span", "ordn", "TAG 可拖 · 每个 TAG 的取值也可拖")])]);
+  const gridPl = ordEl("div", "ordgrid", {});
+  O.player.forEach((t, ti) => {
+    const v = idx.pl.get(t.id) || {};
+    const gone = v.present === false || staleP.has(t.id);
+    const head = ordEl("div", "ordcat player" + (gone ? " stale" : ""),
+      {draggable: "true", "data-kind": "ptag", "data-ti": String(ti), tabindex: "0"},
+      [ordTxt("span", "ordgrip", "⋮⋮"), ordTxt("b", "", v.name || t.name || t.id),
+       ordTxt("code", "", t.id),
+       ordTxt("span", "ordn", gone ? "已失效" : (v.members || 0) + " 人")]);
+    if (gone) {
+      const x = ordTxt("button", "ordx", "×");
+      x.type = "button"; x.title = "从顺序文件移除";
+      x.dataset.del = "ptag"; x.dataset.ti = String(ti);
+      head.append(x);
+    }
+    const chips = ordEl("div", "ordchips", {"data-drop": "tags", "data-ti": String(ti)});
+    t.subs.forEach((sb, si) => {
+      const dead = gone || staleSub.has(t.id + "|" + sb.group + "|" + sb.value);
+      const found = dead ? null : (v.subs || []).filter(x => x.group === sb.group && x.value === sb.value)[0];
+      const cnt = (found && found.members) || 0;
+      const item = ordEl("div", "orditem ordsub" + (dead ? " stale" : ""),
+        {draggable: "true", "data-kind": "psub", "data-ti": String(ti), "data-si": String(si), tabindex: "0"}, [
+          ordTxt("span", "ordgrip", "⋮⋮"),
+          ordTxt("span", "ordnm", sb.value),
+          ordTxt("span", "ordn", sb.group + (dead ? " · 已失效" : " · " + cnt + " 人"))]);
+      if (dead) {
+        const x = ordTxt("button", "ordx", "×");
+        x.type = "button"; x.title = "从顺序文件移除";
+        x.dataset.del = "psub"; x.dataset.ti = String(ti); x.dataset.si = String(si);
+        item.append(x);
+      }
+      chips.append(item);
+    });
+    gridPl.append(ordEl("div", "ordgrp", {"data-ti": String(ti)}, [head, chips]));
+  });
+  secPl.append(gridPl);
+  box.append(secPl);
+
+  // ---- 未纳入顺序 ----
+  const nM = miss.official.length + miss.player.length + miss.subs.length;
+  if (nM) {
+    const secMiss = ordEl("div", "ordsec", {}, [
+      ordEl("h4", "", {}, [document.createTextNode("未纳入顺序"),
+        ordTxt("span", "ordn", "产物里有、顺序文件还没登记——拖进目标卡片，或点「纳入全部未登记项」")])]);
+    const grid = ordEl("div", "ordgrid", {});
+    const mk = (cls, attrs, name, code, note) => {
+      const kids = [ordTxt("span", "ordgrip", "⋮⋮"), ordTxt("span", "ordnm", name)];
+      if (code) kids.push(ordTxt("code", "", code));
+      kids.push(ordTxt("span", "ordn", note));
+      return ordEl("div", cls, Object.assign({draggable: "true", tabindex: "0"}, attrs), kids);
+    };
+    for (const t of miss.official) {
+      grid.append(ordEl("div", "ordgrp whole", {}, [mk("ordcat missing",
+        {"data-kind": "miss-otag", "data-id": t.id}, t.name || t.id, t.id,
+        (t.category || "") + " · " + (t.members || 0) + " 人 · 未登记")]));
+    }
+    for (const t of miss.player) {
+      grid.append(ordEl("div", "ordgrp whole", {}, [mk("ordcat player missing",
+        {"data-kind": "miss-ptag", "data-id": t.id}, t.name || t.id, t.id,
+        (t.members || 0) + " 人 · 未登记")]));
+    }
+    for (const x of miss.subs) {
+      grid.append(ordEl("div", "ordgrp whole", {}, [mk("orditem missing",
+        {"data-kind": "miss-psub", "data-ti": x.tag, "data-g": x.group, "data-v": x.value},
+        x.value, "", x.tag + " · " + x.group + " · 未登记")]));
+    }
+    secMiss.append(grid);
+    box.append(secMiss);
+  }
+
+  if (stat) stat.textContent = ordStats() + (nM ? " · 未登记 " + nM + " 项" : "");
+  const hint = document.getElementById("ordhint");
+  if (hint) {
+    const dead = ORD.stale.official.length + ORD.stale.player.length + ORD.stale.subs.length;
+    hint.innerHTML = "拖拽调整顺序 → 「保存排序」。官方 TAG 只能在自己类别内拖动（category 是 TAG 的属性，不是排序轴）。"
+      + "标「已失效」的项在产物里已不存在，点 × 移除（留着会让排序层校验报错）。"
+      + (dead ? " 当前失效项 " + dead + " 个。" : "")
+      + "<br>保存后会按本顺序重排 <code>results/operator-tags.json</code> 与 <code>results/player-tags-criteria.json</code>：只更新 <code>updated</code>，<b>不递增 version</b>。";
+  }
+  renderOrdNav();
+  ordMark();
+}
+
+// ---- 固钉式悬浮导航（可收起）：点一项滚到对应卡片 ----
+function renderOrdNav() {
+  const host = document.getElementById("ordnavlist");
+  if (!host) return;
+  host.textContent = "";
+  const O = ORD.order;
+  if (!O) return;
+  const add = (label, cls, sel) => {
+    const b = ordTxt("button", "ordnavbtn" + (cls ? " " + cls : ""), label);
+    b.type = "button";
+    b.onclick = () => ordScrollTo(sel, b);
+    host.append(b);
+  };
+  host.append(ordTxt("div", "ordnavsec", "官方类别"));
+  O.official.categories.forEach((c, ci) => add(c.key, "", '.ordgrp[data-ci="' + ci + '"]'));
+  host.append(ordTxt("div", "ordnavsec", "玩家体感 TAG"));
+  O.player.forEach((t, ti) => {
+    const v = ((ORD.view || {}).player || []).filter(x => x.id === t.id)[0] || {};
+    add(t.id + " " + (v.name || t.name || ""), "player", '.ordgrp[data-ti="' + ti + '"]');
+  });
+}
+
+function ordScrollTo(sel, btn) {
+  const list = document.getElementById("ordlist");
+  const el = list.querySelector(sel);
+  if (!el) return;
+  list.scrollTo({top: Math.max(0, el.offsetTop - 8), behavior: "smooth"});
+  const head = el.querySelector(".ordcat");
+  if (head) {
+    head.classList.remove("flash");
+    void head.offsetWidth;                 // 强制重排以重启动画
+    head.classList.add("flash");
+    setTimeout(() => head.classList.remove("flash"), 700);
+  }
+  document.querySelectorAll(".ordnavbtn").forEach(b => b.classList.remove("on"));
+  if (btn) btn.classList.add("on");
+}
+
+function ordNavSet(open) {
+  const nav = document.getElementById("ordnav");
+  const btn = document.getElementById("ordnavtoggle");
+  if (!nav) return;
+  nav.classList.toggle("collapsed", !open);
+  if (btn) btn.textContent = open ? "收起 ▸" : "◂ 导航";
+  try { localStorage.setItem("ord.nav.v1", open ? "1" : "0"); } catch (e) { /* 隐私模式忽略 */ }
+}
+
+// 拖拽：定位源在 ORD.order 里的哪一段数组
+function ordLocate(kind, el) {
+  const O = ORD.order;
+  if (kind === "cat") return {arr: O.official.categories, i: +el.dataset.ci};
+  if (kind === "otag") return {arr: O.official.categories[+el.dataset.ci].tags, i: +el.dataset.ti, ci: +el.dataset.ci};
+  if (kind === "ptag") return {arr: O.player, i: +el.dataset.ti};
+  if (kind === "psub") return {arr: O.player[+el.dataset.ti].subs, i: +el.dataset.si, ti: +el.dataset.ti};
+  return null;
+}
+
+// 拖拽后重排数组（把 from 移到 to 之前／之后）
+function ordReindex(arr, from, to, after) {
+  const moved = arr.splice(from, 1)[0];
+  let at = to;
+  if (from < to) at -= 1;
+  arr.splice(after ? at + 1 : at, 0, moved);
+}
+
+function ordClearMarks() {
+  document.querySelectorAll(".over-before,.over-after,.over-drop")
+    .forEach(r => r.classList.remove("over-before", "over-after", "over-drop"));
+}
+
+function ordWire() {
+  const box = document.getElementById("ordlist");
+  box.addEventListener("dragstart", e => {
+    const row = e.target.closest("[draggable]");
+    if (!row) return;
+    ORD.drag = {kind: row.dataset.kind, el: row, id: row.dataset.id || ""};
+    row.classList.add("drag");
+    try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", row.dataset.kind); } catch (ignored) { /* 老浏览器 */ }
+  });
+  box.addEventListener("dragend", () => { ordClearMarks(); ORD.drag = null; });
+  box.addEventListener("dragover", e => {
+    if (!ORD.drag) return;
+    const dst = e.target.closest(".orditem,.ordcat,.ordchips");
+    ordClearMarks();
+    if (!dst) return;
+    if (dst.classList.contains("ordchips")) {         // 落到卡片空白处＝追加到该卡末尾
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = "move"; } catch (ignored) { /* 同上 */ }
+      const grp = dst.closest(".ordgrp");
+      if (grp) grp.classList.add("over-drop");
+      return;
+    }
+    if (dst === ORD.drag.el) return;
+    // 卡片横向排列，按 X 中点判前后
+    const after = (e.clientX - dst.getBoundingClientRect().left) > dst.offsetWidth / 2;
+    dst.classList.add(after ? "over-after" : "over-before");
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = "move"; } catch (ignored) { /* 同上 */ }
+  });
+  box.addEventListener("drop", e => {
+    if (!ORD.drag) return;
+    const dst = e.target.closest(".orditem,.ordcat,.ordchips");
+    if (!dst) return;
+    e.preventDefault();
+    let after = false;
+    if (!dst.classList.contains("ordchips")) {
+      after = dst.classList.contains("over-after")
+        || (e.clientX - dst.getBoundingClientRect().left) > dst.offsetWidth / 2;
+    }
+    ordDrop(ORD.drag, dst, after);
+    ordClearMarks();
+  });
+  box.addEventListener("click", e => {
+    const x = e.target.closest("[data-del]");
+    if (!x) return;
+    const O = ORD.order, k = x.dataset.del;
+    if (k === "otag") O.official.categories[+x.dataset.ci].tags.splice(+x.dataset.ti, 1);
+    else if (k === "ptag") O.player.splice(+x.dataset.ti, 1);
+    else if (k === "psub") O.player[+x.dataset.ti].subs.splice(+x.dataset.si, 1);
+    ORD.dirty = true; renderOrder();
+  });
+  // 键盘兜底（原生拖拽不可键盘操作）：在**所属数组内**前后移动。
+  // 卡片是换行排列的网格，故 ←/→ 与 ↑/↓ 同义——不跨卡片移动，免得越过「官方 TAG 不跨类」「取值不跨 TAG」两条约束。
+  box.addEventListener("keydown", e => {
+    if (!e.altKey) return;
+    const step = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -1, ArrowDown: 1}[e.key];
+    if (step === undefined) return;
+    const row = e.target.closest("[draggable]");
+    if (!row) return;
+    const a = ordLocate(row.dataset.kind, row);
+    if (!a) return;
+    const j = a.i + step;
+    if (j < 0 || j >= a.arr.length) return;
+    e.preventDefault();
+    a.arr.splice(j, 0, a.arr.splice(a.i, 1)[0]);
+    ORD.dirty = true;
+    const kind = row.dataset.kind, ci = row.dataset.ci, ti = row.dataset.ti;
+    renderOrder();
+    const sel = '[data-kind="' + kind + '"]'
+      + (ci !== undefined ? '[data-ci="' + ci + '"]' : '')
+      + (ti !== undefined ? '[data-ti="' + ti + '"]' : '');
+    const el = box.querySelector(sel);
+    if (el) el.focus();
+  });
+}
+
+function ordDrop(src, dst, after) {
+  const O = ORD.order;
+  const isChips = dst.classList.contains("ordchips");
+  const grp = dst.closest(".ordgrp") || dst;
+
+  // 1) 未登记的项 → 落进目标卡片（按卡片类型决定归属）
+  if (src.kind.indexOf("miss-") === 0) {
+    if (src.kind === "miss-otag") {
+      const ci = isChips ? +dst.dataset.ci : +grp.dataset.ci;
+      const t = (ORD.view.missing.official || []).filter(x => x.id === src.id)[0];
+      if (isNaN(ci) || !t || !O.official.categories[ci]) return;
+      const arr = O.official.categories[ci].tags;
+      const here = !isChips && dst.dataset.kind === "otag" && +dst.dataset.ci === ci;
+      arr.splice(here ? +dst.dataset.ti + (after ? 1 : 0) : arr.length, 0, {id: t.id, name: t.name});
+    } else if (src.kind === "miss-ptag") {
+      const ti = isChips ? +dst.dataset.ti : +grp.dataset.ti;
+      const t = (ORD.view.missing.player || []).filter(x => x.id === src.id)[0];
+      if (!t || (isChips === false && dst.dataset.kind !== "ptag")) return;
+      const here = !isChips && dst.dataset.kind === "ptag" && !isNaN(ti);
+      O.player.splice(here ? ti + (after ? 1 : 0) : O.player.length, 0,
+        {id: t.id, name: t.name, subs: (t.subs || []).map(x => ({group: x.group, value: x.value}))});
+    } else if (src.kind === "miss-psub") {
+      const ti = isChips ? +dst.dataset.ti : +grp.dataset.ti;
+      if (isNaN(ti) || !O.player[ti]) return;
+      const subs = O.player[ti].subs;
+      const here = !isChips && dst.dataset.kind === "psub" && +dst.dataset.ti === ti;
+      subs.splice(here ? +dst.dataset.si + (after ? 1 : 0) : subs.length, 0,
+        {group: src.el.dataset.g, value: src.el.dataset.v});
+    } else { return; }
+    ORD.dirty = true;
+    renderOrder();
+    return;
+  }
+
+  // 2) 同类卡片／卡头之间重排（不跨类别与 TAG）
+  const dk = isChips ? null : dst.dataset.kind;
+  if (src.kind === "otag") {
+    const ci = src.el.dataset.ci;
+    if (isChips) {
+      if (dst.dataset.ci !== ci) return;
+      const arr = O.official.categories[+ci].tags;
+      arr.push(arr.splice(+src.el.dataset.ti, 1)[0]);
+    } else if (dk === "otag") {
+      if (dst.dataset.ci !== ci) return;
+      ordReindex(O.official.categories[+ci].tags, +src.el.dataset.ti, +dst.dataset.ti, after);
+    } else { return; }
+  } else if (src.kind === "cat") {
+    if (dk !== "cat") return;
+    ordReindex(O.official.categories, +src.el.dataset.ci, +dst.dataset.ci, after);
+  } else if (src.kind === "ptag") {
+    if (isChips) { O.player.push(O.player.splice(+src.el.dataset.ti, 1)[0]); }
+    else if (dk === "ptag") { ordReindex(O.player, +src.el.dataset.ti, +dst.dataset.ti, after); }
+    else { return; }
+  } else if (src.kind === "psub") {
+    const ti = src.el.dataset.ti;
+    if (isChips) {
+      if (dst.dataset.ti !== ti) return;
+      const arr = O.player[+ti].subs;
+      arr.push(arr.splice(+src.el.dataset.si, 1)[0]);
+    } else if (dk === "psub") {
+      if (dst.dataset.ti !== ti) return;
+      ordReindex(O.player[+ti].subs, +src.el.dataset.si, +dst.dataset.si, after);
+    } else { return; }
+  } else { return; }
+  ORD.dirty = true;
+  renderOrder();
+}
+
+function ordAdoptAll() {
+  const m = (ORD.view && ORD.view.missing) || {official: [], player: [], subs: []};
+  if (!m.official.length && !m.player.length && !m.subs.length) { toast("没有未登记的项"); return; }
+  const O = ORD.order;
+  for (const t of m.official) {
+    let c = O.official.categories.filter(x => x.key === t.category)[0];
+    if (!c) { c = {key: t.category, tags: []}; O.official.categories.push(c); }
+    if (!c.tags.some(x => x.id === t.id)) c.tags.push({id: t.id, name: t.name});
+  }
+  for (const t of m.player) {
+    if (!O.player.some(x => x.id === t.id)) {
+      O.player.push({id: t.id, name: t.name, subs: (t.subs || []).map(s => ({group: s.group, value: s.value}))});
+    }
+  }
+  for (const x of m.subs) {
+    const p = O.player.filter(y => y.id === x.tag)[0];
+    if (p && !p.subs.some(s => s.group === x.group && s.value === x.value)) p.subs.push({group: x.group, value: x.value});
+  }
+  ORD.dirty = true;
+  renderOrder();
+  toast("未登记的项已补到各段末尾，可再拖到位");
+}
+
 function setTab(t) {
   ST.tab = t;
   document.getElementById("page-zhen").hidden = t !== "zhen";
   document.getElementById("page-induce").hidden = t !== "induce";
+  document.getElementById("page-order").hidden = t !== "order";
   document.getElementById("page-json").hidden = t !== "results";
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   for (const id of ("automergewrap,btmerge,btreload").split(",")) {
     const el = document.getElementById(id);
-    if (el) el.hidden = t === "results";  // 这三个是前两页的控件
+    if (el) el.hidden = t === "results" || t === "order";  // 这四个是前两页的控件
   }
   document.getElementById("hint").textContent = t === "zhen"
     ? "左键 = 加荐 · 右键 = 取消荐 · 「详情」= 右侧查看干员信息"
     : t === "induce"
       ? "选中目标子表后点临时区干员并入 · 干员行右键 = 扩展 / 移动 / 移除 · 卡片里点击条件或备注即可编辑"
-      : "编辑只在内存中，点「保存…」才写盘（可覆盖已有文件，也可另存新名字）";
+      : t === "order"
+        ? "拖拽调整 TAG／子 TAG 的先后 → 「保存排序」；只更新 updated，不升 version"
+        : "编辑只在内存中，点「保存…」才写盘（可覆盖已有文件，也可另存新名字）";
+  if (t === "order") { if (!ORD.loaded) ordLoad(true); else renderOrder(); }
   if (t === "results") renderResults();
 }
 // ---------------------------------------------------------------- 启动
@@ -1860,6 +2315,7 @@ document.querySelectorAll(".tab").forEach(b => {
   b.onclick = () => {
     if (b.dataset.tab === ST.tab) return;
     if (ST.tab === "results" && !resGuard("切换页签")) return;
+    if (ST.tab === "order" && ORD.dirty && !confirm("「TAG 排序」有未保存的改动，切换会丢弃它们。继续？")) return;
     setTab(b.dataset.tab);
   };
 });
@@ -1909,7 +2365,16 @@ document.addEventListener("keydown", e => {
 });
 window.addEventListener("beforeunload", e => {
   if (RES.doc && (RES.dirty || resDirtyNow())) { e.preventDefault(); e.returnValue = ""; return ""; }
+  if (ORD.dirty) { e.preventDefault(); e.returnValue = ""; return ""; }
 });
+ordWire();
+document.getElementById("ordreload").onclick = () => ordLoad(false);
+document.getElementById("ordsave").onclick = () => ordSave();
+document.getElementById("ordadopt").onclick = () => ordAdoptAll();
+document.getElementById("ordnavtoggle").onclick =
+  () => ordNavSet(document.getElementById("ordnav").classList.contains("collapsed"));
+try { ordNavSet(localStorage.getItem("ord.nav.v1") !== "0"); }   // 默认展开，记住「收起」的选择
+catch (e) { ordNavSet(true); }        // 隐私模式读不到就按默认展开
 bindSearch("search", () => ST.zhen.q, v => ST.zhen.q = v, renderOps);
 bindSearch("isearch", () => ST.ind.q, v => ST.ind.q = v, renderIndList);
 bindSearch("psearch", () => ST.ind.pq, v => ST.ind.pq = v, renderPicker);

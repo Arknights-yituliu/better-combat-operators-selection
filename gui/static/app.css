@@ -188,10 +188,12 @@ input:focus, select:focus, textarea:focus {
 }
 input[type="checkbox"] { accent-color: var(--ak-signal-info); width: 1rem; height: 1rem; }
 label.hint { display: inline-flex; align-items: center; gap: .35rem; }
+/* label.hint 自带 display，会盖过 UA 的 [hidden]{display:none}，故显式补一条（同 main[hidden] 等的写法） */
+label.hint[hidden] { display: none; }
 
 /* ---- 7. 三个页签的布局 ---------------------------------------------------- */
 main { flex: 1; display: grid; min-height: 0; }
-main[hidden], #page-json[hidden], #page-induce[hidden], #page-zhen[hidden] { display: none; }
+main[hidden], #page-json[hidden], #page-induce[hidden], #page-order[hidden], #page-zhen[hidden] { display: none; }
 main > * { min-height: 0; overflow: auto; background: var(--panel); }
 #page-zhen { grid-template-columns: 200px minmax(0, 1fr) 420px; }
 #tagcol { border-right: var(--ak-line-hairline) solid var(--line); padding: var(--ak-space-2); }
@@ -453,3 +455,118 @@ h3.sec { font-size: 12px; margin: 2px 0 var(--ak-space-2); color: var(--dim); fo
 .scopechip { padding: 2px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; font-size: 12px; cursor: pointer; opacity: .78; }
 .scopechip:hover { opacity: 1; }
 .scopechip.on { background: rgba(120,170,255,.25); border-color: rgba(120,170,255,.6); opacity: 1; }
+
+/* ---- 15b. TAG 排序页 ----------------------------------------------------- */
+#page-order { display: flex; flex-direction: column; position: relative; }
+#ordbar {
+  display: flex; align-items: center; gap: var(--ak-space-2); flex-wrap: wrap;
+  padding: var(--ak-space-2) var(--ak-space-3);
+  background: var(--ak-surface-inverse); border-bottom: var(--ak-line-hairline) solid var(--line);
+}
+#ordbar .sp { flex: 1; }
+#ordbar b { font-size: 13px; letter-spacing: .02em; }
+#ordbar .dot { width: .55rem; height: .55rem; flex: none; background: var(--ak-signal-disabled); }
+#ordbar .dot.on { background: var(--ak-signal-action); box-shadow: 0 0 0.75rem color-mix(in srgb, var(--ak-signal-action) 80%, transparent); }
+#ordlist { flex: 1; overflow: auto; position: relative; padding: var(--ak-space-2) var(--ak-space-3) var(--ak-space-5); }
+.ordsec { margin-bottom: var(--ak-space-4); }
+.ordsec > h4 {
+  margin: 0 0 var(--ak-space-2); font-size: 12px; font-family: var(--ak-font-serif);
+  letter-spacing: var(--ak-type-tight); color: var(--txt);
+  border-bottom: var(--ak-line-hairline) solid var(--line); padding-bottom: 4px;
+}
+.ordsec > h4 .ordn { margin-left: var(--ak-space-2); }
+
+/* 卡片式：每张卡＝一个类别（官方）或一个 TAG（玩家），卡内是可拖的取值卡片 */
+.ordgrid { display: flex; flex-wrap: wrap; gap: var(--ak-space-2); align-items: flex-start; }
+.ordgrp {
+  position: relative; flex: 1 1 20rem; min-width: 15.5rem; max-width: 100%;
+  background: var(--ak-surface-inverse); border: var(--ak-line-hairline) solid var(--line);
+  padding: 0 0 var(--ak-space-2);
+}
+.ordgrp.whole { flex: 0 1 auto; min-width: 0; }
+.ordcat {
+  position: relative; display: flex; align-items: center; gap: var(--ak-space-2);
+  padding: 2px var(--ak-space-2) 2px var(--ak-space-1);
+  margin-bottom: var(--ak-space-1);
+  /* 信号条：类别头用 info、玩家 TAG 头用 action，深底浅字保证对比 */
+  background: color-mix(in srgb, var(--ak-signal-info) 18%, var(--ak-surface-inverse));
+  border-left: var(--ak-line-strong) solid var(--ak-signal-info);
+  font-weight: 600; cursor: default; user-select: none;
+}
+.ordcat.player {
+  background: color-mix(in srgb, var(--ak-signal-action) 18%, var(--ak-surface-inverse));
+  border-left-color: var(--ak-signal-action);
+}
+.ordcat.flash { animation: ord-flash var(--ak-motion-slow) var(--ak-ease-emphasized); }
+@keyframes ord-flash {
+  0% { background: color-mix(in srgb, var(--ak-signal-action) 62%, var(--ak-surface-inverse)); }
+  100% { background: color-mix(in srgb, var(--ak-signal-info) 18%, var(--ak-surface-inverse)); }
+}
+.ordchips { display: flex; flex-wrap: wrap; gap: var(--ak-space-1); padding: 0 var(--ak-space-2); min-height: 1.6rem; min-width: 0; }
+.orditem {
+  position: relative; display: inline-flex; align-items: center; gap: var(--ak-space-1);
+  max-width: 100%; padding: 1px var(--ak-space-1) 1px 2px;
+  background: var(--ak-surface-raised); border: var(--ak-line-hairline) solid var(--line);
+  font-size: 11px; line-height: 1.5; cursor: default; user-select: none; min-width: 0;
+}
+.orditem[tabindex]:focus-visible, .ordcat[tabindex]:focus-visible {
+  outline: var(--ak-focus-width) solid var(--ak-focus-color); outline-offset: var(--ak-focus-offset);
+}
+.orditem .ordgrip, .ordcat .ordgrip { color: var(--ak-signal-disabled); cursor: grab; font-size: 11px; letter-spacing: -2px; flex: none; }
+.orditem .ordnm, .ordcat .ordnm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orditem .ordnm { flex: 0 1 auto; }
+.ordcat b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orditem code, .ordcat code { font-family: var(--ak-font-mono); font-size: 10px; color: var(--dim); flex: none; }
+.orditem .ordn, .ordcat .ordn { font-family: var(--ak-font-mono); font-size: 10px; color: var(--dim); flex: none; }
+.ordcat .ordn { margin-left: auto; }
+/* 拖拽态：前后指示用伪元素（让位给 stale／missing 的左侧竖线） */
+.orditem.drag, .ordcat.drag { opacity: .4; }
+.orditem.over-before::before, .orditem.over-after::after,
+.ordcat.over-before::before, .ordcat.over-after::after {
+  content: ""; position: absolute; top: -2px; bottom: -2px; width: 3px; background: var(--ak-signal-action);
+}
+.orditem.over-before::before, .ordcat.over-before::before { left: -3px; }
+.orditem.over-after::after, .ordcat.over-after::after { right: -3px; }
+.ordgrp.over-drop { outline: var(--ak-focus-width) solid var(--ak-signal-action); outline-offset: -1px; }
+/* 一个信号条，不用切角：失效／未登记用左侧竖线区分 */
+.orditem.stale, .ordcat.stale { box-shadow: inset 3px 0 0 0 var(--ak-signal-danger); }
+.orditem.missing, .ordcat.missing { box-shadow: inset 3px 0 0 0 var(--ak-signal-accent); }
+.orditem.stale .ordn, .ordcat.stale .ordn { color: var(--ak-signal-danger); }
+.orditem.missing .ordn, .ordcat.missing .ordn { color: var(--ak-signal-accent); }
+.ordx {
+  flex: none; width: 18px; height: 18px; line-height: 1; padding: 0;
+  border: var(--ak-line-hairline) solid var(--line); background: transparent;
+  color: var(--ak-signal-danger); cursor: pointer;
+}
+.ordx:hover { border-color: var(--ak-signal-danger); }
+
+/* 固钉式导航（可收起）：钉在右侧一栏、与内容并排——不遮挡卡片，滚动时始终在位 */
+#ordbody { flex: 1; display: flex; min-height: 0; }
+#ordnav {
+  flex: none; width: 11rem; display: flex; flex-direction: column; gap: var(--ak-space-1);
+  padding: var(--ak-space-1); overflow: auto;
+  background: var(--ak-surface-inverse); border-left: var(--ak-line-hairline) solid var(--line);
+}
+#ordnav.collapsed { width: 2rem; }
+#ordnav.collapsed #ordnavlist { display: none; }
+#ordnav.collapsed #ordnavtoggle { writing-mode: vertical-rl; height: 7rem; }
+#ordnavtoggle {
+  flex: none; height: 24px; padding: 0 var(--ak-space-1); font-size: 11px; white-space: nowrap;
+  border: var(--ak-line-hairline) solid var(--line);
+  background: var(--ak-surface-raised); color: var(--txt); cursor: pointer;
+}
+#ordnavtoggle:hover { border-color: var(--ak-signal-info); }
+#ordnavlist { flex: 1; min-height: 0; overflow: auto; }
+.ordnavsec {
+  font-family: var(--ak-font-mono); font-size: 10px; color: var(--dim);
+  letter-spacing: var(--ak-type-wide); margin: var(--ak-space-1) 0 2px;
+}
+.ordnavbtn {
+  display: block; width: 100%; text-align: left; font-size: 11px;
+  padding: 2px var(--ak-space-1); border: none; border-left: 3px solid transparent;
+  background: transparent; color: var(--dim); cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ordnavbtn:hover { color: var(--txt); background: var(--ak-surface-raised); }
+.ordnavbtn.on { color: var(--txt); border-left-color: var(--ak-signal-action); background: var(--ak-surface-raised); }
+
