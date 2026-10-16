@@ -421,6 +421,18 @@ ACCEPTED = {
     ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "122"),
     ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "130"),
     ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "132"),
+    # 连射「等效每秒门槛」新增与成员复核轮：妮芙、鸿雪、迷迭香、刻俄柏、蓝毒 五行（及其余移出者
+    # 仅存于此处的指针）由 03-吃拐一轮秒.md 的连射子表移出，被移除行所带的引用随行消失——属有意
+    # 为之的成员变动，非漏改（裁定见 docs/rulings.md §二十四；移出记录见该文件「边界与排除记录」L）。
+    # 「132」同时对应 妮芙/妮芙.md:132 与 刻俄柏/刻俄柏.md:132 两处（同原子值）。
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "132"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "63"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "127"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "181"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "197"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "34"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "162"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "105"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.
