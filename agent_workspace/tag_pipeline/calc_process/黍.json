@@ -1,0 +1,90 @@
+{
+  "operator": "黍",
+  "timelines": {},
+  "members": [
+    {
+      "tag": "P13",
+      "subTag": "长效控制",
+      "match": "精英2；3技能专精3",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 前提",
+            "title": "送回触发距离",
+            "result": "2",
+            "unit": "格",
+            "note": "技能 30 秒内敌人每次远离记录地块达 2 格即被送回，行进始终不超过 2 格"
+          },
+          {
+            "section": "② 单次效果",
+            "title": "单次送回效果",
+            "result": "回到记录地块",
+            "unit": "",
+            "note": "反复拉扯、无法离开记录地块 2 格以上"
+          },
+          {
+            "section": "③ 生效次数",
+            "title": "技能持续",
+            "result": "30",
+            "unit": "秒",
+            "note": "3技能持续 30 秒"
+          },
+          {
+            "section": "④ 是否达线",
+            "title": "等效剥夺时长",
+            "expr": "30 ≥ 15",
+            "result": "达标",
+            "unit": "",
+            "note": "等效剥夺 30 秒 ≥ 15 秒门槛"
+          }
+        ]
+      },
+      "metric": "damage",
+      "scenarioNames": {
+        "normal": "反复拉扯·长效控制"
+      }
+    },
+    {
+      "tag": "P13",
+      "subTag": "软控",
+      "match": "精英2；3技能专精3",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 前提",
+            "title": "送回触发距离",
+            "result": "2",
+            "unit": "格",
+            "note": "技能 30 秒内敌人每次远离记录地块达 2 格即被送回，行进始终不超过 2 格"
+          },
+          {
+            "section": "② 单次效果",
+            "title": "单次送回效果",
+            "result": "回到记录地块",
+            "unit": "",
+            "note": "反复拉扯、无法离开记录地块 2 格以上"
+          },
+          {
+            "section": "③ 生效次数",
+            "title": "技能持续",
+            "result": "30",
+            "unit": "秒",
+            "note": "3技能持续 30 秒"
+          },
+          {
+            "section": "④ 是否达线",
+            "title": "等效剥夺时长",
+            "expr": "30 ≥ 15",
+            "result": "达标",
+            "unit": "",
+            "note": "等效剥夺 30 秒 ≥ 15 秒门槛"
+          }
+        ]
+      },
+      "metric": "damage",
+      "scenarioNames": {
+        "normal": "反复拉扯·软控"
+      }
+    }
+  ]
+}

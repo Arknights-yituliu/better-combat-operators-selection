@@ -62,6 +62,9 @@ ACCEPTED = {
     # 其依据中的两处引用随整行删除消失——属有意为之的整行移除（裁定见 docs/rulings.md §十六）。
     ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "84"),
     ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "124"),
+    # 2026-10-22 裁定（B）：艾雅法拉基础间隔改 49 帧后连射等效每秒 474%/s＜500，P03 整行移出成员表，
+    # 其依据 `艾雅法拉.md:62` 随整行删除消失——属有意为之的整行移除（裁定见 docs/rulings.md §二十五）。
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "62"),
     # tag-part/1 迁移：`_brief.md` §4 的产出模板由 md 表格示例改为 JSON 骨架，旧模板中的示例
     # 引用（`维什戴尔/维什戴尔.md:133`）随整块替换移除——属有意为之的文档改写。
     ("agent_workspace/tag_pipeline/player_tags/_brief.md", "133"),

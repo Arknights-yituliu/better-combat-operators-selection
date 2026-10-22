@@ -89,3 +89,5 @@ description: >-
 ```
 
 改完 `results/operator-tags.json` 后如需同步到消费端：在仓库根的 `local.json`（模板 `local.example.json`）里配置 `frontend_results_dir`，运行 `.venv/Scripts/python.exe -X utf8 tools/sync_results.py`——脚本复制 `results/*.json` 并逐文件核对 md5。
+
+> 校验套件另含 `.venv/Scripts/python.exe -X utf8 tools/calc_process.py --check`（计算过程详情：数字守恒、成绩对账、图例命名）；帧/次数自洽用 `tools/frame_check.py`；与 ArkDPS 公式对账用 `tools/arkdps_replicate.py --calibrate` 与 `tools/arkdps_report.py`（帧模型属性登记在 `agent_workspace/tag_pipeline/arkdps_frame_model.json`）。

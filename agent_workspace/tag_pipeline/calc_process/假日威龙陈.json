@@ -1,0 +1,142 @@
+{
+  "operator": "假日威龙陈",
+  "timelines": {
+    "S3": {
+      "fps": 30,
+      "scenarios": [
+        {
+          "id": "normal",
+          "name": "对单目标（水地形、散射手特性）",
+          "durationFrames": 928,
+          "panel": 986,
+          "series": [
+            {
+              "key": "attack",
+              "group": "主攻击",
+              "groupDesc": "每轮两次伤害（各 228%×150% 物理）",
+              "label": "假日风暴每轮（684%）",
+              "damageType": "physical",
+              "pattern": {
+                "type": "periodic",
+                "startFrame": 0,
+                "intervalFrames": 58,
+                "count": 16,
+                "damage": 6744.24,
+                "hits": 2
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "members": [
+    {
+      "tag": "P01",
+      "match": "精英2；3技能（专三数值）；Y模组3级（RPR-Y）；潜能4",
+      "timeline": "S3",
+      "metric": "damage",
+      "scoreNames": {
+        "normal": ""
+      },
+      "expected": {
+        "damage": {
+          "normal": 107908
+        }
+      },
+      "note": "全时长按 16 轮 × 1.933 秒＝30.93 秒计；32 发弹药每次消耗 2 发",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 面板",
+            "title": "面板攻击力构成",
+            "expr": "773 ＋ 80 ＋ 33 ＋ 100",
+            "result": "986",
+            "unit": "点",
+            "note": "精英2满级 773＋满信赖 +80＋潜能4 攻击 +33＋Y模组3级（RPR-Y）攻击 +100"
+          },
+          {
+            "section": "② 攻击间隔",
+            "title": "实际攻击间隔",
+            "expr": "2.3 × 100 ÷ 120",
+            "result": "1.92",
+            "unit": "秒",
+            "note": "技能开启时场地视为水地形，Y模组3级下攻击速度 +20（＝分母 120）"
+          },
+          {
+            "section": "② 攻击间隔",
+            "title": "取整帧后间隔",
+            "expr": "58 ÷ 30",
+            "result": "1.933",
+            "unit": "秒",
+            "note": "30FPS 取整为 58 帧"
+          },
+          {
+            "section": "③ 攻击轮数",
+            "title": "弹药制轮数",
+            "expr": "32 ÷ 2",
+            "result": "16",
+            "unit": "轮",
+            "note": "32 发弹药、每次攻击消耗 2 发"
+          },
+          {
+            "section": "③ 攻击轮数",
+            "title": "全时长",
+            "expr": "16 × 1.933",
+            "result": "30.93",
+            "unit": "秒",
+            "note": "与成绩块口径一致"
+          },
+          {
+            "section": "④ 每轮倍率",
+            "title": "单段倍率",
+            "expr": "100% ＋ 100% ＋ 28%",
+            "result": "228",
+            "unit": "%",
+            "note": "基础 100%＋技能 +100%＋水地形攻击力 +28%"
+          },
+          {
+            "section": "④ 每轮倍率",
+            "title": "每轮合计倍率",
+            "expr": "2 × 228% × 150%",
+            "result": "684",
+            "unit": "%",
+            "note": "每次攻击造成两次伤害，再乘散射手特性 150%（真群攻）"
+          },
+          {
+            "section": "⑤ 合计",
+            "title": "全时长总倍率",
+            "expr": "16 × 684%",
+            "result": "10944",
+            "unit": "%",
+            "note": "16 轮逐轮同倍率"
+          },
+          {
+            "section": "⑤ 合计",
+            "title": "全技能持续总伤",
+            "expr": "986 × 10944%",
+            "result": "107908",
+            "unit": "点",
+            "note": "与成绩块一致；DPS＝107908 ÷ 30.93 ≈ 3488/秒"
+          },
+          {
+            "section": "⑥ 窗口",
+            "title": "15 秒内轮数",
+            "expr": "15 × 30 ÷ 58",
+            "result": "7.8",
+            "unit": "轮",
+            "note": "取整 8 轮（第 0～15 秒）"
+          },
+          {
+            "section": "⑥ 窗口",
+            "title": "最高 15 秒窗口",
+            "expr": "8 × 684%",
+            "result": "5472",
+            "unit": "%",
+            "note": "第 0 秒起 8 轮"
+          }
+        ]
+      }
+    }
+  ]
+}

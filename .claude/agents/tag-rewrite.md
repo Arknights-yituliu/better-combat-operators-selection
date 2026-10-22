@@ -1,7 +1,7 @@
 ---
 name: tag-rewrite
 description: >-
-  重写／复算本仓库玩家体感 TAG 与官方 TAG 成员的「条件」「备注」两列（含分块、能力块自足、面板组成式、档位取用、去内部代号），
+  重写／复算本仓库玩家体感 TAG 与官方 TAG 成员的「条件」「备注」两列（含分块、能力块自足、面板组成式（写进 `calc_process` 的 steps）、档位取用、去内部代号），
   或按新裁定修正已落盘的条目。适用于：「重写 NN-*.json 里这几行」「复算某干员的成绩」「把这批裁定的结果折进条目」
   「按新规范整顿某个 TAG」。产出为 JSON（不直接改分文件），由主进程统一回填。
   不适用于：爬取 PRTS 语料（用 crawl-prts-operator 技能）、新增 TAG（用 add-player-tag 技能）、生成结果 JSON（用 tools/generate_results.py）。

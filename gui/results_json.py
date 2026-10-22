@@ -156,11 +156,59 @@ def _check_combo(label: str, ti: int, mi: int, mem: dict, plc: list, names: dict
             elif pname and urllib.parse.unquote(head[len("https://prts.wiki/w/"):]) != pname:
                 add("warn", "M11", f"{pbase}.prtsUrl", pplc + ["prtsUrl"], plabel, "prtsUrl 的干员名与 operator 不一致（注意 percent 编码）")
         for key in prov:
-            if key not in ("operator", "condition", "remark", "prtsUrl"):
+            if key not in ("operator", "condition", "remark", "prtsUrl", "calc"):
                 add("warn", "M12", f"{pbase}.{key}", pplc + [key], plabel, f"规范之外的字段「{key}」")
+        if "calc" in prov:
+            check_calc(prov.get("calc"), add, f"{pbase}.calc", pplc + ["calc"], plabel)
     for key in mem:
         if key not in ("combo", "condition", "remark", "beneficiaries", "providers", "source", "subTags"):
             add("warn", "M12", f"{base}.{key}", mplc + [key], clabel, f"规范之外的字段「{key}」")
+
+
+def check_calc(calc, add, path: str, loc: list, label: str) -> None:
+    """计算过程详情（docs/output-standard.md §4.2、docs/calc-process-spec.md）的结构校验。"""
+    if not isinstance(calc, dict):
+        add("error", "K1", path, loc, label, "calc 应为对象")
+        return
+    for key in calc:
+        if key not in ("timeline", "metric", "scenarios", "note"):
+            add("warn", "K2", f"{path}.{key}", loc + [key], label, f"规范之外的字段「{key}」")
+    if "timeline" in calc and not (isinstance(calc["timeline"], str) and calc["timeline"].strip()):
+        add("error", "K1", f"{path}.timeline", loc + ["timeline"], label, "timeline 应为非空字符串（干员名@时间轴名）")
+    metric = calc.get("metric", "damage")
+    if metric not in ("damage", "hits"):
+        add("error", "K1", f"{path}.metric", loc + ["metric"], label, "metric 应为 damage/hits")
+    scenarios = calc.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        add("error", "K1", f"{path}.scenarios", loc + ["scenarios"], label, "scenarios 必填且至少一项")
+        return
+    ids = set()
+    for si, sc in enumerate(scenarios):
+        spath, sloc = f"{path}.scenarios[{si}]", loc + ["scenarios", si]
+        if not isinstance(sc, dict):
+            add("error", "K1", spath, sloc, label, "情形必须是对象")
+            continue
+        sid = sc.get("id")
+        if not isinstance(sid, str) or not sid.strip():
+            add("error", "K1", f"{spath}.id", sloc + ["id"], label, "情形缺 id")
+        elif sid in ids:
+            add("error", "K1", f"{spath}.id", sloc + ["id"], label, f"情形 id 重复「{sid}」")
+        else:
+            ids.add(sid)
+        steps = sc.get("steps")
+        if not isinstance(steps, list) or not steps:
+            add("error", "K1", f"{spath}.steps", sloc + ["steps"], label, "步骤必填且至少一条")
+            continue
+        for ti, st in enumerate(steps):
+            tpath, tloc = f"{spath}.steps[{ti}]", sloc + ["steps", ti]
+            if not isinstance(st, dict):
+                add("error", "K1", tpath, tloc, label, "步骤必须是对象")
+                continue
+            for key in st:
+                if key not in ("section", "title", "expr", "result", "unit", "note"):
+                    add("warn", "K2", f"{tpath}.{key}", tloc + [key], label, f"规范之外的字段「{key}」")
+            if not st.get("expr") and not st.get("result"):
+                add("error", "K1", tpath, tloc, label, "步骤至少要有 expr 或 result")
 
 
 def check_remark(remark, add, code: str, path: str, loc: list, label: str) -> None:
@@ -439,9 +487,12 @@ def validate_results(doc) -> tuple[list[dict], dict | None]:
                     add("warn", "M11", f"tags[{ti}].members[{mi}].prtsUrl", mplc + ["prtsUrl"], label + " · " + mname,
                         "prtsUrl 的干员名与 operator 不一致（注意 percent 编码）")
             for key in mem:
-                if key not in ("operator", "condition", "remark", "subTags", "prtsUrl", "source"):
+                if key not in ("operator", "condition", "remark", "subTags", "prtsUrl", "source", "calc"):
                     add("warn", "M12", f"tags[{ti}].members[{mi}].{key}", mplc + [key], label + " · " + (mname or ""),
                         f"规范之外的字段「{key}」")
+            if "calc" in mem:
+                check_calc(mem.get("calc"), add, f"tags[{ti}].members[{mi}].calc", mplc + ["calc"],
+                           label + " · " + (mname or ""))
         # 成员顺序（阵容组合按组合分组，跳过）
         if tid != "P12":
             for mi in range(1, len(members)):

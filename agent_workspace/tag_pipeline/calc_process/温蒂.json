@@ -1,0 +1,129 @@
+{
+  "operator": "温蒂",
+  "members": [
+    {
+      "tag": "P02",
+      "match": "精英2；3技能（专精3数值）；需敌人处于位移状态",
+      "metric": "hits",
+      "scenarioNames": {
+        "normal": "3技能（移动创伤 8 秒）"
+      },
+      "expected": {
+        "hits": {
+          "normal": 121
+        }
+      },
+      "note": "移动创伤按固定 2 帧（0.067 秒）结算，并按机制原文计入 Buff 结束时的额外一次结算",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 前提",
+            "title": "结算间隔",
+            "result": "2",
+            "unit": "帧",
+            "note": "帧伤按固定 2 帧（0.067 秒）结算；需敌人处于位移状态"
+          },
+          {
+            "section": "② 单次效果",
+            "title": "单跳伤害",
+            "result": "1200",
+            "unit": "点/格",
+            "note": "正比于位移距离的真实伤害、按移动距离结算"
+          },
+          {
+            "section": "③ 生效次数",
+            "title": "8 秒内的结算次数",
+            "expr": "8 × 30 ÷ 2",
+            "result": "120",
+            "unit": "次",
+            "note": "8 秒 Buff 期内每 2 帧 1 次"
+          },
+          {
+            "section": "③ 生效次数",
+            "title": "加 Buff 结束时的额外一次结算",
+            "expr": "120 ＋ 1",
+            "result": "121",
+            "unit": "次",
+            "note": "与成绩块一致"
+          },
+          {
+            "section": "④ 是否达线",
+            "title": "等效每秒段数",
+            "expr": "121 ÷ 8",
+            "result": "15.1",
+            "unit": "段/秒",
+            "note": "2 帧间隔远低于 0.5 秒／1.0 秒两档门槛"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "P13",
+      "subTag": "大力推拉",
+      "match": "精英2；1或3技能专精3",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 源",
+            "title": "力度来源",
+            "result": "2",
+            "unit": "级",
+            "note": "蓄水炮液氮炮：第二天赋 +1 级、模组 +1 级",
+            "expr": "1 ＋ 1"
+          },
+          {
+            "section": "② 模组",
+            "title": "档位",
+            "result": "1",
+            "unit": "级",
+            "note": "模组取 1 级——自身推力 +1 级自 1 级即完整，2／3 级无新增力度"
+          },
+          {
+            "section": "③ 判定",
+            "title": "达线",
+            "result": "大力",
+            "note": "满足「大力推拉」门槛"
+          }
+        ]
+      },
+      "metric": "damage",
+      "scenarioNames": {
+        "normal": "大力推拉·大力推拉"
+      }
+    },
+    {
+      "tag": "P13",
+      "subTag": "软控",
+      "match": "精英2；1或3技能专精3",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 源",
+            "title": "力度来源",
+            "result": "2",
+            "unit": "级",
+            "note": "蓄水炮液氮炮：第二天赋 +1 级、模组 +1 级",
+            "expr": "1 ＋ 1"
+          },
+          {
+            "section": "② 模组",
+            "title": "档位",
+            "result": "1",
+            "unit": "级",
+            "note": "模组取 1 级——自身推力 +1 级自 1 级即完整，2／3 级无新增力度"
+          },
+          {
+            "section": "③ 判定",
+            "title": "达线",
+            "result": "大力",
+            "note": "满足「大力推拉」门槛"
+          }
+        ]
+      },
+      "metric": "damage",
+      "scenarioNames": {
+        "normal": "大力推拉·软控"
+      }
+    }
+  ]
+}

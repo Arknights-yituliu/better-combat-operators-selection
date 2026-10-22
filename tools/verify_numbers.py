@@ -113,6 +113,12 @@ def entry_text(member: dict, skip_note: bool = False) -> str:
         parts.append(str(block.get("label", "")))
         for item in block.get("items", []):
             parts.append(f"{item.get('label', '')}{item.get('text', '')}")
+    # calc 的步骤与备注同级可见（面板组成式、恒等式都在这里）
+    for scen in (member.get("calc") or {}).get("scenarios", []):
+        for st in scen.get("steps", []):
+            parts.append("".join(str(st.get(k) or "") for k in ("title", "expr", "result", "unit", "note")))
+    if (member.get("calc") or {}).get("note"):
+        parts.append(str(member["calc"]["note"]))
     return "；".join(parts)
 
 
@@ -182,8 +188,14 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
     if op not in stats:
         return out
 
-    # ① 面板不符：条件 +「计算」块的面板组成式（逐情形一条，主来源）+ 带档位的成绩块标签（兼容）各是一套口径
+    # ① 面板不符：条件 + calc 的步骤（面板组成式，主来源）+ 带档位的成绩块标签（兼容）各是一套口径。
+    #    「计算」块已退役——历史残留仍读，保证迁移中途也能校验。
     declared = {"条件": parse_config(str(member.get("condition", "")))}
+    for scen in (member.get("calc") or {}).get("scenarios", []):
+        for st in scen.get("steps", []):
+            txt = "".join(str(st.get(k) or "") for k in ("expr", "result", "note"))
+            if PANEL_RE.search(txt):
+                declared[f"calc·{txt[:BLOCK_SHORT]}"] = parse_config(txt)
     for block in member.get("remark", []):
         if not isinstance(block, dict):
             continue
@@ -216,7 +228,7 @@ def check_entry(tag: str, member: dict, idx: PrtsIndex, stats: dict,
             out.append(f"{who}：面板 {p} 与任何已声明口径都对不上；能凑出它的是「{explain_panel(op, p)}」")
 
     # ② 档位未取满（更高档有攻击或攻速增益）——只在条目确实算伤害时才提：面板/倍率是本 TAG 判据的场合
-    damage_entry = bool(PANEL_RE.search(text)) or bool(re.search(r"×\d+(?:\.\d+)?%", text))
+    damage_entry = bool(PANEL_RE.search(text)) or bool(re.search(r"×\d+(?:\.\d+)?%", text)) or bool(member.get("calc"))
     if damage_entry:
         for line, tier in declared["条件"]["mods"]:
             mod = module_of(stats[op], resolve_line(op, line))

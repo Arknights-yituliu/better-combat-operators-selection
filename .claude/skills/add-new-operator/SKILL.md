@@ -47,6 +47,19 @@ After the pass, list every **值得在意的机制** that no existing TAG covers
 
 Never create a TAG from your own judgment; never silently drop a notable mechanic. Pure numeric differences (数值筛选维度) and 泛在机制 (普通治疗、普攻伤害) need no TAG and no question.
 
+## 3.5 Write the calc-process source (计算过程详情)
+
+凡新干员命中的玩家 TAG 条目**有计算内容**（成绩项里的总伤／DPS／段数／倍率／门槛判定），就建
+`agent_workspace/tag_pipeline/calc_process/<干员>.json`（一干员一文件，跨 TAG 合并），规范见 `docs/calc-process-spec.md`：
+
+1. 每条命中条目一个 `members[]`：`tag`（`P01`…）+ `match`（条件前缀，用于定位成员行）+ `metric`；
+2. 写 `scenarios.<情形>.steps`（分节 ① 面板 ② 倍率 ③ 次数 ④ 分流 ⑤ 合计）；
+3. **只有该干员在 ArkDPS 有帧模型时**才写 `timelines`（`agent_workspace/_out/_arkdps_*_raw_main-*.js` 里能匹配到代号）；否则只写 steps 并给 `scenarioNames`；
+4. 图例用短名（≤12 字）＋ `groupDesc`；
+5. 跑 `.venv/Scripts/python.exe -X utf8 tools/calc_process.py --check`（数字守恒、成绩对账、图例命名全过）。
+
+**不得**往备注里写 `计算` 块——该块已退役。
+
 ## 4. Update the member lists (the only output)
 
 1. **官方** — edit the split modules under `agent_workspace/tag_pipeline/official_tags/`（`official_tags/[A-I]-*.json` 各分模块），然后运行合并脚本重生成文档：
@@ -61,6 +74,7 @@ Never create a TAG from your own judgment; never silently drop a notable mechani
 
 ## Do not
 
+- Do not write a `计算` block into 备注 (退役；计算内容写 `calc_process/`), and do not hand-edit the product's `calc`.
 - Do not classify from model memory — every judgment cites `文件:行号` under `material_datas/PRTS/`; unknown items are `[待考]` → `## 待开发者确认`.
 - Do not write dates, round labels or edit traces into any 评定标准 section (AGENTS.md rules), and do not renumber/rewrite criteria while adding members.
 - Do not edit `docs/player-tags-specify.md` (developer-owned).

@@ -35,18 +35,20 @@ PLAYER_DIR = PIPE / "player_tags"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(PIPE))
 sys.path.insert(0, str(OFFICIAL_DIR))
+sys.path.insert(0, str(ROOT / "tools"))
 from gui.md import is_sep_row, split_cells          # noqa: E402
 from gui.roster import launch_date, parse_prts_brief  # noqa: E402
 from gui import results_json as rj                   # noqa: E402
 import partdoc                                       # noqa: E402  （分文件 JSON 的唯一读写实现）
 import tag_order                                     # noqa: E402  （TAG 展示顺序的唯一维护处）
+import calc_process                                  # noqa: E402  （计算过程详情／帧级时间轴，见 docs/calc-process-spec.md）
 import _merge_official_to_docs as offm               # noqa: E402  （官方分模块清单 FILES 的唯一来源）
 
 PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v35"
+VERSION = "v36"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -89,13 +91,15 @@ BLOCK_SEP = "｜"                    # 块分隔：全角竖线（ASCII | 会破
 ITEM_SEP = "；"                     # 条分隔
 BLOCK_LABEL_MAX = 40                # 块标签字数上限，超长视为正文（避免整句被当标题）
 BLOCK_LABEL_BAD = set("；。，")       # 块标签不得含句读与逗号（引文整句不是标签）
-BLOCK_LABEL_FREE = ("成绩", "计算", "说明")  # 保留块类：标签不受字数上限约束（成绩情形名可带面板口径）
+BLOCK_LABEL_FREE = ("成绩", "说明")  # 保留块类：标签不受字数上限约束（成绩情形名可带面板口径）
+# 「计算」块已退役（内容改由 calc_process/ 承载、docs/calc-process-spec.md）：
+# 解析仍容忍它（历史文本不崩），但 lint 会把「仍存在」报出来。
 ITEM_LABEL_MAX = 12                 # 条标签字数上限
 ITEM_LABEL_BAD = set("（）「」，。、")  # 条标签不得含标点（技能名带「」者按正文处理）
 BRACKETS = {"（": "）", "(": ")", "「": "」", "【": "】"}   # 括号内不切分
 CLOSERS = {"）", ")", "」", "】"}    # 闭括号宽窄混用（`（…）`）按闭合处理：宁可少切一刀，不可静默错切
 # 块标签只能是能力名或保留块类，绝不会以引号开头（`「…」：` 是引文正文，不是标签）
-BLOCK_HINT_RE = re.compile(r"^(?:成绩|计算|说明)[：\s]")
+BLOCK_HINT_RE = re.compile(r"^(?:成绩|计算|说明)[：\s]")   # 计算：仅用于识别历史文本里的残留块
 ABILITY_HEAD_RE = re.compile(r"^(?:第[一二三]天赋|[0-9一二三]技能|召唤物|装置|特性|模组)")
 # 备注的条自报来源时可用的来源词（docs/concept.md「备注分块」的能力条自报来源）；模组代号亦视作来源
 SOURCE_TOKEN_RE = re.compile(r"分支特性|分支信息|第[一二三]天赋|天赋|[0-9一二三]技能|模组|召唤物|装置|[A-Z]{2,4}-[A-Za-zΔαβ]")
@@ -131,6 +135,7 @@ def block_hint(chunk: str) -> bool:
     m = ABILITY_HEAD_RE.match(head)
     return bool(m) and head[len(m.group(0)):].startswith(("「", "（", "(")) and "：" in _strip_brackets(head)[:48]
 TEXT_PROBLEMS: list[str] = []       # 文本 lint 报告（只报告、不阻断；即存量待重排清单）
+CALC_PROBLEMS: list[str] = []       # calc_process 悬空规则（match 未命中任何成员行）
 
 
 def split_top(text: str, sep: str) -> list[str]:
@@ -295,14 +300,15 @@ def lint_text(tag: str, op: str, cond: str, remark: str) -> None:
                 and not re.match(r"「[^」]*」\s*(?:指|为|是|即|表示|则|＝|=|。)", text):
             rep(f"备注首条以「开头但未点名来源：{text[:24]}…")
     if any(l.startswith("成绩") for l in labels) and not labels[0].startswith("成绩"):
-        rep("成绩块未排在首位（块序应为 成绩→能力→计算→说明）")
-    tail = [i for i, l in enumerate(labels) if l in ("计算", "说明")]
+        rep("成绩块未排在首位（块序应为 成绩→能力→说明）")
+    if any(l == "计算" for l in labels):
+        rep("源里仍有「计算」块（已退役：计算内容写 calc_process/<干员>.json，"
+            "迁移完成后用 tools/calc_process.py --strip 删除源块）")
+    tail = [i for i, l in enumerate(labels) if l == "说明"]
     if tail:
         between = labels[tail[0]:]
-        if any(l not in ("计算", "说明") for l in between):
-            rep("「计算」／「说明」块之后还有能力块（块序应为 成绩→能力→计算→说明）")
-        elif "计算" in between and "说明" in between and between.index("说明") < between.index("计算"):
-            rep("「说明」块排在「计算」之前")
+        if any(l != "说明" for l in between):
+            rep("「说明」块之后还有能力块（块序应为 成绩→能力→说明）")
     # 条件不设字数上限（见 docs/rulings.md「条件不设字数上限」）：可读性由分条与句式保证，
     # 硬性前提与硬性条件一个都不能省；面板/计数口径句仍应写进「说明」块（那属职责分工，不按字数判）。
 
@@ -763,6 +769,9 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
     if rec_fb_file.exists():
         recommend_fallback = json.loads(rec_fb_file.read_text(encoding="utf-8"))
     combo_meta = read_combo_meta(partdoc.load(PLAYER_DIR / "12-阵容组合.json"))
+    calc_docs = calc_process.load_all()
+    calc_rules = calc_process.build_rules(calc_docs)
+    calc_used: set[int] = set()
     tags, seen_ops = [], []
     per_tag: dict[str, list[dict]] = {}
     combos: dict[str, dict] = {}  # 阵容组合：组合名 → {combo, providers}
@@ -794,6 +803,14 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
                 lint_text(tag_name, op, cond, remark)
                 member = {"operator": op, "condition": cond}
                 blocks = parse_blocks(remark)
+                # 计算过程详情：calc_process/<干员>.json 命中本行时写入 calc。
+                # 源里若仍有「计算」块（迁移未收尾），产物中一律剥离；lint 已报出该残留。
+                rule = next((i for i, r in enumerate(calc_rules)
+                             if calc_process.match_rule(r, "P" + tag_no, op, cond, calc_process.subtag_set(tag_no, h3, h4) | {s.get("value") for s in (subs or [])})), None)
+                if rule is not None:
+                    blocks = [b for b in blocks if b.get("label") != "计算"]
+                    member["calc"] = calc_process.build_calc(calc_rules[rule])
+                    calc_used.add(rule)
                 if blocks:
                     member["remark"] = blocks
                 if subs:
@@ -832,6 +849,10 @@ def parse_player(idx: PrtsIndex) -> tuple[list[dict], list[str]]:
         item.update(rec)
         item["members"] = members
         tags.append(item)
+    # 未被任何成员行命中的 calc_process 规则＝悬空规则（多半是 match 写错），交给 --check 报出
+    for i, r in enumerate(calc_rules):
+        if i not in calc_used:
+            CALC_PROBLEMS.append(f"{r['_file']}｜{r['tag']}/{r.get('match')}：未命中任何成员行（match 与条件前缀不符？）")
     return tags, list(dict.fromkeys(seen_ops))
 
 
@@ -958,6 +979,10 @@ def main() -> int:
         if args.report:
             for p in TEXT_PROBLEMS:
                 print("  " + p)
+    if CALC_PROBLEMS:
+        print(f"\n计算过程详情：{len(CALC_PROBLEMS)} 条规则未命中成员行")
+        for p in CALC_PROBLEMS[:40]:
+            print("  " + p)
     if problems:
         errs = [p for p in problems if p["level"] == "error"]
         warns = [p for p in problems if p["level"] == "warn"]
@@ -966,13 +991,25 @@ def main() -> int:
             print(f"  [{p['level']}] {p['code']} {p['path']}: {p['message']} {('[%s]' % p['label']) if p['label'] else ''}")
     else:
         print("\n校验：无问题")
+    calc_docs = calc_process.load_all()
+    calc_doc = {"version": doc["version"], "updated": doc["updated"],
+                "timelines": calc_process.collect_timelines(calc_docs, doc)}
+    calc_problems = calc_process.validate(calc_docs, doc) + CALC_PROBLEMS
+    if calc_problems:
+        print(f"\n计算过程详情校验：{len(calc_problems)} 条问题")
+        for p in calc_problems:
+            print("  " + p)
     if args.check:
-        return 1 if (any(p["level"] == "error" for p in problems) or SUB_PROBLEMS) else 0
-    if SUB_PROBLEMS:
+        return 1 if (any(p["level"] == "error" for p in problems) or SUB_PROBLEMS or calc_problems) else 0
+    if SUB_PROBLEMS or calc_problems:
         return 1  # 解析问题未解决，不写出
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUT_FILE.write_bytes(rj.render_results(doc, eol="crlf").encode("utf-8"))  # 仓库落盘风格：CRLF
     print(f"已写出 {OUT_FILE.relative_to(ROOT)}（{OUT_FILE.stat().st_size} 字节）")
+    calc_out = rj.render_results(calc_doc, eol="crlf").encode("utf-8")
+    calc_process.OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    calc_process.OUT_FILE.write_bytes(calc_out)
+    print(f"已写出 {calc_process.OUT_FILE.relative_to(ROOT)}（{len(calc_doc['timelines'])} 条时间轴，{len(calc_out)} 字节）")
     untagged = write_untagged_md(doc["operators"])
     print(f"已写出 docs/untagged-operators.md（未归 TAG 干员 {untagged} 名）")
     print(json.dumps(stats, ensure_ascii=False))

@@ -62,10 +62,10 @@ When a dimension hits: re-verify each affected row against the PRTS text (`文�
 
 ## 5. Finish
 
-1. 回填：既有行条件/备注 → `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py`；插行/改依据/正文行替换与插入/新建子表 → `scripts/apply_ops.py`（先 `--dry-run`）。
+1. 回填：既有行条件/备注 → `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py`；插行/改依据/正文行替换与插入/新建子表 → `scripts/apply_ops.py`（先 `--dry-run`）；**计算内容（演算式、面板组成式、取档说明）→ 直改 `agent_workspace/tag_pipeline/calc_process/<干员>.json`**（备注里已无 `计算` 块，规范见 `docs/calc-process-spec.md`）。
 2. 合并：`player_tags/_merge_to_docs.py` 与 `official_tags/_merge_official_to_docs.py`；`git diff --stat` 只应含被改分文件＋两份合并文档＋登记簿（`_launch_dates.json`/`char_ids.json` 等）。
 3. **审核规则与结果文件**：存在待裁定项 → 先一轮 AskUserQuestion、**裁定折入前不生成结果文件**；无 → 直接产物链、**产物后审核**。生成时成员变化须递增 `tools/generate_results.py` 的 `VERSION`（同步 `docs/untagged-operators.md`）。
-4. 校验最低集：`tools/run_all_checks.py`；按改动触发——改依据/行号 → `crawlers/strip_prts_noncombat.py --audit`；改条件/备注 → `audit_text_migration.py`（预期数字/依据变化先登记 `ACCEPTED`）；档位取舍 → `REVIEWED_TIERS`。`tools/recommend.py check` 报告悬空荐（荐由开发者维护，只报告）。
+4. 校验最低集：`tools/run_all_checks.py`（含 `tools/calc_process.py --check`）；按改动触发——改依据/行号 → `crawlers/strip_prts_noncombat.py --audit`；改条件/备注 → `audit_text_migration.py`（预期数字/依据变化先登记 `ACCEPTED`）；档位取舍 → `REVIEWED_TIERS`。`tools/recommend.py check` 报告悬空荐（荐由开发者维护，只报告）。
 5. Known drift: the dictionary layer (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv}`) is **not** maintained entry-by-entry, yet some part files cite its counts as cross-anchors (08/09/12) — if the update invalidates an anchor, report it instead of silently editing the anchor text.
 6. 不提交（除开发者另行要求）。
 

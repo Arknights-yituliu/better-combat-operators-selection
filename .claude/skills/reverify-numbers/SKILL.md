@@ -27,4 +27,5 @@ description: 「（待验证）」数值条目的复算与回填流程（extract
 ## 规则与留痕
 
 - 复算结论与回填行走复核文件；一切需要开发者裁决的问题走 `agent_workspace/workdocs/待裁定.md` 流程（先查 `docs/rulings.md`），裁定后折入正本并在台账登记。
+- **涉及攻击次数/时间轴**时，先查 `agent_workspace/tag_pipeline/arkdps_frame_model.json`（哪些属性改变帧、各干员帧数与 ArkDPS 的差异及原因）；改完跑 `tools/frame_check.py` 与 `tools/calc_process.py --check`。需要与 ArkDPS 公式对账时用 `tools/arkdps_report.py`（先 `tools/arkdps_replicate.py --calibrate` 校准求值器）。
 - 分文件在复算期间被手工修订时，用 `_reverify/refresh_lines.py` 只重定位（items.jsonl 的 `loc` 字段＝`b<块序>r<行序>`，见 reverify.iter_part_rows），不重跑 extract。

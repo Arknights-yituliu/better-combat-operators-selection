@@ -1,0 +1,56 @@
+{
+  "operator": "麦哲伦",
+  "timelines": {},
+  "members": [
+    {
+      "tag": "P04",
+      "subTag": "",
+      "match": "精英2；2技能／3技能专精3",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 面板",
+            "title": "面板攻击力构成",
+            "expr": "469 ＋ 40 ＋ 23 ＋ 40",
+            "result": "572",
+            "unit": "点",
+            "note": "精英2满级 469＋满信赖 +40＋潜能4 攻击 +23＋Y模组3级（SUM-Y）攻击 +40"
+          },
+          {
+            "section": "② 无人机",
+            "title": "龙腾.L 单次",
+            "result": "549",
+            "unit": "点",
+            "note": "无人机输出按自身面板计"
+          },
+          {
+            "section": "② 无人机",
+            "title": "龙腾.A 单次",
+            "expr": "803 × 250%",
+            "result": "2008",
+            "unit": "点",
+            "note": "3技能攻击力 +150% 同时作用于麦哲伦与无人机"
+          },
+          {
+            "section": "③ 取档",
+            "title": "模组与潜能",
+            "result": "3",
+            "unit": "级",
+            "note": "Y模组3级（SUM-Y）；潜能5 的攻击 +23 已计入面板；无人机按自身攻击力结算"
+          },
+          {
+            "section": "④ 是否达线",
+            "title": "射程与落点",
+            "result": "6",
+            "unit": "格",
+            "note": "无人机可部署于任意远程位、不限定在麦哲伦射程内"
+          }
+        ]
+      },
+      "metric": "damage",
+      "scenarioNames": {
+        "normal": "默认有敌方单位"
+      }
+    }
+  ]
+}

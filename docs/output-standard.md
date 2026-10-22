@@ -134,6 +134,7 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 | remark | array | 否 | **信息加工后的备注**（数值、持续时间、隐藏机制、特殊用法、战术帮助），块数组，结构见下；无内容时省略该字段（模组隐藏机制查 `docs/module-hidden-mechanics.md`） |
 | subTags | array | 否 | 子 TAG／分组（支持两级嵌套，可被筛选，多选取交集），元素为 `{group, value, detail?}`，见 4.3；无分组时省略 |
 | source | object | 否 | **外部计算工具来源**：显示成绩采用了 ArkDPS 的帧模型／算法框架／用法分支时给出 `{model, url, author, parts, detail}`——`model` 工具名、`url` 官网、`author` 作者（极夜星辰）、`parts` 本条引用的部分（如「帧模型与用法分支」「组合公式与默认数据」）、`detail` 该部分的详细说明（口径见 `docs/calc-rules.md` §4.10）；未采用者省略。消费端**仅在详情卡片末尾**据此展示一条「数据来源：ArkDPS（作者：极夜星辰 · 官网 ark-dps.com/zh/）｜引用部分：{parts}——{detail}」 |
+| calc | object | 否 | **计算过程详情的分步算式**：`{timeline?, metric, note?, scenarios:[{id, steps:[{section?, title?, expr?, result?, unit?, note?}]}]}`。有 `timeline` 时指向 `operator-timelines.json` 的同名时间轴（图）；`metric` 为默认纵轴 `damage`／`hits`。`计算` 块已退役——备注里不含它（存量已全量删除；源里若残留，生成器仍会剥离）。结构与撰写规则见 `docs/calc-process-spec.md` |
 | prtsUrl | string | 是 | 该 TAG 下点击卡片的 PRTS 跳转地址，见 §5 |
 
 **`remark` 的块结构**（撰写写法与块序见 `docs/concept.md`「备注分块」，撰写侧不手写本结构）：
@@ -150,12 +151,12 @@ UI 项目据 `version` 判断是否需要重新导入数据；`updated` 供人�
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| label | string | 否 | 块标签：`成绩` 或 `成绩 <情形名>（<面板口径>）`、能力全称（`2技能「…」`／`第一天赋「…」`／`特性`／`模组「X」N级`／`召唤物「…」`）、`计算`、`说明`；无标签块省略该字段 |
+| label | string | 否 | 块标签：`成绩` 或 `成绩 <情形名>（<面板口径>）`、能力全称（`2技能「…」`／`第一天赋「…」`／`特性`／`模组「X」N级`／`召唤物「…」`）、`说明`；无标签块省略该字段 |
 | items | array | 是 | 块内的条，至少一条 |
-| items[].label | string | 否 | 条标签：成绩块与计算块＝技能名，能力块＝维度词（`持续`／`范围`／`伤害`／`打数`／`其它` 等）；无则省略 |
+| items[].label | string | 否 | 条标签：成绩块＝技能名，能力块＝维度词（`持续`／`范围`／`伤害`／`打数`／`其它` 等）；无则省略 |
 | items[].text | string | 是 | 条正文 |
 
-- 块序固定（成绩 → 各能力块 → 计算 → 说明）；`items` 为空的块、空数组的 `remark` 一律省略。
+- 块序固定（成绩 → 各能力块 → 说明）；`计算` 块已退役，演算式写 `calc_process/`；`items` 为空的块、空数组的 `remark` 一律省略。
 - 旧文本（源单元格不含 `｜`）自动成为「单块 + 条按 `；` 拆分」，两个字段的形状对所有条目一致。
 
 **「阵容组合」（P12）的成员为组合条目**（字段形状与上表不同，其余 TAG 沿用上表）：
@@ -276,7 +277,7 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 4. 排序：生成时在内存里就套用 `tag_order.json`（`build()` 内、校验之前），故**重生成不会打乱顺序**；只改顺序而不重生成时跑 `tools/apply_tag_order.py`（它**只重排、不重生成**——改了分文件后仍须重跑生成器）。
 5. 评定标准严谨版：`tools/criteria_to_json.py` 生成 `results/player-tags-criteria.json`，其 `tags[]` 与各 TAG `subs[]` 同样按 `tag_order.json` 排序（文档 `docs/player-tags-criteria.md` 的章节序是**编辑序**，允许与产物序不同）。
 
-发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 需要时跑 `tools/apply_tag_order.py`／`tools/criteria_to_json.py` → `tools/run_all_checks.py` 八步全绿 → 复制到 UI 项目。
+发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 需要时跑 `tools/apply_tag_order.py`／`tools/criteria_to_json.py` → `tools/run_all_checks.py` 九项全绿（含「计算过程详情校验」） → 复制到 UI 项目。
 
 **手工编辑**：`recommend_gui.py` 的「结果 JSON」页可把 `results/` 下的 json 载入内存编辑（结构化卡片 + 源码视图共用一份数据，编辑期间不写盘），再由「保存…」选择覆盖已有文件或新建自定义文件名；保存前按本规范列出问题（可定位，但不阻断保存，仅内容不是合法 JSON 时拒绝写盘），写盘时先按 `tag_order.json` 重排顺序、再重算荐。内容有变化时按 §1 更新 `version`／`updated`；**纯顺序变化只更新 `updated`**。「TAG 排序」页专门维护顺序（拖拽 → 保存即重排两处产物）。
 
@@ -285,6 +286,48 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 1. 官方 TAG 家族关系（如 造成元素损伤 顶层与四个子系）是否需加 `parent` 字段；当前各自为独立 TAG，层级只记录在文档中。
 2. 官方类 TAG 是否也需要「荐」；如需要，扩展方式与玩家类相同。
 3. 干员基本信息是否补充其他字段（如 获取方式、阵营标签）由 UI 需求决定，新增即需升版本。
+
+## 8.5 时间轴产物 `results/operator-timelines.json`
+
+帧级时间轴不放进 `operator-tags.json`（后者首屏即加载、体量已近上限），单独成文件，由 `tools/generate_results.py` 每次生成时同步写出；前端只在首次打开含图表的详情时加载。
+
+```json
+{
+  "version": "v36",
+  "updated": "2026-10-21",
+  "timelines": {
+    "克莱门莎@S3": {
+      "fps": 30,
+      "scenarios": [
+        {
+          "id": "normal",
+          "name": "普通/精英敌人（元素值 1000）",
+          "durationFrames": 2793,
+          "panel": 1065,
+          "series": [
+            { "key": "attack", "group": "攻击（物理）", "label": "主攻击（235%）", "damageType": "physical",
+              "events": [[15, 2815.6, 1], [51, 2815.6, 1], [87, 3128.4, 1]] }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `timelines` 的键 | `干员名@时间轴名`（如 `克莱门莎@S3`），成员 `calc.timeline` 引用它；同一时间轴可被多个 TAG 的成员共用 |
+| `fps` | 固定 30 |
+| `scenarios[].id` / `name` | 与 `calc.scenarios[].id` 一一对应；`name` 是页面情形按钮文案 |
+| `scenarios[].durationFrames` | 演算窗口总帧数，所有 `events[].frame` ∈ `[0, durationFrames]` |
+| `scenarios[].panel` | 该情形的面板攻击力（展示用） |
+| `series[].key` / `label` / `group` / `groupDesc` | **数据单元**／显示名／**图例单位（短名，≤12 字）**／**图例完整语义**（tooltip 与图例补全用）。同一 `group` 的多条 series 在图上合并求和，图例只出现一次 |
+| `series[].damageType` | `physical`／`art`／`element`／`true`／`fixed`；仅用于 tooltip 标注，**配色按图例逐项分配调色板、同一图内不重色** |
+| `series[].events` | `[frame, damage, hits]`：帧、该次结算的期望伤害（点）、段数（缺省 1）。同一份事件同时支撑「伤害」「攻击段数」两种纵轴 |
+
+- 只收录**被产物成员实际引用**的时间轴；未被引用的撰写源不会进入产物。
+- 形状变化与 `operator-tags.json` 同步升版本；撰写规则见 `docs/calc-process-spec.md`。
 
 ## 9. 完整示例（节选）
 

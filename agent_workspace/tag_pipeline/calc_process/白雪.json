@@ -1,0 +1,54 @@
+{
+  "operator": "白雪",
+  "members": [
+    {
+      "tag": "P02",
+      "match": "精英2；2技能（专精3数值）",
+      "metric": "hits",
+      "scenarioNames": {
+        "normal": "2技能（25 秒）"
+      },
+      "expected": {
+        "hits": {
+          "normal": 25
+        }
+      },
+      "note": "大飞镖使命中目标每秒受到 80% 攻击力法术伤害，持续 25 秒",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 前提",
+            "title": "结算间隔",
+            "expr": "1.0 × 30",
+            "result": "30",
+            "unit": "帧",
+            "note": "每秒结算 1 次；条件为 2 技能专精3"
+          },
+          {
+            "section": "② 单次效果",
+            "title": "单跳倍率",
+            "result": "80",
+            "unit": "%",
+            "note": "每跳为攻击力 80% 的法术伤害"
+          },
+          {
+            "section": "③ 生效次数",
+            "title": "25 秒内的跳数",
+            "expr": "25 × 30 ÷ 30",
+            "result": "25",
+            "unit": "跳",
+            "note": "持续 25 秒、每秒 1 跳"
+          },
+          {
+            "section": "④ 是否达线",
+            "title": "等效每秒段数",
+            "expr": "25 ÷ 25",
+            "result": "1",
+            "unit": "段/秒",
+            "note": "与成绩块一致；25 跳恰达对单门槛"
+          }
+        ]
+      }
+    }
+  ]
+}

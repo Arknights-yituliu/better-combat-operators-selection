@@ -1,0 +1,100 @@
+{
+  "operator": "灰烬",
+  "timelines": {},
+  "members": [
+    {
+      "tag": "P03",
+      "subTag": "聚爆",
+      "match": "精英2；2技能（专三数值）",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 单次倍率",
+            "title": "31 发 × 250% × 110%",
+            "expr": "31 × 250% × 110%",
+            "result": "8525",
+            "unit": "%",
+            "note": "晕眩与 6 秒增伤覆盖前约 30 发；X模组3级（MAR-X）的闪光弹晕眩与 10% 增伤均为达标乘区"
+          },
+          {
+            "section": "② 窗口",
+            "title": "聚爆窗口",
+            "expr": "31 × 0.2",
+            "result": "6.2",
+            "unit": "秒",
+            "note": "每发 0.2 秒"
+          },
+          {
+            "section": "③ 取档",
+            "title": "模组取舍",
+            "result": "1",
+            "unit": "条",
+            "note": "取 X模组3级（MAR-X）；Y模组1级（MAR-Y）的攻速+8 不改变间隔档的文本改写值、取整帧后窗口不变，不取"
+          },
+          {
+            "section": "④ 合计",
+            "title": "聚爆总倍率",
+            "result": "8525",
+            "unit": "%",
+            "note": "与成绩块一致；窗口 6.2 秒内达标（聚爆窗口 ≥6 秒）"
+          }
+        ]
+      },
+      "scenarioNames": {
+        "normal": "31 发连射"
+      },
+      "expected": {
+        "damage": {
+          "normal": 8525
+        }
+      }
+    },
+    {
+      "tag": "P03",
+      "subTag": "连射",
+      "match": "精英2；2技能（专三数值）",
+      "scenarios": {
+        "normal": [
+          {
+            "section": "① 单次倍率",
+            "title": "31 发 × 250% × 110%",
+            "expr": "31 × 250% × 110%",
+            "result": "8525",
+            "unit": "%",
+            "note": "晕眩与 6 秒增伤覆盖前约 30 发；X模组3级（MAR-X）的闪光弹晕眩与 10% 增伤均为达标乘区"
+          },
+          {
+            "section": "② 窗口",
+            "title": "聚爆窗口",
+            "expr": "31 × 0.2",
+            "result": "6.2",
+            "unit": "秒",
+            "note": "每发 0.2 秒"
+          },
+          {
+            "section": "③ 取档",
+            "title": "模组取舍",
+            "result": "1",
+            "unit": "条",
+            "note": "取 X模组3级（MAR-X）；Y模组1级（MAR-Y）的攻速+8 不改变间隔档的文本改写值、取整帧后窗口不变，不取"
+          },
+          {
+            "section": "④ 合计",
+            "title": "聚爆总倍率",
+            "result": "8525",
+            "unit": "%",
+            "note": "与成绩块一致；窗口 6.2 秒内达标（聚爆窗口 ≥6 秒）"
+          }
+        ]
+      },
+      "scenarioNames": {
+        "normal": "31 发连射"
+      },
+      "expected": {
+        "damage": {
+          "normal": 8525
+        }
+      }
+    }
+  ]
+}
