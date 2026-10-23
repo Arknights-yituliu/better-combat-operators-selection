@@ -16,6 +16,7 @@
               "groupDesc": "替身普通攻击（230% 弱点伤害，天赋 ×2）",
               "label": "替身攻击（230%×200%）",
               "damageType": "art",
+              "colorRole": "weakpoint",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -31,6 +32,7 @@
               "groupDesc": "第二天赋总攻击（450% 真实伤害，形态结束时结算）",
               "label": "S.E.E.S.队长总攻击（450%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [

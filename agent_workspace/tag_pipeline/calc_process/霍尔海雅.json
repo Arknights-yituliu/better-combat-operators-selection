@@ -16,6 +16,7 @@
               "groupDesc": "旋风最远段（420%×2×148%，15 轮）",
               "label": "旋风每轮（420%×200%×148%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

@@ -16,6 +16,7 @@
               "groupDesc": "每轮两次伤害（各 228%×150% 物理）",
               "label": "假日风暴每轮（684%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

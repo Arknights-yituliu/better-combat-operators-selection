@@ -15,6 +15,7 @@
               "group": "主攻击",
               "label": "主攻击（235%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 15,
@@ -37,6 +38,7 @@
               "group": "轰炸·物理",
               "label": "轰炸物理（300%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodicInWindows",
                 "intervalFrames": 30,
@@ -93,6 +95,7 @@
               "group": "轰炸·元素",
               "label": "轰炸元素（250%）",
               "damageType": "element",
+              "colorRole": "element",
               "pattern": {
                 "type": "periodicInWindows",
                 "intervalFrames": 30,
@@ -149,6 +152,7 @@
               "group": "侵蚀爆发",
               "label": "侵蚀损伤爆发（5000 点/次）",
               "damageType": "element",
+              "colorRole": "erosion",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -209,6 +213,7 @@
               "group": "主攻击",
               "label": "主攻击（235%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 15,
@@ -231,6 +236,7 @@
               "group": "轰炸·物理",
               "label": "轰炸物理（300%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodicInWindows",
                 "intervalFrames": 30,
@@ -287,6 +293,7 @@
               "group": "轰炸·元素",
               "label": "轰炸元素（250%）",
               "damageType": "element",
+              "colorRole": "element",
               "pattern": {
                 "type": "periodicInWindows",
                 "intervalFrames": 30,
@@ -343,6 +350,7 @@
               "group": "侵蚀爆发",
               "label": "侵蚀损伤爆发（5000 点/次）",
               "damageType": "element",
+              "colorRole": "erosion",
               "pattern": {
                 "type": "list",
                 "events": [

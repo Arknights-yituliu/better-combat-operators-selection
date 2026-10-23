@@ -16,6 +16,7 @@
               "groupDesc": "3技能期间每 2 秒一击的法术伤害（含暖机与蓄力层）",
               "label": "主攻击（逐击递增）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -80,6 +81,7 @@
               "groupDesc": "3技能期间每 2 秒一击的法术伤害（仅暖机）",
               "label": "主攻击（逐击递增）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [

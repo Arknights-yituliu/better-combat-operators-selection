@@ -16,6 +16,7 @@
               "groupDesc": "中继器改向的群体法术攻击（200%×2.8）",
               "label": "混沌的本质每发（200%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -31,6 +32,7 @@
               "groupDesc": "攻击经过中继器的额外 30% 攻击力法术伤害",
               "label": "中继器附伤（30%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

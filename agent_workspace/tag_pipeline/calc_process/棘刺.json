@@ -16,6 +16,7 @@
               "groupDesc": "第一天赋「神经腐蚀」：攻击使目标中毒，3 秒内每秒受到 125 点法术伤害",
               "label": "每秒 1 跳（125 点）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

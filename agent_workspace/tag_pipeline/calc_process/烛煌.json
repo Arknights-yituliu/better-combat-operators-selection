@@ -16,6 +16,7 @@
               "groupDesc": "每发群体攻击本体（225%×110% 法术）",
               "label": "众恶的焚场每发（225%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -31,6 +32,7 @@
               "groupDesc": "灼燃爆发期间额外元素伤害（80%×225%×110%）",
               "label": "额外元素伤害（80%）",
               "damageType": "element",
+              "colorRole": "burn",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -46,6 +48,7 @@
               "groupDesc": "第一天赋熔点引爆固定点（420%×110% 元素）",
               "label": "熔点引爆（420%）",
               "damageType": "element",
+              "colorRole": "burn",
               "pattern": {
                 "type": "list",
                 "events": [

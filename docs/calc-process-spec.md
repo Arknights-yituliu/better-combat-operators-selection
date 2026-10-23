@@ -31,8 +31,8 @@
           "durationFrames": 2793,
           "panel": 1065,
           "series": [
-            { "key": "attack", "group": "攻击（物理）", "label": "主攻击（235%）",
-              "damageType": "physical",
+            { "key": "attack", "group": "主攻击", "label": "主攻击（235%）",
+              "damageType": "physical", "colorRole": "physical",
               "pattern": { "type": "periodic", "startFrame": 15, "intervalFrames": 36, "count": 74,
                            "segments": [{ "untilFrame": 87, "damage": 2815.6 }, { "damage": 3128.4 }] } }
           ]
@@ -78,7 +78,37 @@
 | 风格 | `〈来源〉〈形态〉`：2–6 字为主，如 `主攻击`、`轰炸·物理`、`轰炸·元素`、`侵蚀爆发`、`凋亡持续`、`爆发期元素`、`固定点`；不得写「每次攻击本身造成的…」这类叙述 |
 | 完整语义 | 每组**必须**给 `groupDesc`（tooltip 与图例补全用）；同组内可只在首条写 |
 
-`damageType` ∈ `physical` / `art` / `element` / `true` / `fixed`，仅用于 tooltip 标注——**配色按图例逐项分配调色板**（前端 `LIGHT_PALETTE`/`DARK_PALETTE`），同一张图内绝不重色。
+`damageType` ∈ `physical` / `art` / `element` / `true` / `fixed`，仅用于 tooltip 标注。
+
+**配色按 `colorRole`（颜色角色）**——先按伤害类型定色，同一张图上同类型的第 2/3 个图例取同色相的变体档位（虚线区分），跨干员保持一致：物理恒为橙、法术恒为紫。`colorRole` ∈ `physical` / `art` / `true` / `weakpoint` / `element` / `apoptosis` / `burn` / `neural` / `erosion`，**必填**，且同一时间轴内同一 `group` 的各条 series 必须同角色（图例才是配色单位）。
+
+`colorRole` 按 series **实际造成的伤害类型**判定，不看它是不是「固定值」或「独立机制」：
+
+| 判定依据 | colorRole |
+|---|---|
+| `damageType: physical` | `physical` |
+| `damageType: art` | `art` |
+| `damageType: true` | `true` |
+| 伤害类型为弱点伤害（`groupDesc` 写明） | `weakpoint` |
+| `damageType: fixed` | 按它实际的伤害类型归类（逻各斯 剜魂具辞是「受到的法术伤害提高 165 点」→ `art`） |
+| 元素损伤四类，由图例名区分 | 凋亡 → `apoptosis`、灼燃 → `burn`、侵蚀 → `erosion`、神经 → `neural` |
+| 元素伤害但非损伤爆发（如克莱门莎 轰炸·元素） | `element` |
+
+配色表（前端 `CombatCalcDetail.vue` 的 `ROLE_COLORS`，此处只列首档；深色为同色相在深底上的取值）：
+
+| colorRole | 浅色 | 深色 | 语义 |
+|---|---|---|---|
+| `physical` | `#e0701a` | `#cf7a35` | 物理伤害（橙） |
+| `art` | `#7c3aed` | `#a78bfa` | 法术伤害（亮紫） |
+| `true` | `#b0248f` | `#e0579f` | 真实伤害（品红） |
+| `weakpoint` | `#a07622` | `#c9a94a` | 弱点伤害（暗金） |
+| `element` | `#10938a` | `#40c9b8` | 元素伤害（青绿） |
+| `apoptosis` | `#8a8a8a` | `#c0c0c0` | 凋亡损伤（灰） |
+| `burn` | `#b3202e` | `#d4564a` | 灼燃损伤（赤） |
+| `erosion` | `#1f6fd0` | `#5a9ce8` | 侵蚀损伤（蓝） |
+| `neural` | `#0f9ba0` | `#45b8bd` | 神经损伤（青） |
+
+同类型第 2/3 个图例取该色相的变体档位（更亮/更暗一档）并画虚线；超过档位数的按最后一档处理。新增色值时用 dataviz 校验器对**同一张图实际出现的组合**做校验（色觉模拟 ΔE ≥ 8、正常视觉 ΔE ≥ 15、对底对比度 ≥ 3:1）。
 
 **事件**在产物里是 `[frame, damage, hits]`；`hits` 为段数（缺省 1）。同一份事件同时支撑「伤害」「段数」两种纵轴，无需重复存储。
 
@@ -187,7 +217,7 @@
 
 - 容器：左边框 `3px solid rgb(var(--v-theme-primary))`、**无圆角**、标题主色（与成绩块同族）；
 - 情形 chips（>1 个情形时；无图条目取 `calc.scenarios[].name`）；
-- 图表：ECharts（全局 CDN），横轴帧数；「伤害 / 攻击段数」×「累计伤害 / 单次伤害」（段数模式为「累计段数 / 单次段数」）两组切换；纵轴不写单位；图例为短名 `group`、tooltip 补全 `groupDesc`；**配色按图例出现顺序取调色板**；
+- 图表：ECharts（全局 CDN），横轴帧数；「伤害 / 攻击段数」×「累计伤害 / 单次伤害」（段数模式为「累计段数 / 单次段数」）两组切换；纵轴不写单位；图例为短名 `group`、tooltip 补全 `groupDesc`；**配色按 `colorRole`**（同类型多图例取同色相变体档位 + 虚线，见 §2.1）；
 - 步骤：按 `section` 分组，`expr` 用等宽字体、`result` 主色高亮、`note` 小字灰色。
 
 ## 6. 迁移状态与流程

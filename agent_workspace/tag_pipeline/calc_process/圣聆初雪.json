@@ -16,6 +16,7 @@
               "groupDesc": "群体法术主攻击（598%，含特性追加 ×1.15）",
               "label": "主攻击（598%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

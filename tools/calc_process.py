@@ -40,12 +40,15 @@ RESULTS_FILE = ROOT / "results" / "operator-tags.json"
 
 FPS = 30
 DAMAGE_TYPES = ("physical", "art", "element", "true", "fixed")
+# 颜色角色：图例按伤害类型取色（docs/calc-process-spec.md §2.1）。
+# 与 damageType 不同——它区分元素损伤的四个子类，并把 fixed（固定值附伤）按实际类型归类。
+COLOR_ROLES = ("physical", "art", "true", "weakpoint", "element", "apoptosis", "burn", "neural", "erosion")
 TOP_KEYS = ("operator", "timelines", "members")
 MEMBER_KEYS = ("tag", "match", "subTag", "timeline", "metric", "scenarios", "note", "scoreNames", "expected", "scenarioNames")
 STEP_KEYS = ("section", "title", "expr", "result", "unit", "note")
 TL_KEYS = ("fps", "scenarios")
 SCENARIO_KEYS = ("id", "name", "durationFrames", "panel", "series")
-SERIES_KEYS = ("key", "group", "groupDesc", "label", "damageType", "pattern", "events")
+SERIES_KEYS = ("key", "group", "groupDesc", "label", "damageType", "colorRole", "pattern", "events")
 CALC_SCENARIO_KEYS = ("id", "name", "steps")
 
 # 图例短名上限（含标点）：整句一律不合格，见 docs/calc-process-spec.md §2.1
@@ -162,6 +165,7 @@ def expand_scenario(sc: dict) -> dict:
             "groupDesc": s.get("groupDesc") or s.get("group") or s.get("label") or s["key"],
             "label": s.get("label") or s["key"],
             "damageType": s["damageType"],
+            "colorRole": s["colorRole"],
             "events": expand_series(s),
         })
     return {
@@ -318,6 +322,7 @@ def _validate(docs: list[dict], results: dict | None, baseline: str = "HEAD") ->
                 problem(f"{doc['_file']}｜{name}：规范之外的字段 {sorted(extra)}")
             ids = []
             groups: list[str] = []
+            group_roles: dict[str, str] = {}
             for sc in tl.get("scenarios") or []:
                 extra = set(sc) - set(SCENARIO_KEYS)
                 if extra:
@@ -329,6 +334,9 @@ def _validate(docs: list[dict], results: dict | None, baseline: str = "HEAD") ->
                         problem(f"{doc['_file']}｜{name}｜{sc.get('id')}｜{s.get('key')}：规范之外的字段 {sorted(extra)}")
                     if s.get("damageType") not in DAMAGE_TYPES:
                         problem(f"{doc['_file']}｜{s.get('key')}：damageType 应为 {'/'.join(DAMAGE_TYPES)}")
+                    if s.get("colorRole") not in COLOR_ROLES:
+                        problem(f"{doc['_file']}｜{s.get('key')}：colorRole 必填，应为 {'/'.join(COLOR_ROLES)}"
+                                f"（当前 {s.get('colorRole')!r}）")
                     if "pattern" not in s and "events" not in s:
                         problem(f"{doc['_file']}｜{s.get('key')}：缺少 pattern/events")
                     group = s.get("group") or s.get("label") or s.get("key")
@@ -339,6 +347,11 @@ def _validate(docs: list[dict], results: dict | None, baseline: str = "HEAD") ->
                                     f"应写短名并把完整语义放进 groupDesc")
                         if not s.get("groupDesc") and s.get("group"):
                             problem(f"{doc['_file']}｜{name}｜图例「{group}」缺 groupDesc（完整语义）")
+                    # 图例才是配色单位：同一时间轴内同一 group 的各条 series 必须同色角色
+                    prev = group_roles.setdefault(group, s.get("colorRole"))
+                    if s.get("colorRole") != prev:
+                        problem(f"{doc['_file']}｜{name}｜图例「{group}」内 colorRole 不一致："
+                                f"{prev!r} 与 {s.get('colorRole')!r}")
             if len(set(ids)) != len(ids):
                 problem(f"{doc['_file']}｜{name}：scenario id 重复")
         for m in doc.get("members") or []:

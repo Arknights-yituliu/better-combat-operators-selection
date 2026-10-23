@@ -15,6 +15,7 @@
               "group": "本体攻击",
               "label": "本体普通攻击（180%）",
               "damageType": "art",
+              "colorRole": "art",
               "groupDesc": "本体普通攻击（100%×1.8＝180%，间隔 1.167 秒）",
               "pattern": {
                 "type": "periodic",
@@ -30,6 +31,7 @@
               "group": "浮游单元",
               "label": "4 个浮游单元攻击（35%→121%）",
               "damageType": "art",
+              "colorRole": "art",
               "groupDesc": "浮游单元攻击（伤害上限按 35%→50%→65%→80%→95%→110%→121% 递增，4 个单元合计）",
               "pattern": {
                 "type": "periodic",
@@ -73,6 +75,7 @@
               "group": "周围持续",
               "label": "单元周围每秒法术伤害（216%）",
               "damageType": "art",
+              "colorRole": "art",
               "groupDesc": "浮游单元周围敌人每秒受到 120%×1.8＝216% 攻击力法术伤害（不叠加）",
               "pattern": {
                 "type": "periodic",

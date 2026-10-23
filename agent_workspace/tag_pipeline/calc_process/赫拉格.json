@@ -16,6 +16,7 @@
               "groupDesc": "满月主攻击（200% 物理）",
               "label": "满月每下（200%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

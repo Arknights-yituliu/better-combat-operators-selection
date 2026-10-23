@@ -15,6 +15,7 @@
               "group": "主攻击",
               "label": "3技能 主攻击（250%）",
               "damageType": "art",
+              "colorRole": "art",
               "groupDesc": "3技能 每次攻击造成的法术伤害（250%）",
               "pattern": {
                 "type": "periodic",
@@ -30,6 +31,7 @@
               "group": "浮空持续",
               "label": "浮空持续伤害（150%/跳）",
               "damageType": "art",
+              "colorRole": "art",
               "groupDesc": "集成战略特限模组：失衡／浮空状态敌人每 0.5 秒受到 60%×2.5＝150% 攻击力法术伤害",
               "pattern": {
                 "type": "periodic",

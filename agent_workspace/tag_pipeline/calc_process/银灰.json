@@ -16,6 +16,7 @@
               "groupDesc": "真银斩每下（376.05% 物理）",
               "label": "真银斩（376.05%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -31,6 +32,7 @@
               "groupDesc": "X模组特性附带的 10% 攻击力法术伤害",
               "label": "模组附带法术（10%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

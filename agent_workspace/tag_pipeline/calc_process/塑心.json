@@ -16,6 +16,7 @@
               "groupDesc": "第二天赋：全场敌人处于凋亡损伤爆发期间时每秒受到 100 点元素伤害",
               "label": "每秒 1 跳（100 点）",
               "damageType": "element",
+              "colorRole": "apoptosis",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,

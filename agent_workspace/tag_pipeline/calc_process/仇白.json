@@ -16,6 +16,7 @@
               "groupDesc": "主攻击（266.5% 法术：技能 155%＋模组特性 15.5%＋第一天赋 96%）",
               "label": "问雪每击（266.5%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [

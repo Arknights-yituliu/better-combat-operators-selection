@@ -305,7 +305,8 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
           "durationFrames": 2793,
           "panel": 1065,
           "series": [
-            { "key": "attack", "group": "攻击（物理）", "label": "主攻击（235%）", "damageType": "physical",
+            { "key": "attack", "group": "主攻击", "label": "主攻击（235%）", "damageType": "physical",
+              "colorRole": "physical",
               "events": [[15, 2815.6, 1], [51, 2815.6, 1], [87, 3128.4, 1]] }
           ]
         }
@@ -323,7 +324,8 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 | `scenarios[].durationFrames` | 演算窗口总帧数，所有 `events[].frame` ∈ `[0, durationFrames]` |
 | `scenarios[].panel` | 该情形的面板攻击力（展示用） |
 | `series[].key` / `label` / `group` / `groupDesc` | **数据单元**／显示名／**图例单位（短名，≤12 字）**／**图例完整语义**（tooltip 与图例补全用）。同一 `group` 的多条 series 在图上合并求和，图例只出现一次 |
-| `series[].damageType` | `physical`／`art`／`element`／`true`／`fixed`；仅用于 tooltip 标注，**配色按图例逐项分配调色板、同一图内不重色** |
+| `series[].damageType` | `physical`／`art`／`element`／`true`／`fixed`；仅用于 tooltip 标注 |
+| `series[].colorRole` | `physical`／`art`／`true`／`weakpoint`／`element`／`apoptosis`／`burn`／`neural`／`erosion`；**图例配色的唯一依据**。先按伤害类型定色，同一张图上同类型的第 2/3 个图例取同色相变体档位并以虚线区分，跨干员保持一致。判定规则见 `docs/calc-process-spec.md` §2.1 |
 | `series[].events` | `[frame, damage, hits]`：帧、该次结算的期望伤害（点）、段数（缺省 1）。同一份事件同时支撑「伤害」「攻击段数」两种纵轴 |
 
 - 只收录**被产物成员实际引用**的时间轴；未被引用的撰写源不会进入产物。

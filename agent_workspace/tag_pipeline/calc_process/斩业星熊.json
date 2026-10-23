@@ -16,6 +16,7 @@
               "groupDesc": "二连击（关技能后四连击）的攻击力伤害，含 X 模组每击附带 10% 法术伤害",
               "label": "主攻击（二连击／临死四连击）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -188,6 +189,7 @@
               "groupDesc": "受到攻击时对目标额外造成 10% 攻击力的法术伤害",
               "label": "受击反弹（2.5 秒节拍）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -256,6 +258,7 @@
               "groupDesc": "二连击（关技能后四连击）的攻击力伤害，含 X 模组每击附带 10% 法术伤害",
               "label": "主攻击（二连击／临死四连击）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -428,6 +431,7 @@
               "groupDesc": "受到攻击时对目标额外造成 10% 攻击力的法术伤害",
               "label": "受击反弹（2.5 秒节拍）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -496,6 +500,7 @@
               "groupDesc": "二连击（关技能后四连击）的攻击力伤害，含 X 模组每击附带 10% 法术伤害",
               "label": "主攻击（二连击／临死四连击）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -780,6 +785,7 @@
               "groupDesc": "受到攻击时对目标额外造成 10% 攻击力的法术伤害",
               "label": "受击反弹（2.5 秒节拍）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -868,6 +874,7 @@
               "groupDesc": "二连击（关技能后四连击）的攻击力伤害，含 X 模组每击附带 10% 法术伤害",
               "label": "主攻击（二连击／临死四连击）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -1152,6 +1159,7 @@
               "groupDesc": "受到攻击时对目标额外造成 10% 攻击力的法术伤害",
               "label": "受击反弹（2.5 秒节拍）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [

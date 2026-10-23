@@ -16,6 +16,7 @@
               "groupDesc": "每击 180%×1.28×(1＋特性档) 的攻击力伤害",
               "label": "攻击（满档 1152%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -128,6 +129,7 @@
               "groupDesc": "每击 12%×(1＋特性档) 的真实伤害",
               "label": "附加真伤（满档 60%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -248,6 +250,7 @@
               "groupDesc": "每击 180%×1.28×(1＋特性档) 的攻击力伤害",
               "label": "攻击（满档 1152%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -360,6 +363,7 @@
               "groupDesc": "每击 12%×(1＋特性档) 的真实伤害",
               "label": "附加真伤（满档 60%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -480,6 +484,7 @@
               "groupDesc": "每击 180%×1.28×(1＋特性档) 的攻击力伤害",
               "label": "攻击（满档 1152%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -592,6 +597,7 @@
               "groupDesc": "每击 12%×(1＋特性档) 的真实伤害",
               "label": "附加真伤（满档 60%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -712,6 +718,7 @@
               "groupDesc": "每击 180%×1.28×(1＋特性档) 的攻击力伤害",
               "label": "攻击（满档 1152%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -824,6 +831,7 @@
               "groupDesc": "每击 12%×(1＋特性档) 的真实伤害",
               "label": "附加真伤（满档 60%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -944,6 +952,7 @@
               "groupDesc": "每击 180%×1.28×(1＋特性档) 的攻击力伤害",
               "label": "攻击（满档 1152%）",
               "damageType": "physical",
+              "colorRole": "physical",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -1056,6 +1065,7 @@
               "groupDesc": "每击 12%×(1＋特性档) 的真实伤害",
               "label": "附加真伤（满档 60%）",
               "damageType": "true",
+              "colorRole": "true",
               "pattern": {
                 "type": "list",
                 "events": [

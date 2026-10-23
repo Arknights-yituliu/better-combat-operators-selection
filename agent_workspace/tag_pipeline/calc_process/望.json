@@ -16,6 +16,7 @@
               "groupDesc": "每枚棋子／跟子触发 380%×1.45 的法术伤害",
               "label": "棋子／跟子触发（551%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -204,6 +205,7 @@
               "groupDesc": "每枚棋子／跟子触发 380%×1.45 的法术伤害",
               "label": "棋子／跟子触发（551%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "list",
                 "events": [

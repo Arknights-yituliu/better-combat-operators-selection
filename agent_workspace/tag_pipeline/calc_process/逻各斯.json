@@ -15,6 +15,7 @@
               "group": "主攻击",
               "label": "主攻击（400%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -30,6 +31,7 @@
               "group": "主攻击",
               "label": "语汇演化法术附加",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -45,6 +47,7 @@
               "group": "主攻击",
               "label": "剜魂具辞固定点",
               "damageType": "fixed",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -60,6 +63,7 @@
               "group": "爆发期元素",
               "label": "语汇演化元素附加",
               "damageType": "element",
+              "colorRole": "apoptosis",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -133,6 +137,7 @@
               "group": "凋亡持续",
               "label": "凋亡损伤爆发（800/秒）",
               "damageType": "element",
+              "colorRole": "apoptosis",
               "pattern": {
                 "type": "windowsPerSecond",
                 "windows": [
@@ -163,6 +168,7 @@
               "group": "主攻击",
               "label": "主攻击（400%）",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -178,6 +184,7 @@
               "group": "主攻击",
               "label": "语汇演化法术附加",
               "damageType": "art",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -193,6 +200,7 @@
               "group": "主攻击",
               "label": "剜魂具辞固定点",
               "damageType": "fixed",
+              "colorRole": "art",
               "pattern": {
                 "type": "periodic",
                 "startFrame": 0,
@@ -208,6 +216,7 @@
               "group": "爆发期元素",
               "label": "语汇演化元素附加",
               "damageType": "element",
+              "colorRole": "apoptosis",
               "pattern": {
                 "type": "list",
                 "events": [
@@ -261,6 +270,7 @@
               "group": "凋亡持续",
               "label": "凋亡损伤爆发（800/秒）",
               "damageType": "element",
+              "colorRole": "apoptosis",
               "pattern": {
                 "type": "windowsPerSecond",
                 "windows": [

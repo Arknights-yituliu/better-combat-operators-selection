@@ -31,6 +31,8 @@
 > - 二十二 排序层 —— TAG／取值展示顺序的唯一维护处、拖拽式排序页与版本口径
 > - 二十三 ArkDPS 外部数据更新复核（2026-10-16）——珊比「阻挡／不阻挡」二情形与弹药类技能口径
 > - 二十四 连射：等效每秒门槛新增与已纳入成员复核
+> - 二十五 独立复核裁定（帧模型与元素损伤）
+> - 二十六 时间轴图配色 —— 按伤害类型定色、固定值附伤的归类
 
 ---
 
@@ -1058,3 +1060,17 @@
 ## 复核留痕
 - 报告：`agent_workspace/_out/review/arkdps-audit-2026-10-22.md`；逐条中间量：`_out/review/_p01_trace.txt`。
 - ArkDPS 现抓公式：`_out/_arkdps_live_logos_delta.txt`、`_out/_arkdps_live_censhen_x.txt`、`_out/_arkdps_live_censhen_y.txt`、`_out/_arkdps_live_zhenyan.txt`、`_out/_arkdps_live_qiubai.txt`。
+
+# 二十六、时间轴图配色：按伤害类型定色
+
+## 1. 配色以伤害类型为准，不按图例顺序、不设独立色池
+- **裁定**：时间轴折线图（`operator-timelines.json`）的图例颜色由 `series[].colorRole` 决定，**先按该 series 实际造成的伤害类型定色**：物理橙、法术紫、真实品红、弱点暗金、元素青绿、凋亡灰、灼燃赤、侵蚀蓝、神经青。同一张图上同类型的第 2/3 个图例取同色相的变体档位并画虚线，跨干员颜色一致。**「自成一套机制」的伤害部分不再单列独立色**——如克莱门莎的「轰炸」按其实实际伤害类型取色（轰炸·物理＝物理橙的变体、轰炸·元素＝元素青绿）。
+- **理由**：开发者点定——图例颜色需以伤害类型为主要区分依据，先定类型再定同一干员内不同伤害部分的相似色；跨干员同名伤害类型颜色一致才有比较意义。
+- **适用范围**：一切含二维折线图的计算过程详情；新增干员、新增图例时同样按此判定。
+- **折入位置**：`docs/calc-process-spec.md` §2.1（字段表、判定规则与配色表）；`docs/output-standard.md` §8.5；`docs/ui-render-rules.md` §6.3；`tools/calc_process.py`（`COLOR_ROLES` 校验）；前端 `CombatCalcDetail.vue` 的 `ROLE_COLORS`。
+
+## 2. 固定值附伤按其自身的伤害类型归类
+- **裁定**：`damageType: fixed` 的 series **不一律并入真实伤害**，而是看它实际造成的是什么伤害：逻各斯「剜魂具辞」是「攻击使目标…受到的法术伤害提高 165 点」（`material_datas/PRTS/逻各斯/逻各斯.md:65`），属**固定值的法术附伤**，故 `colorRole: art`；只有本身就是真实伤害的固定值才归 `true`。
+- **理由**：开发者点定——固定点伤害仍按伤害类型在主色相上取相似色，除非它就是真实伤害。
+- **适用范围**：一切 `damageType: fixed` 的 series。
+- **折入位置**：`calc_process/逻各斯.json`（`t2` series 的 `colorRole`）；`docs/calc-process-spec.md` §2.1 判定表。
