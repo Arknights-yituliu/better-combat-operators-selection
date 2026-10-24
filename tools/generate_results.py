@@ -48,7 +48,7 @@ PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v37"
+VERSION = "v38"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -378,6 +378,7 @@ ARKDPS_MEMBER_ROWS = {
     ("01", "荒芜拉普兰德"),
     ("01", "玛恩纳"),
     ("01", "卡涅利安"),
+    ("01", "Mon3tr"),
 }
 
 ARKDPS_DETAILS = {
