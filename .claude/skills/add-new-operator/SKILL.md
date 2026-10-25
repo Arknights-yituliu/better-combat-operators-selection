@@ -69,8 +69,9 @@ description: 对新实装干员逐 TAG 评定（官方设定 TAG ＋ 玩家体�
 2. **玩家** —— 改分文件（成员表 ＋ 按需的边界／多 TAG 并存），然后跑：
    `.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py`
    并核对 `docs/player-tags-members.md` 的总览行（受影响 TAG 行数 +N）。
-3. **体检** —— `git diff --stat` 只应出现预期的文件；评定标准各节必须原封不动（本管线只更新**成员名单**；需要改评定标准是另一件事，交开发者）。再挑两三条新行确认合并文档里渲染正常。
-4. **不要生成 `results/operator-tags.json`** —— 最终 JSON 按 `docs/output-standard.md` 另行产出。除开发者要求外不提交。
+3. **零 TAG 也是一种结论**：若官方与玩家 TAG 一个都不收，成员表一行都不改——此时把**近失理由**（哪个门槛差多少、依据行号）写进相应分文件的「边界与排除记录」，否则下次全库重扫会把它当未判过而重判。同时在「检索记录」留一条单点复核痕（日期可留在此节）。
+4. **体检** —— `git diff --stat` 只应出现预期的文件（**本仓库常有并行代理同改同一批分文件**：工作区里出现不是你改的条目属正常，只核对**你自己的**那几行仍在、并列出非你所改的路径上报，**不要处置它们**——尤其禁止 `git checkout --`／`git restore`，见 `AGENTS.md` §二 铁律 5）；评定标准各节必须原封不动（本管线只更新**成员名单**；需要改评定标准是另一件事，交开发者）。再挑两三条新行确认合并文档里渲染正常。
+5. **不要生成 `results/operator-tags.json`** —— 最终 JSON 按 `docs/output-standard.md` 另行产出。除开发者要求外不提交。
 
 ## 禁止
 
