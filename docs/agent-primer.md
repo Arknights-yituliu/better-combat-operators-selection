@@ -80,3 +80,6 @@
 3. **产出格式**：写 JSON 到 `agent_workspace/_out/<批名>.json`（键＝干员名，值＝`{condition, remark, why}`），**不直接改分文件**——由主进程统一回填（按「干员」列名结构化定位、只设 条件/备注 两个字段，其余字段原样保留）。
 4. **自查命令**：`tools/verify_numbers.py --only <TAG>` 与 `tools/prts_stats.py --check`，并要求回报关键输出。
 5. **不许自作主张的清单**：不得改依据列、不得增删成员行、不得改评定标准（发现规则冲突时报告，不自行其是）；工具报警按本 TAG 判据裁定，裁定结论进 `REVIEWED_TIERS` 或台账。
+
+> **本条只适用于 TAG 改写／复算／数据修复类任务。版本更新类任务（新干员／新模组）不适用——它的开工件与阅读预算在 `docs/version-update-quickstart.md` §1，主进程按那份清单派单，不要让子代理再读本文与 `rulings` 全文。**
+

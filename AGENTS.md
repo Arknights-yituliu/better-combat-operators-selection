@@ -1,211 +1,52 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (Claude Code, OpenCode, Codex, …) when working with code in this repository. 人类开发者入口见 `README.md`；文档索引见 `docs/README.md`；agent 资源索引见 `.claude/README.md`。
+> **本文只讲「接到任务怎么开工」。** 项目介绍、数据流、命令手册、分类约定都是专文，按 §三 索引按需查阅——**开工时不要读它们**。
+> 人类开发者入口见 `README.md`；文档总目录见 `docs/README.md`；agent 资源索引见 `.claude/README.md`。
 
-## What this repo is
+## 一、任务类型 → 开工件（按类型二选一，不要叠加）
 
-A **data-production repository** (not an app) for an Arknights operator-filtering system. It crawls the PRTS wiki into local markdown, then classifies every operator under two TAG systems (official-defined + player-perception) and produces per-operator results consumed by a **separate UI project**. There is no build/lint/test tooling; the code is a handful of one-off Python data scripts. Working language is Chinese; all documents/outputs are Chinese.
+| 任务类型 | 唯一开工件 | 要点 |
+|---|---|---|
+| **版本更新**（新干员 ＋／或 既有干员新模组） | `docs/version-update-quickstart.md` | 其 §1「阅读预算」已写死必读 4 处、按需与禁读清单、三条止损线；**不再另读 primer** |
+| 新干员实装（单独） | `.claude/skills/add-new-operator/SKILL.md` | 只更新成员文档，**绝不生成** `results/operator-tags.json` |
+| TAG 改写／复算／数据修复 | `docs/agent-primer.md` | 派子代理一律用 `.claude/agents/tag-rewrite`，别手写 brief |
+| 全表扫描／评定标准修订 | `docs/scan-protocol.md` ＋ `.claude/skills/solidify-criteria/SKILL.md` | 扫描类先出名单、逐人决断，再另起复核 |
+| 新增 TAG | `.claude/skills/add-player-tag/SKILL.md` | 先把评定标准说清，除非明确选 stub 方案 |
+| 数值复算／「（待验证）」条目 | `.claude/skills/reverify-numbers/SKILL.md` | |
+| 批次回填／守恒审计 | `.claude/skills/tag-batch-rewrite/SKILL.md` | 先 `--dry-run` |
+| 会话转交 | `.claude/skills/handoff/SKILL.md` | 状态快照在 `agent_workspace/handoff/state.md`（本地） |
+| 判断类问题（取哪个档／算不算计入…） | `docs/rulings.md` | **先读顶部节级目录、只读命中节**；查不到才提问 |
 
-The eventual product is the JSON set consumed by the filter UI: `results/operator-tags.json` (main output; format spec: `docs/output-standard.md`), `results/combat_glossary.json` (combat-term glossary, generated from `docs/glossary.md`), and `results/player-tags-criteria.json` (per-TAG criteria copy for the frontend drawer, generated from `docs/player-tags-criteria.md`). TAG definitions, membership lists, counts and open questions change frequently — this file describes stable structure and conventions only; treat `docs/` as the source of truth for content.
+> 结构性更改（改评定标准、全库重扫、增删 TAG、改计算规则正本）**不走版本更新快线**。
 
-## Data flow / architecture
+## 二、AI 协作铁律（四条，违反过，代价明确）
 
-```
-docs/operators.txt ──► crawlers/crawl_prts.py ──► material_datas/PRTS/<干员>/<干员>.md (+ <召唤物>.md siblings)
-crawlers/crawl_ranges.py ──► material_datas/PRTS/<干员>/攻击范围.md（攻击范围网格：各精英化阶段 / 技能 / 召唤物；PRTS 用内联 SVG 绘制，主爬虫不抓）
-                                              │
-        official TAGs:  agent_workspace/tag_pipeline/{catalog,merged,deterministic}.json + final_lists.tsv
-                        agent_workspace/tag_pipeline/official_tags/[A-I]-*.json（tag-part/1 分模块：条目头＋干员 | 编号 | 条件 | 备注）
-                        └─► docs/official-tags-members.md（_merge_official_to_docs.py 重生成 §3/§4/§5）
-        player TAGs:    docs/player-tags-specify.md（定义）
-                        agent_workspace/tag_pipeline/player_tags/NN-*.json（tag-part/1 分 TAG 判定文件，含逐条 文件:行号 证据）
-                        _brief.md（共享评定标准）+ _launch_dates.json + _merge_to_docs.py + _recommend.json（荐，tools/recommend.py 维护）
-                        └─► docs/player-tags-members.md（自动生成，勿手改：改分文件后重新合并）
-                        └─► results/operator-tags.json（最终输出，tools/generate_results.py 生成，规范见 docs/output-standard.md）
-                        └─► docs/untagged-operators.md（未归 TAG 干员，随生成一并写出）
-        计算过程详情:   agent_workspace/tag_pipeline/calc_process/<干员>.json（帧级时间轴＋分步算式，撰写源）
-                        └─► results/operator-timelines.json（帧级时间轴，随生成一并写出；前端详情弹窗按需加载）
-                        └─► members[].calc（分步算式；备注里已无「计算」块，该块已退役、存量已全量删除）
-                        规范 docs/calc-process-spec.md；校验 tools/calc_process.py --check（Σ伤害＝成绩块总伤的对账、数字守恒、图例命名）
-                        --pending（待迁移清单）/ --show-entry（看源「计算」块与成绩块）/ --strip（删除源「计算」块）
-        player TAG 文案: docs/player-tags-criteria.md（严谨版源：通俗说明＋精确条件＋计算式＋对照例子）
-                        └─► results/player-tags-criteria.json（tools/criteria_to_json.py；前端「查看评定标准详情」抽屉）
-        展示顺序:       agent_workspace/tag_pipeline/tag_order.json（手写：官方类别序／类内 TAG 序、玩家 TAG 序、每 TAG 取值序）
-                        └─► tools/apply_tag_order.py（只重排、不重生成）──► 两处 results/ 产物的顺序与玩家的 subOrder
-```
+1. **自创代称必须登记**：文档与交付文本中的任何代称、缩写、自编号（规则号、历史冲突号、TAG 代号、模组线名、公式符号等）一律登记在 `docs/term-map.md`（含义／用法／查阅位置）。**新建即同步**；未登记的代称不得用于交付文本，且首次出现必须当场解释该怎么理解。
 
-- `material_datas/PRTS/` — one folder per operator; operator page plus one sibling `.md` per summon. `_manifest.json` is the crawler's resume record (per-operator status/files/summon links). 语料**只含作战信息**：章节级剧情（`干员档案`/`语音记录`/`干员密录`…）由 `STOP_SECTIONS` 整节丢弃，模组剧情、模组解锁任务、升级材料、`后勤技能` 由 `strip_noncombat()` 剥离（模组等级图标改写为 `**模组等级N**` 文本行，模组类型码保留为 `**ART-X**` 形式的文本行）。剥离压缩了行号，全仓库 `文件:行号` 引用随之整体平移，核对方式见下方 `crawlers/strip_prts_noncombat.py --audit`。
-- `agent_workspace/tag_pipeline/` — official-TAG machine-readable dicts (`catalog.json` = TAG dictionary — the only dict scripts read；另有一份**非字典**手写机读源 `tag_order.json` = TAG／取值的展示顺序（见数据流图），`merged.json` = operator→TAG ids, `deterministic.json` = parsed base stats/summons — a snapshot that does not follow TAG changes; `merged.json` / `final_lists.tsv` rebuilt by `_merge_official_to_docs.py --sync-dicts`; `final_lists.tsv` = TAG→members)、`stats.json`（**机读属性层**：每干员的 E0–E2 满级攻击／信赖上限／潜能各档／模组各档固定属性，由 `tools/prts_stats.py` 从 PRTS 语料抽取；面板与档位的唯一取数处）与 `player_tags/` for the player-TAG workflow；`arkdps_frame_model.json` 为帧模型登记表（哪些属性改变帧、逐干员的帧数/次数与 ArkDPS 对照，见 `docs/calc-process-spec.md §2.5`）。
-- `agent_workspace/` — agent 工作区（各子目录用途见 `agent_workspace/README.md`）：`tag_pipeline/` 为 TAG 判定文件与机读字典所在；`_out/` 为临时批次目录（本地，不进库）；`workdocs/` 存《待裁定.md》《待验证复算.md》等工作稿（本地，不进库，模板在 `docs/templates/`）；`handoff/` 存转交状态快照（本地，不进库）。
-- `crawlers/` — PRTS 爬取与语料剥离（`crawl_prts.py`、`crawl_ranges.py`、`crawl_special_mechanics.py`、`strip_prts_noncombat.py`）；`tools/` — 生成与校验工具（`prts_stats.py`、`verify_numbers.py`、`generate_results.py`、`calc_process.py`、`frame_check.py`、`arkdps_replicate.py`、`arkdps_report.py`、`apply_tag_order.py`、`glossary_to_json.py`、`criteria_to_json.py`、`module_notes.py`、`recommend.py`、`run_all_checks.py`、`sync_results.py`）。根目录只保留 GUI 入口 `recommend_gui.py` 与启动脚本。
-- `docs/mechanism-understanding.md` + `docs/verification-complaints.md` — mechanics primer and known judgment pitfalls (dated notes — their counts reflect the day they were written; current lists live in the member docs).
-- `docs/concept.md` — project intent and the 条件/备注/结果 JSON rules that all classification work follows (the one place those writing rules live); `docs/output-standard.md` — final results JSON spec (version/date, operator cards, PRTS deep links, 荐); `docs/untagged-operators.md` — 未归入任何 TAG 的干员（auto-written by `tools/generate_results.py`: full roster minus `operators[]`). `docs/player-tags-specify.md` — 玩家 TAG 定义（开发者手改）; `docs/calc-rules.md` — 计算规则正本（结算层位与总式、游戏文本→因素映射、演算流程、未定项索引），数值门槛与术语只作指针指向 `docs/player-tags-specify.md`／`docs/glossary.md`; `docs/ui-render-rules.md` — 消费端（前端项目）渲染规则记录，改 JSON 结构时对照之.
-- `gui/` — the maintenance panel as a package: `config/errors/md` (leaf) → `tags/roster/recommends/merges/results_json/order` (data) → `writeback/model` (business) → `server/selfcheck/__main__`; page assets in `gui/static/` (`index.html` + `app.css` + `app.js`, styled with ak-ui dark tokens — see the CSS header for provenance and the density compromise). `recommend_gui.py` at the root is a thin entry point (`python -m gui` is equivalent). Usage guide (English): `gui/README.md`.
-- The UI itself is **out of scope** for this repo (the panel above is a maintainer tool, not the product UI).
+2. **裁定必须留痕、所见即所得**：所有待裁项集中在单一工作文件 `agent_workspace/workdocs/待裁定.md`，每条自包含（背景／现状／候选／**算式与来源**），开发者只读该文件即可裁定；涉及模组线、专有机制、道具、自编号时**给出完整描述**，不得假设开发者与自己知识对齐。**先查台账再提问**——同一个问题问第二遍即流程失败。裁定后四步缺一不可：① 折入源文件；② `docs/rulings.md` 登记（裁定／理由／适用范围／折入位置）；③ 脚本侧放行表（`ACCEPTED`／`REVIEWED_TIERS`）写明理由并指向台账；④ 整体移除 `待裁定.md`。
 
-### File authority map (what to trust, what to edit)
+3. **改动的授权边界**：开发者明确要求修改的，必须动；**AI 自行发现「可能需要修改」的，一律先写进《待裁定.md》问过再改**——不得自行改动、不得顺带修。自行放大工具权限（如放宽代理的 `allowed-tools`）同属越界。
 
-Read only what the task needs; the two member docs and the two results JSONs are large — read them by §／target TAG, never whole.
+4. **语言统一中文**：本仓库一切手写文档的正文用中文；代码块、命令、路径、JSON 键与游戏专名（PRTS／TAG／术语代号）保留原文。规则与判定标准见 `docs/README.md`「撰写语言」，机器校验见 `tools/doc_consistency.py`。
 
-**手写权威源（改这些）**: `docs/concept.md`（意图＋条件/备注规则）、`docs/output-standard.md`（产物规范）、`docs/calc-process-spec.md`（计算过程详情＋帧级时间轴规范）、`docs/player-tags-specify.md`（玩家 TAG 定义）、`docs/calc-rules.md`（计算规则正本：结算层位／文本→因素映射／演算流程；复算作业副本为 `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md`）、**`docs/rulings.md`（裁定台账：开发者对判断类问题的裁定逐条留痕——裁定／理由／适用范围／折入位置；判断类问题先查它，别再问第二遍）**、`docs/term-map.md`（代称映射表：一切自创代称／缩写／自编号的含义与查阅位置，改动或新增代称时同步）、`agent_workspace/tag_pipeline/official_tags/[A-I]-*.json`（官方 TAG 定义与成员，tag-part/1 JSON，GUI 写回可改）、`agent_workspace/tag_pipeline/player_tags/NN-*.json`（玩家 TAG 判定＋证据，tag-part/1 JSON；`_brief.md` 为作业规范）、**`agent_workspace/tag_pipeline/calc_process/<干员>.json`（计算过程详情的撰写源：时间轴 series＋分步 steps；改后跑 `tools/generate_results.py`）**、**`docs/player-tags-criteria.md`（玩家 TAG 评定标准严谨版：前端抽屉文案源，撰写要求见其文件头；由分文件评定标准转述、`tools/criteria_to_json.py` 校验指纹）**、`docs/glossary.md`（术语；前 5 节手写，后 6 节由 `crawlers/crawl_special_mechanics.py --apply` 追加）、字典 `catalog.json`／`char_ids.json`／`_launch_dates.json`／`docs/operators.txt`、**`agent_workspace/tag_pipeline/tag_order.json`（TAG／取值的展示顺序，唯一维护处；维护面板「TAG 排序」页或 `tools/apply_tag_order.py`）**。
+## 三、索引（需要时再读，不要开工时读）
 
-**生成物（勿手改，改上列源文件后重生成）**: `docs/official-tags-members.md` §3/§4/§5 ← `_merge_official_to_docs.py`；`docs/player-tags-members.md` ← `player_tags/_merge_to_docs.py`；`results/operator-tags.json` ＋ `results/operator-timelines.json` ＋ `docs/untagged-operators.md` ← `tools/generate_results.py`；`results/combat_glossary.json` ← `tools/glossary_to_json.py`；`results/player-tags-criteria.json` ← `tools/criteria_to_json.py`；`docs/module-hidden-mechanics.md`（各模组「※」隐藏机制汇编）← `tools/module_notes.py --emit`（源＝`docs/temp.txt`）；`material_datas/PRTS/**`（含 `_manifest.json`、`_range_codes.json`、`特殊机制/`）← 三个爬虫；`merged.json`／`final_lists.tsv` ← `--sync-dicts`（无脚本读取）；`deterministic.json`＝基础属性快照（不随 TAG 变化）；`results/operator-tags.json` 与 `results/player-tags-criteria.json` 的**顺序**另有第二个写者 `tools/apply_tag_order.py`（只重排、不重生成）。
+| 想了解 | 读 |
+|---|---|
+| 项目是什么、数据流、目录职责、**文件权属**（改谁／信谁） | `docs/architecture.md` |
+| **全部命令**与参数 | `docs/commands.md` |
+| 分类约定、**评定标准写法规则** | `docs/classification-conventions.md` |
+| 爬虫内部、语料剥离规则、证据层审计纪律 | `docs/crawling-and-strip.md` |
+| 计算规则正本／产物规范／消费端渲染规则 | `docs/calc-rules.md`、`docs/output-standard.md`、`docs/ui-render-rules.md` |
+| 机制常识正典／术语／历史判断陷阱 | `docs/mechanism-understanding.md`、`docs/glossary.md`、`docs/verification-complaints.md` |
+| 条件与备注的写法（分条／分块） | `docs/concept.md` |
+| 历史记录（仅背景、不作依据） | `docs/history-notes.md` |
+| 文档总目录 | `docs/README.md` |
+| 维护面板用法 | `gui/README.md` |
+| 人类开发者入门／贡献 | `README.md`、`CONTRIBUTING.md` |
 
-**属性与数值工具（非生成链路，按需运行）**: `tools/prts_stats.py`（PRTS 语料 → `stats.json`，并提供 `panel_of()` 面板复算）与 `tools/verify_numbers.py`（对着 `stats.json` 校准产物里的面板／档位／恒等式／内部代号／因子覆盖）。两者与 `stats.json` 一样是**生成物**：改 `stats.json` 要改爬虫侧或重跑 `tools/prts_stats.py`，不手改。
+## 四、本仓库的边界
 
-**剥离工具（非生成链路，按需运行）**: `crawlers/strip_prts_noncombat.py` —— 剥离逻辑本体在 `crawlers/crawl_prts.py` 的 `plan_strip()`／`render_strip()`／`strip_noncombat()`，本脚本只 import 之，用于回填历史语料与审计。`--dry-run` 先看改动与冲突；`--fix-stale` 补正审计发现的失效引用。删除行会平移其后行号，任何再次剥离都必须同时跑改写与审计。
-
-**回填工具（非生成链路，按需运行）**: `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py` —— 把 `agent_workspace/_out/<批名>.json`（`tag-rewrite` 子代理的产出，键＝干员名，值＝`{condition, remark, why}`）写回分文件：**按「干员」列名结构化定位行、只设「条件」「备注」两个字段**（其余字段原样保留；同名多行取文档序最后一处，`干员（子表名）` 可对块标题消歧）；行首机器协议前缀（插拔容错的 `救急路径：`、`子 TAG：`）用 `--keep-prefix` 从当前行取出保留，否则整批丢子 TAG。`agent_workspace/_out/` 为临时批次目录（已 gitignore）。
-
-**隐藏机制工具（非生成链路，按需运行）**: `tools/module_notes.py` —— 解析 `docs/temp.txt`（PRTS《模组》页表格快照，开发者收集）里各模组**效果格的「※」条文**，汇编成 `docs/module-hidden-mechanics.md`（按干员／按类别索引；跨模组重复的通用注释单列）。术语弹窗里的 glossary 释义不计入本档（它们归 `docs/glossary.md`）。`--list` 只看统计；`--emit` 写出。
-
-`--audit` 报三类，判据是**与 HEAD 对比**——取每条引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值：
-- **失效**（应为 0）：工作区没带上应有的值，即漏改；
-- **未解析**（应为 0）：解析不到目标、但文件名属于 PRTS 语料，属于"看不懂就当没问题"的静默跳过；
-- **指向已删行**（每次改动剥离规则后需人工过一遍其原文）：原锚点所在行被剥离删除，逐条看删的是不是作战内容。
-
-**不要**用"新行号处的文本 == 旧行号处的文本"做这个检查。剥离保证 `new[map(x)-1] == old[x-1]` 对任何在范围内的行号都成立，无论它是改写后的还是漏改的——那样的检查只会发现越界，正是本仓库踩过的坑。有意偏离机械映射的引用（改锚到真正支撑论点的行）登记在脚本内的 `ACCEPTED`，新增即视为一次显式裁定。
-
-扫描范围按目录显式枚举（`REF_GLOBS`），新增目录时须同步——漏一个目录就是整批引用静默保留旧行号。
-
-**只为背景、不作依据**: `docs/verification-complaints.md`、`agent_workspace/tag_pipeline/player_tags/_mode-limited-module-audit.md`、`official-fullmap-aura.md`（历史转制稿）。`docs/mechanism-understanding.md` 是**机制常识正典**——判别原则以它为准（其中的计数与举例如有出入，以现行文件为准）。
-
-## 开工前的必读清单（新会话与子代理）
-
-派发或接手「TAG 改写／复算／数据修复」类任务前，**先读 `docs/agent-primer.md`**（作业记忆包）：游戏常识（技能按精英阶段开放、**专精需精英2＋技能 7 级**、模组解锁需精英2——这三条语料里查不到）、仓库作业常识、**反面清单**（真的发生过的错误类型）、以及派发子代理的必读清单与产出格式。派这类子代理一律用 `.claude/agents/tag-rewrite` 代理类型，别再手写 brief——记忆由结构保证，不靠每次重新嘱咐。
-
-**版本更新类任务**（新干员／新模组等非结构性更新）：先读 `docs/version-update-quickstart.md`（快线）——七步流程、预核验清单、验证最低集与审核规则（**有待裁定项：先裁定、裁定前不生成结果文件；无：产物后审核**）。结构性更改（改评定标准／全库重扫／增删 TAG）不走此线。
-
-本文与 `docs/agent-primer.md` 的关系：本文讲仓库**结构**，primer 讲**常识与红线**；两者的内容如与 `docs/rulings.md` 的裁定冲突，以裁定为准并回改。
-
-**接手既有工作时**：先跑 `.claude/skills/handoff/SKILL.md`（转交技能）——它含开工顺序、现场约定（踩过的坑）、校验套件与转交写法；**当前状态快照在 `agent_workspace/handoff/state.md`**（本地，不进库），其内容有时效，与仓库文件冲突时以文件为准；每轮交付前顺手更新。
-
-## Commands
-
-```bash
-# Crawl one (or several) operators, with summons; resumable + throttled
-.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"
-#   new operator? first add a line to docs/operators.txt:  干员名 https://prts.wiki/w/干员名
-#   flags: --force (re-crawl ok entries), --delay-min/--delay-max, --operators-file, --out-dir
-#   爬虫写出前会跑 strip_noncombat()，落盘语料不含剧情/养成内容
-
-# 核对证据层：全仓库 文件:行号 是否仍指向剥离前的原文（剥离或改行号后必跑）
-.venv/Scripts/python.exe -X utf8 crawlers/strip_prts_noncombat.py --audit   # --fix-stale 补正
-
-# 核对条件/备注重排：对比 HEAD，查重排行是否丢数字、丢依据、留禁用符号（改过分文件后必跑）
-#   有意改动的数字登记在脚本内的 ACCEPTED（键＝文件名｜干员，值＝放行令牌＋理由）
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py           # --only 01 只审某文件
-
-# 批次回填：把 agent_workspace/_out/<批名>.json（tag-rewrite 子代理的产出，键＝干员名）写回分文件
-#   按表头定位列、以 HEAD 重建整行，只替换「条件」「备注」两格；行首机器协议前缀用 --keep-prefix 保留
-.venv/Scripts/python.exe -X utf8 .claude/skills/tag-batch-rewrite/scripts/_apply_batch.py --tag P03 --file 03-吃拐一轮秒.json --out agent_workspace/_out/P03-A.json
-
-# PRTS 语料 → 机读属性层（属性/信赖/潜能/模组档位固定属性）→ agent_workspace/tag_pipeline/stats.json
-.venv/Scripts/python.exe -X utf8 tools/prts_stats.py                     # --check 只报覆盖率；--panel 干员 --stage e2 --pot 4 --module Δ --tier 3
-# 产物数值校准：面板是否与条件声明的档位相符、模组档位是否取满、恒等式、内部代号、因子覆盖
-.venv/Scripts/python.exe -X utf8 tools/verify_numbers.py                 # --only P01；--coverage 只看因子覆盖清单
-
-# 一键全量校验：属性层覆盖率 / 数值校准 / 生成规范与文本 lint / 迁移守恒 / 证据层审计 / GUI 自检
-.venv/Scripts/python.exe -X utf8 tools/run_all_checks.py
-
-# Regenerate the merged player-TAG document after editing part files
-.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py
-
-# Regenerate the player-tag criteria JSON (frontend 抽屉文案) from its source doc
-.venv/Scripts/python.exe -X utf8 tools/criteria_to_json.py        # --check 只校验；--accept 放行分文件指纹
-
-# Generate the final results JSON from both member docs (spec: docs/output-standard.md §7)
-.venv/Scripts/python.exe -X utf8 tools/generate_results.py          # --check / --report
-#   writes results/operator-tags.json; --check validates against the spec without writing
-#   applies tag_order.json ordering in memory, so regenerating never scrambles the display order
-#   also writes results/operator-timelines.json from agent_workspace/tag_pipeline/calc_process/
-
-# Validate the calc-process sources alone (spec: docs/calc-process-spec.md)
-.venv/Scripts/python.exe -X utf8 tools/calc_process.py --check      # --show 干员 / --emit
-#   numerical reconciliation: Σ event damage per scenario must match the 成绩 block's 总伤 (±0.5%)
-
-# Re-order the two results products to the order kept in tag_order.json (re-order only, no regeneration)
-.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py           # 套用；无变化则不写盘（幂等）
-.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py --check   # 一致性校验（run_all_checks 的第 8 步用这个）
-.venv/Scripts/python.exe -X utf8 tools/apply_tag_order.py --seed    # 把产物有、顺序文件没登记的项补到各段末尾（--rebuild 整体重建）
-
-# Maintain player-TAG 荐 (recommended operators); data file player_tags/_recommend.json
-.venv/Scripts/python.exe -X utf8 tools/recommend.py list|add|remove|check   # 例：tools/recommend.py add 充电 白铁
-# Local web panel, four tabs:
-#   「荐」= 荐 add/remove (详情 = info card + read-only 条件/备注 in the right column);
-#   「人工归纳」= pick operators out of a TAG (扩展/移动/移除) into a staging area, fold them into
-#     target 子表, and edit 条件/备注 (writes back to player_tags/NN-*.json and official_tags/[A-I]-*.json;
-#     recomputes official 条目头);
-#   「TAG 排序」= drag TAGs / sub-TAG values into the display order kept in
-#     agent_workspace/tag_pipeline/tag_order.json; saving re-projects the order onto both results
-#     products (updates `updated` only, never `version`);
-#   「结果 JSON」= load results/*.json into memory (or start from a spec-shaped skeleton), edit with
-#     structured cards + a raw-source view, then save via 覆盖已有文件 / 新建自定义文件名 — nothing is
-#     written until 保存, and validation against docs/output-standard.md only warns, never blocks;
-#     保存时先按 tag_order.json 重排顺序、再按 _recommend.json／_recommend_fallback.json 重算各玩家
-#     TAG 的荐字段（面板内荐只读）。
-.venv/Scripts/python.exe -X utf8 recommend_gui.py                    # --port / --no-browser / --check
-.venv/Scripts/python.exe -X utf8 -m gui                              # 同上（实现都在 gui/ 包内）
-
-# Crawl attack ranges (per elite phase / skill / summon) into each operator dir; resumable
-.venv/Scripts/python.exe -X utf8 crawlers/crawl_ranges.py            # --only 干员名 / --force
-
-# Regenerate the combat-term glossary JSON from docs/glossary.md (mirror-checked inside)
-.venv/Scripts/python.exe -X utf8 tools/glossary_to_json.py
-
-# 解析 docs/temp.txt（PRTS《模组》页快照）→ 模组隐藏机制汇编 docs/module-hidden-mechanics.md
-.venv/Scripts/python.exe -X utf8 tools/module_notes.py            # --list 只看统计；--emit 写出
-
-# Refresh the PRTS《特殊机制》snapshot + normalized entries (network; throttled)
-.venv/Scripts/python.exe -X utf8 crawlers/crawl_special_mechanics.py  # --emit / --apply（追加术语章节）/ --input
-
-# After any official-TAG structural change (add/rename/merge TAGs, member edits): rebuild
-# the machine-readable dicts merged.json / final_lists.tsv from the module files
-.venv/Scripts/python.exe -X utf8 agent_workspace/tag_pipeline/official_tags/_merge_official_to_docs.py --sync-dicts
-```
-
-- On Windows the console is GBK: always run Python with `-X utf8` / `PYTHONIOENCODING=utf-8`, or write CJK output to a UTF-8 file and read it with the Read tool — printing CJK directly yields mojibake.
-- PRTS requires **full browser headers** (UA + Accept + Accept-Language + Referer) and throttling (default 1.2–2.8 s/request); never crawl in a tight loop. See `.claude/skills/crawl-prts-operator/SKILL.md` for crawler internals and cleanup gotchas (hidden-span passes, markdownify image loss, Windows `os.replace` retry).
-
-## Classification conventions (apply when adding/editing TABs or members)
-
-- **Evidence-based**: every judgment cites `文件:行号` under `material_datas/PRTS/`; never classify from model memory. Uncertain items are marked `[待考]` and routed to 待开发者确认.
-- **条件 vs 备注**: 条件 = hard requirements, 备注 = processed info (numbers, durations, hidden mechanics, tactical use) — the full rules, 反例 and 正例 live in `docs/concept.md`「结果展示」; follow that instead of restating it here. 两者的**排布规范**同在该文件：「条件分条」（`；` 只切并列要求，「或」合并成一条、支内用 `／`）与「备注分块」（`｜` 分块、`；` 分条、两层都用 `标签：正文`；块序 成绩→能力→说明；`★` 分类标记与 `备注：` 类前缀禁用）。源字段（分文件 JSON 的「备注」列值）里用 `｜` 写、生成器解析成结果 JSON 的块数组；不符规范的行由 `tools/generate_results.py --check` 的文本 lint 逐条列出，改动过的行另跑 `.claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py`（数字守恒／依据不丢）。
-- **数值取自机读层、不手抄**: 面板（满信赖＋最高精英满级＋有效潜能最高档＋条件点名模组档位固定属性）、潜能与模组各档固定属性的**唯一取数处是** `agent_workspace/tag_pipeline/stats.json`（`tools/prts_stats.py` 从 PRTS 语料抽取，`panel_of()` 给面板与组成式）；产物里的每个 `面板NNN` 由 `tools/verify_numbers.py` 回头校准。模组／潜能取对本 TAG 有帮助的最高档并写进条件（**「有帮助」按绝对贡献判**——不得因更高档会拉低比值／稀释均值而改取低档；多条通用模组之间平权、取成绩更高者；持**特限证章**者通用线与特限线**分别计算**、UI 分别展示且特限线优先，无者默认模组增伤条件均满足、取更高者并把条件写进条件，见 `docs/rulings.md`）。**计算规则只作用于玩家体感 TAG**——官方设定 TAG 不涉及计算部分；成绩只允许「精英0/1 可满足的最低档＋最高档」与「特殊机制多情形」两种并列，其余取满配档；能力块必须自足（写清该能力本身）；未计入项逐条写进 `说明`；**内部代号（范围代号、`S1/S2/S3`、`表 2A`、`路径⑤`）不入产物，但模组代号例外、应当进产物**——统一写「中文线名（代号）」如 `X模组3级（HOK-X）`、`集成战略特限模组3级（ISW-α）`（见 `docs/rulings.md`「模组代号进产物」）。演算默认敌人为**纯木桩**（0 防御／0 法抗／0 闪避免伤／无减伤）：作用于敌方防/抗数值的减益与穿透不计入，承伤倍率型增伤（脆弱、通缉）照计。
-- **No dropped capabilities**: an operator's entry lists **every** capability meeting that TAG's 评定标准 — multiple qualifying features are all written (条件 covers each hard requirement, 备注 itemizes them); never omit one because it overlaps, is smaller, or a stronger one is already written.
-- **And nothing unrelated**: an entry writes only what belongs to that TAG's 评定对象 — other abilities (特性／别的天赋／别的技能／未取用的模组线) and their 「未计入」 notes are not written; what is actually folded into the calculation (面板组成式、算式) is kept. See `docs/rulings.md`「条目只写与本 TAG 相关的内容」and `docs/concept.md`「备注分块」.
-- **Module tiers (模组档位)**: when a module enhances the capability a TAG judges, 条件 names the module + level (e.g. `Y模组3级`) and 备注 uses that tier's values; pick the highest tier whose **absolute** contribution to this TAG's judged capability is greatest — never a lower tier just because the higher one dilutes a ratio or margin. Multiple **通用** module lines are equal-ranked: take the higher-scoring one. Operators with a **特限证章** (mode-limited module) get **both** the universal line and the 特限 line computed and presented (特限 first, per `docs/ui-render-rules.md`); everyone else assumes every module's boost condition holds and takes the higher line, writing the enabling condition into 条件. Different TAG rows may cite different modules. No vague "X模组更佳/可选" phrasing; modules irrelevant to the TAG are not mentioned. **Calculation rules apply to player TAGs only — official TAGs carry no computation.**
-- **Summons/devices count as the owner's capability.** **Mode-limited modules (ISW-α/RA-α etc.) count** for player TAGs — state the mode restriction in 条件 and note it in 备注.
-- Direction matters (to allies vs self vs enemies); one operator may belong to **multiple TAGs**; player TAGs may have **sub-TAGs** (implementation/type/scope distinctions).
-- Mechanism-level, time-independent only: no tier-list / current-meta claims.
-- Member tables sort by release date descending (date from PRTS `## 获得方式`, cached in `player_tags/_launch_dates.json`); boundary/combo tables follow their own grouping.
-- 开发者的裁定与开放问题落在各分文件自身的 `## 待开发者确认` 与评定标准/边界与排除记录里 — read the target file's 评定标准 and 边界与排除记录 before changing any player TAG.
-- Player-TAG work uses parallel agents: one agent per TAG writes an evidence-bearing part file under `player_tags/`, following `_brief.md`; the merge script consolidates them into `docs/player-tags-members.md` (stripping the 依据 column). Keep evidence in the part files.
-- Adding a new TAG: follow `.claude/skills/add-player-tag/SKILL.md` — make the 评定标准 fully unambiguous with the developer before any member work, unless they explicitly choose the "先创建此TAG，评定标准后续更新" stub option.
-- 评定标准只给了几个例子／模糊表述（「相当高」「较强」）时：follow `.claude/skills/solidify-criteria/SKILL.md` — 回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证；对外释义（tooltip 等）同步更新。
-- New operator released (developer gives a PRTS link or description): follow `.claude/skills/add-new-operator/SKILL.md` — crawl into `material_datas/PRTS/`（含攻击范围）, judge every TAG (official + player), ask the developer about notable mechanics no TAG covers, then update the member docs (`docs/official-tags-members.md` + part files → merged doc) only — never generate `results/operator-tags.json`.
-- Version update (new operator **plus** new modules on existing operators, incremental): follow `.claude/skills/update-version/SKILL.md` — refresh only the changed operators, fold new modules into the affected rows (模组档位), and run the cross-operator impact checklist (新阵营成员/使能者/对外挂点…); never a full-table rescan.
-
-### TAG criteria: 评定标准 writing rules (official AND player TAGs)
-
-- A TAG's evaluation standard is called **评定标准** — use that term everywhere: the section heading (`## 评定标准`), its sub-headings, and any prose that states, applies or records a standard. This applies to **both TAG systems**: the official entries (`docs/official-tags-members.md` §1/§4) and every player-TAG file (`agent_workspace/tag_pipeline/player_tags/NN-*.json`). Do not use 口径, 裁决 or any other synonym for the standard itself; sub-rules (how a count is computed, rounding, etc.) use plain words — 计数方式 / 计算方式 / 判定 / 门槛 — never 口径.
-- When adding, revising or removing a standard, **never stamp dates or round labels** (`2026-09-11`, 本轮, 追加, 最新, 二次更新…) and never write the edit itself into the text (no "覆盖上一轮…", 已落实, 重新纳入, 移出改为…, 修正后, before/after phrasing). A reader must not be able to tell from the text which round a rule came from.
-- Every TAG's 评定标准 must be **清晰、有序、整洁、风格一致**:
-  - 清晰 — 纳入写「收什么」，排除写「不收什么」，判定阈值与算式给全；
-  - 有序 — 固定顺序：规格原文（如有）→ 纳入 → 排除 → 与其它 TAG 的关系 → 通用约定（数值档位、召唤物/装置、模式限定模组）；有子 TAG 时每个子 TAG 独立成块、用同一套小标题；
-  - 整洁 — 不重复、不夹叙旧账、不引用本文件其它小节编号之外的"第几条"；
-  - 风格一致 — 统一用 `**纳入**：`、`**排除**：`、`**与其它 TAG 的关系**：`、`**约定**：` 等加粗标签起头。
-- Fold each new standard into the existing structure — the path it belongs to, the member table, the boundary records — then re-read that TAG's whole 评定标准 section and tidy it: merge redundancies, renumber paths, re-word so it reads as one clean spec written in a single pass.
-- Boundary, exclusion and 待开发者确认 records state rules/facts and their rationale only; they are not a changelog of how the list evolved (drop 本轮／日期／已落实-style labels there too). 检索记录 is the one place where dated process entries may remain.
-
-## AI 协作铁律（工作流程）
-
-1. **自创代称必须映射**：文档与本仓库 AI 输出中使用的任何代称、缩写、自编号（规则号 R1–R24、历史冲突号 C1–C10、TAG 代号 P01–P13、X模组/Y模组、公式符号等），一律登记在 `docs/term-map.md`（代称映射表）——逐条写明含义、用法与查阅位置。**创建任何新的代称／自创词时必须同步维护该表**；未登记的代称不得在交付文本中使用。
-2. **裁定内容所见即所得、并且必须留痕**：所有待开发者裁定的内容集中于单一工作文件 `agent_workspace/workdocs/待裁定.md`——每条自包含（背景、现状、候选值／选项、**支撑判断的计算式与来源**），开发者**仅需阅读该文件**即可完成全部裁定，无需查阅任何其它文件；文中出现的任何**自创词／简称必须当场解释该怎么理解**；涉及模组线（X／Y／Δ／特限证章等）、专有机制、道具、自编号与代称时，**必须给出完整描述**（名称、效果原文、数值、模式限定与达成条件）——**不得假设开发者的知识储备与自己对齐**。裁定后**四步缺一不可**：① 折入源文件（分文件／规则／复算产物）；② 在 `docs/rulings.md`（裁定台账）登记一条（**裁定／理由／适用范围／折入位置**）；③ 脚本侧逐条放行表（`ACCEPTED`／`REVIEWED_TIERS` 等）写明理由并指向台账；④ 整体移除 `待裁定.md`。**先查台账再提问**——同一个问题问第二遍就是流程失败。与《待验证复算.md》的分工：后者只保留数值复核职能（复算值与结论、回填行），一切需要开发者裁决的问题一律并入 `待裁定.md`。
-3. **改动的授权边界**：**开发者明确要求修改的，必须动；AI 自行发现「可能需要修改」的，一律先写进《待裁定.md》问过开发者再决定**——不得自行改动、不得顺带修。自行放大工具权限同属越界（代理定义的 `allowed-tools` 一经收窄，放宽须经开发者明确同意）。
-
-## Working notes
-
-- Git branch `master`; `docs/player-tags-specify.md` is periodically hand-edited by the developer. Do not commit unless asked.
-- The mechanics docs (`mechanism-understanding.md`, `verification-complaints.md`) exist because the same misjudgments recur (e.g. 灼烧 DoT ≠ 灼燃损伤; 屏障 vs 护盾 vs 闪避; "每帧检测" implementation notes vs real frame mechanics) — consult them before asserting a mechanism.
-- Game-term definitions live in `docs/glossary.md` — check it before judging anything phrased as a term (e.g. 过载 = 技能进行到一半时触发额外效果、覆盖后半程；魔力、吟唱 同此).
+- 这是**数据生产线，不是应用**；产品 UI 在另一个项目，本仓库不消费自己的产物。
+- 没有构建／测试工具链；校验靠 `tools/run_all_checks.py`（十项，清单以脚本 `CHECKS` 为准）。
+- Windows 控制台是 GBK：Python 一律加 `-X utf8`，否则中文直出是乱码。

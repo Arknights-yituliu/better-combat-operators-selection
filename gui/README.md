@@ -1,449 +1,299 @@
-# TAG Maintenance Panel — Developer Guide
+# TAG 维护面板 · 开发与使用指南
 
-A local, single-user web panel for maintaining the operator TAG data of this repository:
-the 荐 lists, the member tables of every TAG (both TAG systems), and the final
-`results/*.json` deliverable. It is a plain Python `http.server` on `127.0.0.1`
-(stdlib only, no build step) serving four screens from `gui/static/`.
+本仓库干员 TAG 数据的本地单人维护面板：维护「荐」名单、各 TAG 的成员表（两套 TAG 体系都含），以及最终产物 `results/*.json`。实现是跑在 `127.0.0.1` 上的 Python 标准库 `http.server`（不依赖第三方包、无构建步骤），由 `gui/static/` 提供四个页面。
 
-> The UI itself is in Chinese. This guide names every control in Chinese with an English gloss.
+> 界面本身是中文。本指南对每个控件都用中文点名。
 
 ---
 
-## 1. At a glance
+## 1. 总览
 
-| Tab | Chinese | What you do there | Writes to disk |
-|---|---|---|---|
-| Recommendations | 荐 | Add / remove the recommended operators (荐) of a player TAG; 详情 shows an info card in the right column | `agent_workspace/tag_pipeline/player_tags/_recommend.json` (immediately) |
-| Manual induction | 人工归纳 | Pick operators out of a TAG (or the full roster), stage them, fold them into target sub-tables, edit 条件 / 备注 | the markdown part files, immediately (see §5) |
-| TAG order | TAG 排序 | Drag TAGs and sub-TAG values into the order you want (official categories, official TAGs within a category, player TAGs, each player TAG's sub-values); 保存排序 writes the order file and re-orders both products | `agent_workspace/tag_pipeline/tag_order.json`, plus `results/operator-tags.json` and `results/player-tags-criteria.json` when 保存后重排产物 is on (immediately) |
-| Results JSON | 结果 JSON | Load `results/*.json` into memory, edit it (structured cards + raw source), save with two options; saving recomputes each player TAG's 荐 fields from `_recommend.json` | only when you press **保存…** |
+| 页签 | 做什么 | 写盘时机 |
+|---|---|---|
+| **荐** | 增删某个玩家体感 TAG 的推荐干员（荐）；`详情` 在右栏显示信息卡 | `agent_workspace/tag_pipeline/player_tags/_recommend.json`（即时） |
+| **人工归纳** | 从某 TAG（或全量干员表）里挑出干员、放进临时区、折进目标子表、编辑条件／备注 | 各 markdown 分文件（即时，见 §5） |
+| **TAG 排序** | 拖拽 TAG 与子 TAG 取值排定展示序（官方类别序、类内 TAG 序、玩家 TAG 序、各玩家 TAG 的取值序）；`保存排序` 写出顺序文件并把顺序投影到两处产物 | `tag_order.json`；若勾了 `保存后重排产物`，同时写 `results/operator-tags.json` 与 `results/player-tags-criteria.json`（即时） |
+| **结果 JSON** | 把 `results/*.json` 载入内存编辑（结构化卡片＋原始源码），两种方式保存；保存时按 `_recommend.json` 重算各玩家 TAG 的荐字段 | 只在点 **保存…** 时 |
 
-Data conventions (what belongs in 条件 vs 备注, TAG criteria, the output schema) live in
-`docs/concept.md`, `docs/output-standard.md`, `docs/player-tags-specify.md` and the per-TAG part
-files — this guide only explains the tool.
+数据规范（条件与备注各写什么、TAG 评定标准、产物结构）在 `docs/concept.md`、`docs/output-standard.md`、`docs/player-tags-specify.md` 与各 TAG 分文件里——本指南只讲工具本身。
 
 ---
 
-## 2. Requirements and running
+## 2. 环境与启动
 
 ```bash
-# from the repository root
-start_gui.bat                 # Windows: double-click or run; uses .venv when present
-./start_gui.sh                # macOS/Linux equivalent
-.venv/Scripts/python.exe -X utf8 recommend_gui.py                 # start + open the browser
+# 在仓库根目录执行
+start_gui.bat                 # Windows：双击或运行；有 .venv 时优先用它
+./start_gui.sh                # macOS / Linux 对应脚本
+.venv/Scripts/python.exe -X utf8 recommend_gui.py                 # 启动并打开浏览器
 .venv/Scripts/python.exe -X utf8 recommend_gui.py --port 8520 --no-browser
-.venv/Scripts/python.exe -X utf8 recommend_gui.py --check         # read-only self-test, no server
-.venv/Scripts/python.exe -X utf8 -m gui                           # identical (implementation lives in gui/)
+.venv/Scripts/python.exe -X utf8 recommend_gui.py --check         # 只做只读自检，不起服务
+.venv/Scripts/python.exe -X utf8 -m gui                           # 同上（实现在 gui/ 包内）
 ```
 
-* Python 3.11+. The panel itself needs **no** third-party packages; the crawlers' dependencies are in `requirements.txt`.
-* `start_gui.bat` / `start_gui.sh` pick the interpreter for you (`.venv` first, then system Python).
-* `-X utf8` matters on Windows: without it the console mangles CJK output.
-* The server binds `127.0.0.1` only (never exposed to the network) and picks an ephemeral port if
-  the requested one is busy — the actual URL is printed at startup.
-* Every mutating request carries a per-session token, so a random page in your browser cannot
-  drive the panel.
-* `--check` parses everything (12 player files, 14 official files, 431 roster operators) and asserts
-  the invariants below. Run it after any change to the data files or to the tool itself.
+- 需要 Python 3.11+。面板本身**不需要**任何第三方包；爬虫的依赖在 `requirements.txt`。
+- `start_gui.bat` / `start_gui.sh` 会自动挑解释器（先 `.venv`，再系统 Python）。
+- Windows 上 `-X utf8` 很关键：不加会让控制台的中文输出变乱码。
+- 服务只绑定 `127.0.0.1`（不对外网暴露）；指定端口被占用时自动换一个临时端口——**实际 URL 会在启动时打印**。
+- 每个写操作都带会话令牌，浏览器里随便打开的网页无法驱动面板。
+- `--check` 会把全部数据解析一遍（12 个玩家分文件、14 个官方分文件、431 名干员）并断言下面的各项不变式。**改过数据文件或工具本身后跑一次。**
 
 ---
 
-## 3. Global chrome
+## 3. 全局控件
 
-| Control | Meaning |
+| 控件 | 含义 |
 |---|---|
-| `荐 / 人工归纳 / 结果 JSON` | Tab strip. Switching away from 结果 JSON asks for confirmation if it has unsaved edits. |
-| `保存后自动重新生成名单文档` (checkbox, on by default) | After a write, run the affected merge script(s) so `docs/*-members.md` matches the part files. Turn it off to batch many edits and press the button yourself at the end. |
-| `重新生成名单文档` | Runs both merge scripts now (player + official). |
-| `刷新数据` | Re-fetches `/api/data`, re-parsing the markdown files and forcing the PRTS basic-info cache to rebuild. |
-| Status text (top right) | One-line result of the last action (`已保存并重新生成名单文档` / failures). |
-| Toasts (bottom right) | Per-action feedback; red-bordered ones are errors and stay longer. |
+| `荐 / 人工归纳 / 结果 JSON` | 页签条。切离「结果 JSON」时若有未保存改动，会先确认。 |
+| `保存后自动重新生成名单文档`（勾选框，默认开） | 每次写盘后自动跑受影响的合并脚本，让 `docs/*-members.md` 与分文件一致。要连续做多处修改时可关掉，最后手工点一次。 |
+| `重新生成名单文档` | 立刻跑两个合并脚本（玩家＋官方）。 |
+| `刷新数据` | 重新拉 `/api/data`，重新解析 markdown，并强制重建 PRTS 基本信息缓存。 |
+| 状态文字（右上角） | 上一次操作的一行结果（`已保存并重新生成名单文档` 或失败原因）。 |
+| Toast（右下角） | 每次操作的反馈；红框的是错误，停留更久。 |
 
-**Keyboard.** `Enter` / `✓` commits an edit, `Esc` / `×` cancels it, `Ctrl+Enter` commits a
-multi-line field. `Esc` closes the topmost layer (dialog → context menu → open card). In the save
-dialog `Ctrl+Enter` saves from anywhere.
+**键盘**：`Enter` / `✓` 提交编辑，`Esc` / `×` 取消，`Ctrl+Enter` 提交多行字段。`Esc` 关闭最上层（对话框 → 右键菜单 → 展开的卡片）。保存对话框里 `Ctrl+Enter` 可在任意位置保存。
 
-The three controls `保存后自动重新生成名单文档`, `重新生成名单文档`, `刷新数据` are hidden on the
-结果 JSON tab — that screen has its own load/save semantics and never touches the markdown files.
+`保存后自动重新生成名单文档`、`重新生成名单文档`、`刷新数据` 三个控件在「结果 JSON」页签下隐藏——那个页签有自己的载入／保存语义，从不碰 markdown。
 
 ---
 
-## 4. Tab「荐」 — recommended operators
+## 4. 页签「荐」
 
-Purpose: mark which operators are recommended under a player TAG. 荐 exists only for the 12 player
-TAGs (P01–P12); official TAGs have no such field. 荐 carries **no display priority** — the array
-order in `_recommend.json` has no meaning.
+用途：标记某个玩家 TAG 下哪些干员是「荐」。荐只存在于玩家 TAG（P01–P12），官方 TAG 没有这个字段。荐**不带展示优先级**——`_recommend.json` 里的数组顺序没有意义。
 
-1. Pick a TAG in the left column (`全部干员` = the union of every member table).
-2. **Left-click** an operator row → adds it to that TAG's 荐 list.
-   **Right-click** → removes it. Both act immediately and are written to `_recommend.json`.
-3. The list shows two groups — 荐（N 人） first, then 其余成员（N 人） — each sorted by release date
-   descending (same-day entries by pinyin). 荐 rows carry a 荐 badge and the amber highlight.
-   With a sub-TAG in the scope bar selected, both groups list **only that sub-TAG's members**
-   (the count line is `N / N 人`), so a 荐 cannot be given to an operator whose record under this
-   TAG belongs to another sub-TAG. 荐 already stored under the selected scope stay listed even if
-   they no longer qualify, so you can right-click them away.
-4. Every row has a `详情` (Details) button: it renders that operator's info card (name / charId /
-   rarity / class·branch / faction / release date / PRTS link) plus read-only 条件 / 备注 record
-   cards — the selected TAG's records, or every player TAG's records under `全部干员` — in the
-   right column. The right column shows a hint until you click a 详情.
-5. The search box filters by name (substring, same behaviour as the other tabs).
+1. 在左栏选一个 TAG（`全部干员`＝各成员表的并集）。
+2. **左键**点一行干员 → 加入该 TAG 的荐；**右键** → 移除。两者都立即生效并写入 `_recommend.json`。
+3. 列表分两组——先「荐（N 人）」、后「其余成员（N 人）」——组内按实装时间倒序（同日按拼音）。荐行带荐徽标与琥珀色高亮。作用域栏选了子 TAG 时，两组都只列**该子 TAG 的成员**（计数行显示 `N / N 人`），因此无法把荐给一个在本 TAG 下记录属于别的子 TAG 的干员。已存在该作用域下、但当前不再符合条件的荐仍会列出，方便你右键移除。
+4. 每行都有 `详情` 按钮：在右栏渲染该干员的信息卡（名称／编号／稀有度／职业·分支／势力／实装时间／PRTS 链接），以及只读的条件／备注记录卡——所选 TAG 的记录，或在 `全部干员` 下每个玩家 TAG 的记录。未点详情时右栏显示提示。
+5. 搜索框按名称过滤（子串匹配，与其他页签一致）。
 
-Notes and failure modes:
+注意与失败情形：
 
-* Only members of the TAG's main tables can become 荐 (the panel refuses otherwise) — that is what
-  keeps `tools/recommend.py check` clean. Inside a sub-TAG scope the bar is higher: the operator
-  must be a member **of that sub-TAG**, otherwise the add is refused with
-  `「X」不在「TAG／子值」这个子 TAG 的成员中…`.
-* Sub-TAG membership is read from the **part files** with the generator's own rule
-  (`player_subtags()` in `tools/generate_results.py` — sub-table heading, 范围／子 TAG cell, or the
-  备注 prefix, see `docs/output-standard.md` §4.3), the same code that fills `subTags` in
-  `results/operator-tags.json`. A row added on 人工归纳 can therefore be recommended right away;
-  no regeneration needed.
-* If a 荐 later stops being a member (you removed the row, or moved it to another TAG), the panel
-  prunes it and tells you with a toast. Re-adding the member does **not** restore the 荐. A 荐 that
-  stays a TAG member but is no longer inside its sub-TAG is reported as `荐不在该子作用域内`
-  (toast on load, listed by `--check`); it keeps showing in that scope's list so you can remove it.
-* 阵容组合 (P12) is edited **per category (势力／用法)**: the scope bar switches the view; the combo header carries the combo-level 荐 (left-click = recommend the combo, right-click = remove), while the provider rows keep their own per-operator 荐. The two are independent and may be mixed (`docs/output-standard.md` §6). Providers within a combo by release date.
-* 荐 scoping: for player TAGs **with sub-TAGs**, the scope bar switches between the sub-TAG lists only — there is **no TAG-level scope** (TAG level cannot hold 薦; the panel refuses TAG-level adds and defaults to a sub-scope). The operator list is confined to the selected sub-TAG's members, and so is every 荐 you can give there. Entries are stored under `TAG/子值` keys and the results JSON carries them as `recommendedBySub`／`recommendedFallbackBySub`.
-* 条件 / 备注 are edited on the 人工归纳 tab; the 荐 tab itself cannot edit them.
-* The CLI equivalent is `tools/recommend.py list|add|remove|check`; both write the same `_recommend.json`. The CLI validates TAG-level membership and the scope *value*; the stricter sub-TAG membership check lives in the panel (and in its `--check` report).
+- 只有 TAG 主表的成员才能成为荐（面板会拒绝），这样才能让 `tools/recommend.py check` 保持干净。子 TAG 作用域内门槛更高：该干员必须是**该子 TAG 的成员**，否则拒绝并提示 `「X」不在「TAG／子值」这个子 TAG 的成员中…`。
+- 子 TAG 归属是用生成器同一套规则从**分文件**里读的（`tools/generate_results.py` 的 `player_subtags()`——子表标题、范围／子 TAG 单元格、或备注前缀，见 `docs/output-standard.md` §4.3），与填 `results/operator-tags.json` 的 `subTags` 是同一份代码。因此在「人工归纳」页新加的行可以立刻被荐，无需重生成。
+- 若某个荐后来不再是成员（你删了那行、或移到了别的 TAG），面板会剪掉它并弹 toast。把成员加回来**不会**恢复荐。仍是 TAG 成员但已不在其子 TAG 内的荐，报为 `荐不在该子作用域内`（载入时 toast、`--check` 也会列出），并在该作用域列表里保留以便你移除。
+- **阵容组合（P12）按分类（势力／用法）编辑**：作用域栏切换视图；组合标题行带组合级荐（左键＝荐该组合，右键＝移除），提供者行各自带干员级荐。二者互相独立、可以混用（`docs/output-standard.md` §6）。组合内的提供者按实装时间排序。
+- 荐的作用域：对有子 TAG 的玩家 TAG，作用域栏只在子 TAG 之间切换——**没有 TAG 级作用域**（TAG 级不能承载荐；面板拒绝 TAG 级添加、默认落到某个子作用域）。干员列表限定在所选子 TAG 成员内，可给的荐也限于此。条目以 `TAG/子值` 为键存储，结果 JSON 以 `recommendedBySub`／`recommendedFallbackBySub` 承载。
+- 条件／备注在「人工归纳」页签编辑；本页签不能改。
+- 命令行等价物是 `tools/recommend.py list|add|remove|check`，写的是同一份 `_recommend.json`。命令行校验 TAG 级成员资格与作用域**值**；更严格的子 TAG 成员资格检查在面板里（以及它的 `--check` 报告里）。
 
 ---
 
-## 5. Tab「人工归纳」 — staging and folding
+## 5. 页签「人工归纳」——暂存与折入
 
-Purpose: pull operators out of one TAG and fold them into another (or add brand-new members to a
-TAG), carrying their 条件 / 备注 where that makes sense.
+用途：把干员从一个 TAG 里取出来折进另一个 TAG（或给某 TAG 添加全新成员），并在合适的时候带走其条件／备注。
 
-### 5.1 Layout
+### 5.1 版面
 
 ```
-┌ TAG tree ──────────┬ operator list ────────────────┬ full-roster picker ─┐
-│ 玩家体感 TAG (12)   │ rows of the selected scope     │ search + 431 people │
-│ 官方设定 TAG        │ click = expand the card        │ left-click = stage   │
-├─────────────────────┴───────────────────────────────┤ (expand mode only)  │
-│ staging area (临时区) — click an item to fold it in │                     │
-└─────────────────────────────────────────────────────┴─────────────────────┘
+┌ TAG 树 ─────────────┬ 干员列表 ─────────────────────┬ 全量干员选择器 ────┐
+│ 玩家体感 TAG (12)    │ 所选作用域的行                 │ 搜索 + 431 人       │
+│ 官方设定 TAG         │ 点击 = 展开卡片                │ 左键 = 放入临时区    │
+├──────────────────────┴────────────────────────────────┤（仅扩展模式）       │
+│ 临时区 —— 点某项即折入                                  │                     │
+└───────────────────────────────────────────────────────┴─────────────────────┘
 ```
 
-### 5.2 Selecting targets
+### 5.2 选择目标
 
-* The TAG tree groups **玩家体感 TAG** (P01–P12) and **官方设定 TAG** (A–I, one category per row).
-* A TAG whose member table is split (决战歼灭, 次数对策, 吃拐一轮秒, 远程消耗, 充电, 初动增加, 保人,
-  高档控制, 阵容组合) shows a caret: click the TAG row
-  to browse all of its members, click a **sub-table row** (表 1 / 2A / 2B / …) to select it. The
-  sub-table — not the TAG — is the unit that receives new rows, because each sub-table means
-  something different.
-* Click a sub-table = single selection. `Ctrl`/`Cmd`+click = multi-selection; every staged item is
-  then folded into **all** selected sub-tables (except 移动, which allows exactly one).
-* The selected scope is also what the operator list shows, and what the expanded cards edit.
-  An operator that appears in two sub-tables of one TAG is legal (e.g. 机械师 in 02) — duplication
-  is only rejected **within one sub-table**.
+- TAG 树分两组：**玩家体感 TAG**（P01–P12）与**官方设定 TAG**（A–I，一行一个类别）。
+- 成员表被拆分的 TAG（决战歼灭、次数对策、吃拐一轮秒、远程消耗、充电、初动增加、保人、高档控制、阵容组合）带折叠箭头：点 TAG 行浏览全部成员，点**子表行**（表 1／2A／2B／…）选中它。接收新行的是**子表**而非 TAG，因为每个子表含义不同。
+- 点一个子表＝单选。`Ctrl`/`Cmd`+点击＝多选；此时每个暂存项会折进**全部**所选子表（`移动` 除外，它只允许一个目标）。
+- 所选作用域同时也是干员列表显示、以及展开卡片编辑的范围。同一干员出现在同一 TAG 的两个子表里是合法的（如 02 的机械师）——**只在同一子表内**拒绝重复。
 
-### 5.3 Staging (临时区)
+### 5.3 临时区
 
-| Action | Result |
+| 操作 | 结果 |
 |---|---|
-| Left-click a picker row (right column) | Stages it in **扩展 / extend** mode. Nothing else is possible from the picker. |
-| Right-click an operator row → `扩展` | Same, from the operator list. |
-| `×` on a staged item | Drop it from staging (no file is touched). |
-| `清空` | Empty the staging area (confirmation; no file is touched). |
+| 左键点选择器一行（右栏） | 以**扩展**模式放入临时区；选择器本身只能做这一件事 |
+| 右键点干员行 → `扩展` | 同上，从干员列表发起 |
+| 暂存项上的 `×` | 从临时区移除（不碰文件） |
+| `清空` | 清空临时区（需确认；不碰文件） |
 
-Staged items are kept in `localStorage`, so a reload does not lose them. If the source row of a
-`移动` item changed meanwhile, the item turns red and asks you to stage it again.
+暂存项存放在 `localStorage`，刷新页面不丢。若某个 `移动` 项的源行期间变了，该项会变红并要求重新暂存。
 
-### 5.4 Folding a staged item into the selected sub-table(s)
+### 5.4 把暂存项折进所选子表
 
-Click a staged item. What happens depends on its mode:
+点一个暂存项，行为取决于它的模式：
 
-* **扩展 (extend)** — inserts a new member row with **empty 条件 and 备注** (plus an empty 依据) so you
-  can write them yourself; its 编号 is filled in from `char_ids.json` by operator name. The staged
-  item stays, so you can fan the same operator out to several sub-tables.
-* **移动 (move)** — inserts a new row carrying the source row's **编号 / 条件 / 备注 / 子 TAG / 依据**,
-  then deletes the source row. Exactly one target sub-table is allowed. After a successful move the
-  staged item is consumed. Columns the target table does not have are dropped and reported.
-* Nothing is written if every target is skipped (e.g. the operator is already in that sub-table).
+- **扩展** —— 插入一行新成员，**条件与备注为空**（依据也空），由你填写；编号按干员名从 `char_ids.json` 填入。暂存项保留，可把同一干员铺到多个子表。
+- **移动** —— 插入一行新成员并带上源行的**编号／条件／备注／子 TAG／依据**，然后删除源行。只允许一个目标子表。移动成功后暂存项消耗。目标表没有的列会被丢弃并报告。
+- 所有目标都被跳过时（如该干员已在该子表）不写任何东西。
 
-New rows are placed by release date (newest first) using `player_tags/_launch_dates.json`;
-阵容组合 always appends to the end of the combo table, because that TAG groups by combo rather than
-by date.
+新行按实装时间定位（新的在前，数据来自 `player_tags/_launch_dates.json`）；阵容组合始终追加到组合表末尾，因为该 TAG 按组合分组而非按日期。
 
-### 5.5 Right-click menu on an operator row
+### 5.5 干员行的右键菜单
 
-| Item | Meaning |
+| 项 | 含义 |
 |---|---|
-| `扩展（放入临时区）` | stage in extend mode |
-| `移动（带走条件/备注，删除源行）` | stage in move mode, remembering the exact source row |
-| `移除（删除该行）` | delete that row from the source table after a confirmation (the dialog names the file; `git` is the undo) |
+| `扩展（放入临时区）` | 以扩展模式暂存 |
+| `移动（带走条件/备注，删除源行）` | 以移动模式暂存，记住确切的源行 |
+| `移除（删除该行）` | 确认后从源表删除该行（对话框会点名文件；`git` 就是撤销） |
 
-When the operator has several records in the current scope, each 移动/移除 entry names the
-sub-table it applies to.
+当该干员在当前作用域有多条记录时，每个移动／移除项都会点名它作用于哪个子表。
 
-### 5.6 Cards — viewing and editing one operator
+### 5.6 卡片——查看与编辑单个干员
 
-Click an operator row to expand it. The card shows the operator's basic info from the PRTS crawl
-(rarity, class·branch, faction, release date, PRTS link — read only) followed by one card per
-record **within the currently selected scope**:
+点一行干员展开。卡片先显示从 PRTS 抓来的基本信息（稀有度、职业·分支、势力、实装时间、PRTS 链接——只读），随后是**当前所选作用域内**每条记录一张卡：
 
-* `编号` — read-only charId (`char_1035_wisdel`), shown next to the operator's basic info. It is the
-  member row's 编号 cell, falling back to `agent_workspace/tag_pipeline/char_ids.json` while a table
-  has not been given the column yet; inserts fill it in automatically, and there is no editor.
-* 条件 / 备注 — click to edit. Clearing 备注 deletes the key; an empty 条件 is flagged in amber
-  until you fill it in.
-* `依据` — read-only evidence pointer (player TAGs only).
-* `子 TAG` — for member tables that carry a `子 TAG` column (拐杖 and the like), click the cell to edit it: values are written as `组/值`, multiple values joined with `、` (e.g. `增益类型/攻击力(加算)、生效方式/在场`; the `触发时` value keeps its detail in parentheses). TAGs whose sub-TAGs are stored as sub-tables are managed by moving rows between sub-tables instead.
-* `prtsUrl` — free text plus four anchor buttons (`无锚点 / #技能 / #天赋 / #模组 / #召唤物信息`) and
-  `按干员名重建`. Choosing the anchor is a human judgement (see `docs/output-standard.md` §5).
-* `↑ 上移` / `↓ 下移` / `删除成员` — reorder or remove the member row.
+- `编号` —— 只读 charId（`char_1035_wisdel`），显示在基本信息旁。它取成员行的编号格，表还没有该列时回退到 `agent_workspace/tag_pipeline/char_ids.json`；插行会自动填，没有编辑器。
+- 条件／备注 —— 点击编辑。清空备注会删掉该键；空条件会以琥珀色提示直到填上。
+- `依据` —— 只读证据指针（仅玩家 TAG）。
+- `子 TAG` —— 对带 `子 TAG` 列的成员表（拐杖之类），点单元格编辑：值写成 `组/值`，多个值用 `、` 连接（如 `增益类型/攻击力(加算)、生效方式/在场`；`触发时` 的值把明细留在括号里）。子 TAG 存成子表的 TAG，改用「在子表之间移动行」来管理。
+- `prtsUrl` —— 自由文本＋四个锚点按钮（`无锚点 / #技能 / #天赋 / #模组 / #召唤物信息`）与 `按干员名重建`。选哪个锚点是人判断（见 `docs/output-standard.md` §5）。
+- `↑ 上移` / `↓ 下移` / `删除成员` —— 调整行序或删除成员行。
 
-Editing a cell writes just that row's `条件`/`备注` **field** (every other cell is left untouched) and
-optionally re-runs the merge. A cell must not contain a pipe (`|` — the generated member doc is still
-a markdown table) and must stay on one line: pasted newlines are collapsed to spaces with a warning.
-Rows are addressed **structurally** (block id + row index + the row's current 条件/备注/子 TAG values);
-if the row changed under you, the server rejects the write with `drift` and the panel asks you to
-refresh instead of overwriting someone else's edit.
+编辑单元格只写该行的条件／备注**字段**（其余格子原样保留），并可选择重跑合并。单元格不得含竖线（`|`——生成的成员文档仍是 markdown 表格），且必须单行：粘贴进来的换行会折叠成空格并给出警告。行是**结构化**定位的（块 id ＋ 行下标 ＋ 该行当前的条件／备注／子 TAG 值）；若行在你操作期间变了，服务端以 `drift` 拒绝写入，面板会请你刷新，而不是覆盖别人的编辑。
 
-### 5.7 What the tab writes
+### 5.7 本页签写哪些文件
 
-| File | When |
+| 文件 | 时机 |
 |---|---|
-| `agent_workspace/tag_pipeline/player_tags/NN-*.json` | member inserted / deleted / moved, or a cell edited |
-| `agent_workspace/tag_pipeline/official_tags/[A-I]-*.json` | same; the entry header `（N 人 · 首现 日期）` is derived at render time, never stored |
-| `agent_workspace/tag_pipeline/player_tags/_recommend.json` | a 荐 became invalid because its member row left the TAG |
-| `docs/player-tags-members.md`, `docs/official-tags-members.md` | regenerated by the merge scripts (never edit these by hand) |
+| `agent_workspace/tag_pipeline/player_tags/NN-*.json` | 插入／删除／移动成员行，或编辑某格 |
+| `agent_workspace/tag_pipeline/official_tags/[A-I]-*.json` | 同上；条目头 `（N 人 · 首现 日期）` 在渲染时推导、从不存储 |
+| `agent_workspace/tag_pipeline/player_tags/_recommend.json` | 某荐因成员行离开该 TAG 而失效 |
+| `docs/player-tags-members.md`、`docs/official-tags-members.md` | 由合并脚本重生成（**绝不手改**） |
 
-Inserting into an official table builds the row from that table's columns (`干员｜编号｜条件｜备注`;
-编号 comes from `char_ids.json` by operator name); the part files are validated on load, so a
-malformed row cannot be produced.
+往官方表插行时，按该表的列（`干员｜编号｜条件｜备注`）构造行，编号按干员名从 `char_ids.json` 取；分文件在载入时即校验，因此不会产出畸形行。
 
 ---
 
-## 6. Tab「结果 JSON」 — editing the deliverable
+## 6. 页签「结果 JSON」——编辑产物
 
-Purpose: edit `results/*.json` (canonically `results/operator-tags.json`, spec:
-`docs/output-standard.md`) by hand. The whole screen is **in-memory**: reading, editing and
-validating never touch the disk. Only **保存…** writes.
+用途：手工编辑 `results/*.json`（规范文件是 `results/operator-tags.json`，规范见 `docs/output-standard.md`）。整个页面是**内存态**：载入、编辑、校验都不碰磁盘，只有 **保存…** 会写。
 
-### 6.1 Loading
+### 6.1 载入
 
-* `加载…` lists the `results/` directory (nothing else can be opened or overwritten).
-  A file that is not valid JSON still opens, in the source view, so you can repair it.
-* `新建骨架` starts an empty document shaped like the spec
-  (`{"version":"v1","updated":<today>,"operators":[],"tags":[]}`).
-* Opening a non-results JSON (e.g. `combat_glossary.json`) puts the screen in read-only summary
-  mode with a warning; nothing can be edited structurally.
-* If a previous session left an unsaved draft in `localStorage`, a banner offers to restore or
-  discard it — it is never restored automatically.
-* If the file's 荐 fields differ from `_recommend.json` / `_recommend_fallback.json`, a toast warns
-  on load that saving will recompute them (see §6.4).
+- `加载…` 列出 `results/` 目录（别的路径既打不开也覆盖不了）。不是合法 JSON 的文件也会以源码视图打开，方便你修。
+- `新建骨架` 建一个符合规范的空白文档（`{"version":"v1","updated":<今天>,"operators":[],"tags":[]}`）。
+- 打开非 results 的 JSON（如 `combat_glossary.json`）会进入只读摘要模式并给出警告，不能做结构性编辑。
+- 若上次会话在 `localStorage` 留了未保存草稿，顶部横幅提供「恢复／丢弃」——**绝不自动恢复**。
+- 若文件的荐字段与 `_recommend.json`／`_recommend_fallback.json` 不一致，载入时 toast 会提示保存将重算它们（见 §6.4）。
 
-### 6.2 Editing
+### 6.2 编辑
 
-Two views of one document; switching re-serializes / re-parses, so neither side can silently lose
-the other's edits. If the source text is not valid JSON, switching back to the structured view is
-refused (you stay in the source view, with the error shown).
+同一文档的两个视图；切换时会重新序列化／反序列化，因此哪一侧都不会静默丢掉另一侧的改动。若源码文本不是合法 JSON，切回结构化视图会被拒绝（停留在源码视图并显示错误）。
 
-* **Structured** — `按干员` / `按 TAG` toggles the mode.
-  * TAG mode: left = `tags[]`, middle = its members, right = the TAG panel (`id` and `source` are
-    read-only; `name` editable; `category` dropdown for official TAGs; a **read-only 荐 view** for
-    player TAGs — per sub-TAG names, fallback entries marked, with a note that the source of truth
-    is `_recommend.json` and saving recomputes it) plus the selected member's card
-    (condition / remark / subTags / prtsUrl, add & remove members, reorder).
-  * 阵容组合 (P12) members are **combo entries**: the card edits `combo` / `condition` / `remark` /
-    `beneficiaries` and the nested provider rows (`operator` / `condition` / `remark` / `prtsUrl`);
-    buttons: `＋ 加组合`, `＋ 提供者`, `删除组合` (format: `docs/output-standard.md` §4.2).
-    Each combo card shows read-only whether the combo is currently in a 荐 list (荐 is maintained
-    on the 荐 tab; saving recomputes it).
-  * Operator mode: a searchable, paginated `operators[]` list; the card edits all seven fields;
-    `从全量干员表补全` fills them from the crawled PRTS data; renaming cascades through members and
-    荐; `新增干员条目` picks from the full roster; `删除条目` warns when references remain.
-* **Source** — the whole document as JSON text, with `格式化` and the parse error underneath.
+- **结构化** —— `按干员` / `按 TAG` 切换模式。
+  - TAG 模式：左＝`tags[]`，中＝其成员，右＝TAG 面板（`id` 与 `source` 只读；`name` 可改；官方 TAG 有 `category` 下拉；玩家 TAG 有**只读的荐视图**——按子 TAG 列名、兜底项有标记，并注明真源是 `_recommend.json`、保存时会重算）＋所选成员的卡片（条件／备注／subTags／prtsUrl，增删成员、调序）。
+  - 阵容组合（P12）的成员是**组合条目**：卡片编辑 `combo`／`condition`／`remark`／`beneficiaries` 与嵌套的提供者行（`operator`／`condition`／`remark`／`prtsUrl`）；按钮：`＋ 加组合`、`＋ 提供者`、`删除组合`（格式见 `docs/output-standard.md` §4.2）。每张组合卡以只读方式显示该组合当前是否在荐名单中（荐在「荐」页签维护；保存时会重算）。
+  - 干员模式：可搜索、分页的 `operators[]` 列表；卡片编辑全部七个字段；`从全量干员表补全` 从抓取的 PRTS 数据补齐；改名会级联到成员与荐；`新增干员条目` 从全量名单里挑；`删除条目` 在仍有引用时警告。
+- **源码** —— 整份文档以 JSON 文本呈现，带 `格式化` 与下方的解析错误。
 
-### 6.3 Checking and tidying
+### 6.3 校验与整理
 
-* `校验` runs the `docs/output-standard.md` rules on the server and reports errors / warnings as a
-  toast. It never edits anything.
-* `按规范整理` applies the mechanical rules after showing a summary of what it will change: sort
-  `tags[]` **by `tag_order.json`** (official by the file's category order, players by the file's TAG
-  order — this replaced an older rule that sorted players by numeric id, which wrongly put `P12`
-  before `P13`), re-emit each player TAG's `subOrder`, reorder every member's `subTags` and the
-  `recommendedBySub` lists, then sort `operators[]` by release date,
-  drop empty `remark` / `subTags`, add missing `recommended` arrays. It deliberately does **not**
-  reorder the members of 阵容组合 (that TAG is grouped by combo). Undo = reload the file.
+- `校验` 在服务端跑 `docs/output-standard.md` 的规则，以 toast 报告错误／警告。它不改任何东西。
+- `按规范整理` 先展示将要改什么，再套用机械规则：**按 `tag_order.json`** 排 `tags[]`（官方按文件的类别序、玩家按文件的 TAG 序——这取代了旧的「玩家按数字 id 排」规则，旧规则会把 `P12` 错排到 `P13` 之前），重发各玩家 TAG 的 `subOrder`、重排每个成员的 `subTags` 与 `recommendedBySub` 列表，然后按实装时间排 `operators[]`，删掉空的 `remark`／`subTags`，补齐缺失的 `recommended` 数组。它**故意不**重排阵容组合的成员（该 TAG 按组合分组）。撤销＝重新载入文件。
 
-### 6.4 Saving
+### 6.4 保存
 
-`保存…` opens the save dialog:
+`保存…` 打开保存对话框：
 
-* **Target** — `覆盖已有文件` (a dropdown of `results/*.json`, defaulting to the file you loaded) or
-  `新建文件` (a name; duplicate names are flagged). When nothing is loaded yet the dialog preselects
-  **新建**, so you cannot overwrite another artifact by accident. Overwriting a file **other than the
-  one you loaded** additionally requires ticking a confirmation checkbox.
-* **Version** — if the content changed (ignoring `version`/`updated`), the dialog offers to set
-  `updated` to today and bump `version` (`v1` → `v2`, any number of digits; unparsable values are
-  left for you to type). Ticking the box off is allowed and only shows a warning. A pending 荐
-  recompute counts as a content change too.
-* **荐 fields** — before writing, every player TAG's `recommended` / `recommendedFallback` /
-  `recommendedBySub` / `recommendedFallbackBySub` is recomputed from `_recommend.json` /
-  `_recommend_fallback.json` with the generator's own rule (`rec_fields()` in
-  `tools/generate_results.py`) — that is why a 覆盖保存 picks up 荐 added on the 荐 tab. The dialog
-  lists the differences up front (as `R8` warnings, click to jump), the post-save toast reports what
-  was recomputed, and the in-memory document adopts the written version.
-* **Problems** — the same validation list, each entry clickable to jump to the offending card.
-  Warnings and spec errors never block saving; the one hard refusal is text that is not valid JSON
-  (you would be writing a broken deliverable).
-* **`强制覆盖`** — only needed when the file changed on disk since you loaded it (see §7).
-* After a successful save the in-memory document becomes the new baseline, the draft copy is
-  dropped, and the screen's current file switches to the file you wrote.
+- **目标** —— `覆盖已有文件`（`results/*.json` 下拉，默认是载入的那个）或 `新建文件`（填名字；重名会标红）。尚未载入任何文件时默认选**新建**，以免误覆盖别的产物。覆盖**载入文件以外**的文件还需额外勾一道确认。
+- **版本** —— 若内容变了（忽略 `version`／`updated`），对话框提议把 `updated` 设为今天并递增 `version`（`v1` → `v2`，位数不限；无法解析的值留给你手填）。可以取消勾选，只会给警告。待重算的荐也算内容变化。
+- **荐字段** —— 写盘前，用生成器同一套规则（`tools/generate_results.py` 的 `rec_fields()`）按 `_recommend.json`／`_recommend_fallback.json` 重算各玩家 TAG 的 `recommended` / `recommendedFallback` / `recommendedBySub` / `recommendedFallbackBySub`——这就是「覆盖保存」能带上在「荐」页签新加的荐的原因。对话框会先列出差异（作为 `R8` 警告，可点跳转），保存后的 toast 报告重算了什么，内存文档接收写出的版本。
+- **问题** —— 同一份校验清单，每项可点跳转到问题卡片。警告与规范错误**从不阻断保存**；唯一的硬拒绝是文本不是合法 JSON（那会写出坏产物）。
+- **`强制覆盖`** —— 仅在文件自你载入后已在磁盘上变化时需要（见 §7）。
+- 保存成功后，内存文档成为新基线，草稿副本被删除，页面的当前文件切到你写出的那个。
 
-Files are written as UTF-8 without BOM, `ensure_ascii=False`, two-space indent, CRLF line endings
-(the style of the existing `results/` files); an LF file stays LF.
+写盘格式为 UTF-8 无 BOM、`ensure_ascii=False`、两空格缩进、CRLF 换行（与现有 `results/` 文件一致）；原本 LF 的文件仍写 LF。
 
 ---
 
-## 6b. Tab「TAG 排序」 — the display order
+## 6b. 页签「TAG 排序」——展示顺序
 
-The **display order** of everything the player sees — official TAG categories, the official TAGs
-inside each category, the player TAGs, and every player TAG's sub-TAG values — is kept in one
-hand-written file, `agent_workspace/tag_pipeline/tag_order.json` (format `tag-order/1`). This tab is
-the drag-and-drop editor for it; `tools/apply_tag_order.py` is the command-line equivalent, and
-`tools/generate_results.py` applies the same ordering while generating, so regenerating never
-scrambles the order.
+玩家看到的一切**展示顺序**——官方 TAG 类别、各类别内的官方 TAG、玩家 TAG、每个玩家 TAG 的子 TAG 取值——都保存在一份手写文件 `agent_workspace/tag_pipeline/tag_order.json`（格式 `tag-order/1`）里。本页签是它的拖拽编辑器；`tools/apply_tag_order.py` 是命令行等价物，`tools/generate_results.py` 生成时套用同一套排序，因此重生成不会打乱顺序。
 
-**Layout**: the page is a **card grid**, not a vertical list — one card per official category and one
-per player TAG, wrapping side by side (9 categories fit in ~3 rows at 1280 px). Each card holds its
-own draggable chips, so a whole category's TAGs are visible at once instead of one per screen row.
-A **pinned nav rail** sits on the right (collapsible via `收起`; the choice is remembered in
-`localStorage` under `ord.nav.v1`): click an official category or a player TAG there to scroll to its
-card and flash its header. The rail is a real column beside the scroller, so it never covers a card.
+**版面**：页面是**卡片网格**而非竖列——每个官方类别一张卡、每个玩家 TAG 一张卡，并排折行（1280 px 下 9 个类别约占 3 行）。每张卡只持有自己的可拖拽 chip，因此一整个类别的 TAG 能同屏看全。右侧固定一条**导航栏**（可 `收起`；选择记在 `localStorage` 的 `ord.nav.v1`）：点某个官方类别或玩家 TAG 会滚到它的卡片并闪烁其标题。导航栏是滚动区旁的真实一列，不会遮住卡片。
 
-**What you can drag**
+**能拖什么**
 
-| Region | Draggable | Constraint |
+| 区域 | 可拖 | 约束 |
 |---|---|---|
-| 官方设定 TAG | the category header (category order) | — |
-| 官方设定 TAG | a TAG chip (order inside its category) | **cannot leave its category** — `category` is a property of the TAG, not an ordering axis; a cross-category drop is refused |
-| 玩家体感 TAG | a TAG header (player TAG order) | — |
-| 玩家体感 TAG | the value chips under a TAG (that TAG's sub-value order) | stays within its TAG |
+| 官方设定 TAG | 类别标题（类别序） | — |
+| 官方设定 TAG | TAG chip（类内序） | **不能离开所属类别**——`category` 是 TAG 的属性而非排序轴；跨类别投放会被拒绝 |
+| 玩家体感 TAG | TAG 标题（玩家 TAG 序） | — |
+| 玩家体感 TAG | TAG 下的取值 chip（该 TAG 的取值序） | 只能在本 TAG 内 |
 
-Dropping a chip on the **blank part of a card** appends it to that card. Chips are also
-keyboard-movable (`Alt`+`←/→`, or `Alt`+`↑/↓` — same thing, since the cards wrap), because native
-HTML5 drag-and-drop is unusable with a keyboard; the keyboard path stays inside the chip's own array
-so it cannot break the two constraints above.
+把 chip 丢在**卡片的空白处**会追加到该卡末尾。chip 也支持键盘移动（`Alt`+`←/→`，或 `Alt`+`↑/↓`——卡片折行，两者等价），因为原生 HTML5 拖拽无法用键盘操作；键盘路径只在 chip 自己的数组内移动，因此不会破坏上面两条约束。
 
-**Unregistered and dead entries**
+**未登记与已失效**
 
-* Rows the product has but the file does not → shown in the 未纳入顺序 tray, marked 未登记. They are
-  **not lost**: the fallback appends them to the end of their section, so the product stays valid
-  until you drag them where you want. `纳入全部未登记项` appends them all at once.
-* Entries the file has but the product no longer contains → marked 已失效 with a `×` to remove them.
-  Leaving them in makes `tools/apply_tag_order.py --check` fail, so the toolbar shows a count.
-* When a value lives inside a nested sub-TAG (e.g. 高档控制's 独立达成/需配合 under 远距控制), the row
-  shows the group it is keyed under — the file keys values by `(group, value)`, not by value alone.
+- 产物有、文件里没有的项 → 显示在「未纳入顺序」托盘里，标为「未登记」。它们**不会丢**：兜底会把它们追加到所属段末尾，因此在你拖到合适位置前产物仍然合法。`纳入全部未登记项` 可一次全部追加。
+- 文件有、产物里已没有的项 → 标为「已失效」，带 `×` 可删。留着会让 `tools/apply_tag_order.py --check` 失败，因此工具栏会显示计数。
+- 取值位于嵌套子 TAG 内时（如高档控制的「独立达成／需配合」在「远距控制」之下），该行会显示它挂的组——文件以 `(组, 值)` 为键，而不是只用值。
 
-**Saving**
+**保存**
 
-`保存排序` validates the file, writes it atomically, and — with `保存后重排产物` on (default) —
-immediately re-projects the order onto `results/operator-tags.json` and
-`results/player-tags-criteria.json`. The client sends the digests it loaded so a file changed on disk
-is refused (`drift`), exactly like the 结果 JSON tab.
+`保存排序` 会校验文件、原子写入，并在 `保存后重排产物`（默认开）时立即把顺序投影到 `results/operator-tags.json` 与 `results/player-tags-criteria.json`。客户端会带上载入时的摘要，因此磁盘上已变化的文件会被拒绝（`drift`），与「结果 JSON」页签一致。
 
-**Version semantics**: reordering updates `updated` **only** — it never bumps `version`
-(`docs/output-standard.md` §1). The one exception was the release that introduced the `subOrder`
-field itself (a schema change, so it bumped once).
+**版本语义**：重排只更新 `updated`，**从不**递增 `version`（`docs/output-standard.md` §1）。唯一的例外是引入 `subOrder` 字段的那次发布（结构变化，因此升了一次）。
 
-Because order changes also affect the 结果 JSON tab (its in-memory copy is stale afterwards), that
-tab's loaded document is dropped when you save an order.
+顺序变化也会影响「结果 JSON」页签（它的内存副本此后已过期），因此在保存排序时会丢弃那个页签载入的文档。
 
-## 7. Why writes are safe (and when they are refused)
+## 7. 写盘为何安全（以及在什么情况下被拒）
 
-Every write path uses optimistic concurrency against the state you actually saw:
+每条写路径都对「你实际看到的状态」做乐观并发校验：
 
-| Guard | Message you may see | What to do |
+| 校验 | 可能看到的提示 | 怎么办 |
 |---|---|---|
-| Part files: the exact line you edited must still be on disk | `这一行已被外部改动（或行号已偏移），请点「刷新数据」后重试` | press `刷新数据` and redo the edit |
-| Part files: the sub-table's heading + header row must match (a fingerprint) | `目标子表已被外部改动（标题或表头变化）…` | same |
-| Results JSON: the file's content digest must match what you loaded | `文件已被外部改动，请重新载入，或确认后强制覆盖` | reload it, or tick `强制覆盖` if your version is the good one |
-| Filenames | `文件名只能含中文/字母/数字/空格/._-，且必须以 .json 结尾` | only `results/<name>.json`, no separators |
+| 分文件：你编辑的那一行必须仍在磁盘上 | `这一行已被外部改动（或行号已偏移），请点「刷新数据」后重试` | 点 `刷新数据` 后重做编辑 |
+| 分文件：子表的标题＋表头必须匹配（指纹） | `目标子表已被外部改动（标题或表头变化）…` | 同上 |
+| 结果 JSON：文件内容摘要必须与你载入时一致 | `文件已被外部改动，请重新载入，或确认后强制覆盖` | 重新载入，或在你的版本正确时勾 `强制覆盖` |
+| 文件名 | `文件名只能含中文/字母/数字/空格/._-，且必须以 .json 结尾` | 只能是 `results/<名字>.json`，不含分隔符 |
 
-Writes are atomic (temp file + `os.replace` with retries for Windows file locks) and the server
-serialises every request behind one lock, so two browser tabs cannot interleave a read-modify-write.
-Unsaved work is protected three ways: a `beforeunload` prompt, a confirmation when switching tabs or
-loading another file, and a `localStorage` draft of the results document.
+写盘是原子的（临时文件 ＋ `os.replace`，带 Windows 文件锁重试），服务端把所有请求串行化在一把锁后面，因此两个浏览器标签页无法交错读改写。未保存的工作有三重保护：`beforeunload` 提示、切页签或载入别的文件时的确认、以及结果文档在 `localStorage` 里的草稿。
 
 ---
 
-## 8. Troubleshooting
+## 8. 故障排查
 
-| Symptom | Cause / fix |
+| 现象 | 原因／处理 |
 |---|---|
-| `有 N 条荐已不在成员表中，请核对` toast on load | a 荐 whose member row was removed outside the panel. Re-add the row, then the 荐, or edit `_recommend.json`. |
-| A merge script fails after a save | the edit is already written; fix the reported problem and press `重新生成名单文档`. |
-| `服务端异常：…` toast | an unexpected error; the file on disk is unchanged for that request. Check the console you started the server from. |
-| Fonts look like the system default | the panel fetches Noto Sans/Serif SC from Google Fonts after load with a 2.5 s timeout; offline it silently falls back to the local stack. Nothing is broken. |
-| The port is busy | the panel prints the port it actually bound — copy that URL. |
-| Missing `gui/static` | the server refuses to start with the path in the message. |
+| 载入时 toast `有 N 条荐已不在成员表中，请核对` | 某荐的成员行在面板外被删了。把行加回来再加荐，或直接改 `_recommend.json`。 |
+| 保存后合并脚本失败 | 编辑本身已写入；修掉报告的问题后点 `重新生成名单文档`。 |
+| toast `服务端异常：…` | 意外错误；该请求对应的磁盘文件未变。查看启动服务端的那个控制台。 |
+| 字体看起来像系统默认 | 面板在页面载入后从 Google Fonts 取 Noto Sans/Serif SC，超时 2.5 秒；离线时静默回退到本地字体栈。**不是故障**。 |
+| 端口被占 | 面板会打印它实际绑定的端口——复制那个 URL。 |
+| 缺 `gui/static` | 服务端拒绝启动，并在消息里给出路径。 |
 
-`git diff` is the source of truth for what changed; every destructive action (移除, overwrite) names
-the file it will touch, and the repository is the undo history.
+`git diff` 是「改了什么」的真源；每个破坏性操作（移除、覆盖）都会点名它将触碰的文件，仓库本身就是撤销历史。
 
 ---
 
-## 9. Maintainer notes
+## 9. 维护者笔记
 
 ```
 gui/
-  config.py      paths + sys.path bootstrap (imports the sibling tools/recommend.py / merge script),
-                 CHAR_IDS (char_ids.json → 「编号」列取值)
-  errors.py      UserError(msg, code) — anything raised here is shown to the user as-is
-  md.py          cell helpers, atomic write, and the line-addressed Doc model
-  tags.py        markdown parsers (player blocks, official entries)
-  roster.py      PRTS basic-info parsing + mtime-keyed cache
-  recommends.py  荐 store helpers, apply_recommend, prune_recommend
-  merges.py      subprocess wrappers for the two merge scripts
-  results_json.py  filename whitelist, load/render/validate/check/save for results/*.json
-                 (also applies tag_order on save, and sorts on request for 「按规范整理」)
-  order.py       tag_order.json load/save + the view the 「TAG 排序」 tab drags
-  rec_sync.py    recompute a results doc's 荐 fields from the 荐 files (generator-identical;
-                 called on save; load/check use it for the drift notice)
-  writeback.py   doc_registry, block resolution, apply_ops, save_cell
-  model.py       the /api/data model
-  server.py      Handler, routes, token, LOCK, static assets
-  selfcheck.py   --check assertions
-  static/        index.html + app.css + app.js (a plain classic script; RES and ORD must stay global)
+  config.py      路径与 sys.path 引导（导入同级的 tools/recommend.py / 合并脚本），
+                 CHAR_IDS（char_ids.json →「编号」列取值）
+  errors.py      UserError(msg, code) —— 这里抛出的都按原文展示给用户
+  md.py          单元格辅助、原子写入、按行寻址的 Doc 模型
+  tags.py        markdown 解析器（玩家块、官方条目）
+  roster.py      PRTS 基本信息解析 ＋ 按 mtime 键控的缓存
+  recommends.py  荐存储辅助、apply_recommend、prune_recommend
+  merges.py      两个合并脚本的 subprocess 包装
+  results_json.py 结果文件的名字白名单、load/render/validate/check/save
+                 （保存时也套用 tag_order，并按需为「按规范整理」排序）
+  order.py       tag_order.json 的读写 ＋「TAG 排序」页签拖拽的视图
+  rec_sync.py    按荐文件重算结果文档的荐字段（与生成器一致；保存时调用，
+                 载入/校验用它判断漂移）
+  writeback.py   doc_registry、块定位、apply_ops、save_cell
+  model.py       /api/data 的模型
+  server.py      Handler、路由、令牌、LOCK、静态资源
+  selfcheck.py   --check 断言
+  static/        index.html + app.css + app.js（普通经典脚本；RES 与 ORD 必须保持全局）
 ```
 
-Dependency direction is one-way: `config/errors/md` → data modules → `writeback/model` → `server`.
-`selfcheck.py` must not import `server.py` (it is meant to run without a port).
+依赖方向是单向的：`config/errors/md` → 数据模块 → `writeback/model` → `server`。`selfcheck.py` 不得 import `server.py`（它要能在不起端口的情况下运行）。
 
-Things to keep in sync when you change the UI:
+改界面时必须同步的事项：
 
-1. **The DOM contract.** `--check` asserts that the ids/classes the acceptance scripts use still
-   exist and that `RES` / `ORD` are top-level globals. Renaming one without updating the scripts breaks the
-   harness silently.
-2. **Order.** Display order lives in `agent_workspace/tag_pipeline/tag_order.json` only. Do not
-   reintroduce per-TAG order constants (the deleted `P01/P08/P13_SUB_ORDER`): the generator, the CLI
-   and this panel all read the one file, and `tools/apply_tag_order.py --check` is what proves they
-   agree. Reordering the **markdown** member tables is a different thing and stays forbidden (see
-   `docs/rulings.md` §二十二).
-3. **The skin.** `static/app.css` transcribes ak-ui's `--ak-*` tokens (MIT, © 2019 云游君 — the
-   header comment records provenance). Keep components to one cut corner **or** one signal bar, and
-   use the tokens rather than new hard-coded colours. The density compromise (44 / 36 / 32 px) is
-   documented at the top of the same file.
-4. **Static serving.** Only `index.html`, `app.css`, `app.js` are served, and `index.html` must
-   contain exactly one `__TOKEN__` placeholder (the server substitutes the session token into
-   `<meta name="x-token">`).
-5. **New tab checklist.** Add the `<main id="page-…" hidden>` block, a `.tab[data-tab]` button, a
-   branch in `setTab()`, a `render…()` call and (if it needs data) an endpoint in `server.py` plus a
-   contract entry in `selfcheck.py`. If the page writes a new file, add it to the "写入的文件" list in
-   `gui/__main__.py` and to the 总览 table in §1.
-6. **Sub-TAG structure or representation changes.** After touching how a TAG stores its sub-TAGs
-   (sub-tables ↔ `子 TAG` column ↔ remark prefix), walk all four tabs once: 荐 (scope bar, add /
-   remove), 人工归纳 (pick a sub-table → 并入 / move / remove; edit 条件 / 备注 / 子 TAG cells),
-   TAG 排序 (values of the affected TAG show up, drag one, save, undo), 结果 JSON (load → 校验 →
-   leave without saving). Then run `tools/run_all_checks.py`.
+1. **DOM 契约**。`--check` 会断言验收脚本用到的 id／class 仍存在、`RES`／`ORD` 仍是顶层全局。改名而不更新脚本，会**静默**弄坏验收链路。
+2. **顺序**。展示顺序只存在 `agent_workspace/tag_pipeline/tag_order.json` 里。不要重新引入按 TAG 硬编码的顺序常量（已删除的 `P01/P08/P13_SUB_ORDER`）：生成器、命令行与本面板都读那一份文件，`tools/apply_tag_order.py --check` 就是它们一致的证明。重排 **markdown** 成员表是另一回事，且仍然禁止（见 `docs/rulings.md` §二十二）。
+3. **皮肤**。`static/app.css` 转写了 ak-ui 的 `--ak-*` 令牌（MIT，© 2019 云游君——文件头注释记录了出处）。组件保持「一个切角**或**一条信号条」，用令牌而不是新写死颜色。密度折中（44 / 36 / 32 px）记在同一文件顶部。
+4. **静态服务**。只服务 `index.html`、`app.css`、`app.js`，且 `index.html` 必须恰好含一个 `__TOKEN__` 占位（服务端把会话令牌替换进 `<meta name="x-token">`）。
+5. **新增页签清单**。加 `<main id="page-…" hidden>` 块、一个 `.tab[data-tab]` 按钮、`setTab()` 里的一个分支、一次 `render…()` 调用；若需要数据，则在 `server.py` 加端点并在 `selfcheck.py` 加一条契约项。若该页会写新文件，把它加进 `gui/__main__.py` 的「写入的文件」清单与 §1 的总览表。
+6. **子 TAG 结构或表示法变更**。动过某 TAG 存储子 TAG 的方式（子表 ↔ `子 TAG` 列 ↔ 备注前缀）后，把四个页签各走一遍：荐（作用域栏、增／删）、人工归纳（选子表 → 并入／移动／移除；编辑条件／备注／子 TAG 格）、TAG 排序（受影响 TAG 的取值出现、拖一个、保存、撤销）、结果 JSON（载入 → 校验 → 不保存离开）。然后跑 `tools/run_all_checks.py`。
 
-Run `--check` and click through all four tabs after any change; the end-to-end Playwright scripts
-used during development live outside the repo (in the OS temp directory) and drive the same DOM
-contract.
+任何改动后都跑一次 `--check`，并把四个页签实际点一遍；开发期用的端到端 Playwright 脚本放在仓库外（操作系统临时目录），驱动的是同一份 DOM 契约。

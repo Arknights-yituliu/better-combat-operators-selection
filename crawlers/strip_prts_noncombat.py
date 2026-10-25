@@ -43,7 +43,6 @@ REF_GLOBS = [
     "agent_workspace/tag_pipeline/official_tags/*.json",
     "docs/*.md",
     "agent_workspace/workdocs/*.md",
-    "information_records/*.md",
     "*.md",
     "*.py",
     "**/*.py",

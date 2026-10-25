@@ -1,78 +1,80 @@
 ---
 name: crawl-prts-operator
-description: Crawl one or more Arknights operators (plus their summons, if any) from the PRTS wiki into material_datas/PRTS as markdown. Use when asked to grab/fetch/crawl an operator's data from PRTS, update or re-crawl existing operator data, or debug/extend the PRTS crawler.
+description: 从 PRTS wiki 爬取一名或多名明日方舟干员（含其召唤物）的语料，写成 material_datas/PRTS 下的 markdown。当被要求抓取／拉取／爬取 PRTS 的干员数据、更新或重爬既有干员语料、或调试与扩展 PRTS 爬虫时使用（触发词：爬取、抓取、重爬、PRTS、爬虫、crawl）。
 ---
 
-# Crawl an operator from PRTS
+# 从 PRTS 爬取干员
 
-## Quick path
+## 快速路径
 
-The project crawler `crawlers/crawl_prts.py` (run it with the project venv) does everything:
+项目自带爬虫 `crawlers/crawl_prts.py`（用项目 venv 跑）一步到位：
 
 ```bash
 .venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名"
 ```
 
-- If the operator is missing from `docs/operators.txt`, add a line first: `干员名 https://prts.wiki/w/干员名`.
-- Output goes to `material_datas/PRTS/<干员名>/`:
-  - `<干员名>.md` — the operator's gameplay body (干员信息 through 模组).
-  - `<召唤物名>.md` — one sibling file per summon, crawled automatically from the 召唤物信息 section links. An operator with no summons gets only the main file.
-- Operators already recorded as ok in `material_datas/PRTS/_manifest.json` (with files on disk) are skipped; pass `--force` to re-crawl. Failures are retried on the next run.
-- Useful flags: `--only "A,B,C"` (subset), `--force`, `--delay-min/--delay-max` (per-request throttle).
+- `docs/operators.txt` 里没有该干员时，先加一行：`干员名 https://prts.wiki/w/干员名`。
+- 输出到 `material_datas/PRTS/<干员名>/`：
+  - `<干员名>.md` —— 干员的作战正文（干员信息 到 模组）。
+  - `<召唤物名>.md` —— 每只召唤物一个同级文件，由「召唤物信息」小节的链接自动抓取。没有召唤物的干员只有主文件。
+- 已在 `material_datas/PRTS/_manifest.json` 记为 ok（且磁盘上文件仍在）的干员会跳过；加 `--force` 强制重爬。失败的会在下次运行重试。
+- 常用参数：`--only "A,B,C"`（子集）、`--force`、`--delay-min/--delay-max`（每请求限速）。
 
-## Verify after crawling
+## 爬后验收
 
-1. The folder exists and contains `<干员名>.md` (plus summon files if the wiki page has a 召唤物信息 section — check the page if unsure).
-2. The header block shows `> 稀有度: N | 职业: X` and there is a `## 干员信息` block with those two lines.
-3. The gameplay sections are present: `## 特性`, `## 天赋`, `## 技能`, `## 模组` (older/low-rarity operators may legitimately lack some).
-4. Summon files contain the stat table (`## 召唤物信息`) and the owner name resolves (持有者 cell shows the operator's name, not empty).
-5. No leaked tooltip text in data rows: body text should not contain `术语:` or `异常效果:` definitions inline.
-6. No non-combat content survived: `## 精英化材料`, `## 技能升级材料`, `## 后勤技能` must be **absent**, and `## 模组` must contain no prose story, no `**模组解锁任务**`/`**解锁需求与材料消耗**`, and no image lines. Module tiers appear as `**模组等级1/2/3**` text lines and the type code as a `**ART-X**`-style text line.
+1. 目录存在且含 `<干员名>.md`（若 wiki 页面有「召唤物信息」小节，还要有召唤物文件——不确定就开页面看）。
+2. 页头块显示 `> 稀有度: N | 职业: X`，且有包含这两行的 `## 干员信息` 块。
+3. 作战小节齐全：`## 特性`、`## 天赋`、`## 技能`、`## 模组`（低星／早期干员可能合理地缺某些）。
+4. 召唤物文件含属性表（`## 召唤物信息`），且持有者名能解析（「持有者」格显示干员名而非空）。
+5. 数据行里没有泄漏的 tooltip 文本：正文不应内联出现 `术语:` 或 `异常效果:` 的定义。
+6. 没有残留的非作战内容：`## 精英化材料`、`## 技能升级材料`、`## 后勤技能` 必须**不存在**；`## 模组` 里不得有剧情散文、不得有 `**模组解锁任务**`／`**解锁需求与材料消耗**`、不得有图片行。模组档位以 `**模组等级1/2/3**` 文本行出现，类型码以 `**ART-X**` 形式的文本行出现。
 
 ## 非作战内容剥离
 
-`crawl_page()` writes `strip_noncombat(to_markdown(...))`, so the corpus holds only combat information: section-level lore is dropped by `STOP_SECTIONS`, and module story (which PRTS emits twice — a `全文阅读` and a byte-identical `关闭全文` copy), unlock tasks, upgrade-material blocks, and 后勤技能 are stripped line-wise by `plan_strip()`/`render_strip()` in `crawlers/crawl_prts.py`. Level icons become `**模组等级N**`; type icons are dropped because the same code sits on the next line as plain text.
+`crawl_page()` 写的是 `strip_noncombat(to_markdown(...))`，因此语料只含作战信息：章节级剧情由 `STOP_SECTIONS` 丢弃；模组剧情（PRTS 会输出两份——`全文阅读` 与逐字节相同的 `关闭全文` 副本）、解锁任务、升级材料块、`后勤技能` 由 `crawlers/crawl_prts.py` 的 `plan_strip()`／`render_strip()` 逐行剥离。等级图标改写为 `**模组等级N**`；类型图标删除，因为同一类型码就在下一行以纯文本出现。
 
-Anything cited as `文件:行号` is a **post-strip** line number. Changing what gets stripped shifts every pointer below the edit, so after any change to the strip rules run `crawlers/strip_prts_noncombat.py --audit`. It takes each pointer as it stood at HEAD, maps it, and requires the working tree to carry the mapped value; it reports 失效 (missed rewrite — must be 0), 未解析 (resolves to no file yet names a PRTS one, i.e. silently skipped — must be 0), and 指向已删行 (the anchor's line was stripped; review each one's original text to confirm it was not combat content). `--fix-stale` repairs 失效 pointers; `--dry-run` previews a backfill.
+任何被引作 `文件:行号` 的都是**剥离后**的行号。改动剥离内容会平移其下所有指针，所以**改过剥离规则后必须跑** `crawlers/strip_prts_noncombat.py --audit`。它取每条指针在 HEAD 时的行号、按映射换算、要求工作区确实带着换算后的值；报「失效」（漏改，必须为 0）、「未解析」（解析不到文件、但文件名是 PRTS 语料，即被静默跳过，必须为 0）、「指向已删行」（锚点所在行被剥离删除，需逐条复核原文确认删的不是作战内容）。`--fix-stale` 修正失效指针；`--dry-run` 预览回填。
 
-Do **not** try to detect a stale pointer with a content test — `new[map(x)-1] == old[x-1]` holds for every in-range number whichever side of the map it was written on, so such a check only ever catches out-of-range ones. Deliberate departures from the mechanical map (re-anchoring onto the line that actually supports the claim) live in the script's `ACCEPTED` set. Coverage comes from `REF_GLOBS`, enumerated by directory — a file one level outside a listed glob is never scanned, so add new citation-bearing directories there.
+**不要**用内容测试去发现失效指针——`new[map(x)-1] == old[x-1]` 对任何在范围内的行号都成立，无论它写在哪一侧，那种检查只能抓到越界的。有意偏离机械映射的（改锚到真正支撑论点的行）登记在脚本的 `ACCEPTED` 里。覆盖范围由 `REF_GLOBS` 按目录枚举——比所列 glob 深／浅一层的文件永远不会被扫描，新增带引用的目录要加进去。
 
-## What the crawler does (for context when debugging)
+> 剥离规则的完整依据、三轮复盘与通用教训见 `docs/crawling-and-strip.md`。
 
-1. Fetches `https://prts.wiki/w/<name>` with full browser headers.
-2. Splits `#mw-content-text > div.mw-content-ltr.mw-parser-output` into sections, keeping 干员信息 → 模组 and stopping at the first lore section (相关道具/干员档案/语音记录/干员密录/悖论模拟/干员模型/注释与链接).
-3. Reads the 召唤物信息 section, follows its `/w/` links (deduped), and crawls each summon page the same way (stop at 召唤物模型).
-4. Gets 稀有度/职业 for all operators via one batched Semantic MediaWiki `action=ask` query.
-5. Cleans wiki noise, converts to markdown, strips non-combat content, writes files, updates `_manifest.json` after every operator (crash-safe resume).
+## 爬虫做了什么（调试时的背景）
 
-## Notes / gotchas
+1. 用完整浏览器请求头取 `https://prts.wiki/w/<name>`。
+2. 把 `#mw-content-text > div.mw-content-ltr.mw-parser-output` 切成小节，保留「干员信息」到「模组」，遇到第一个剧情小节（相关道具／干员档案／语音记录／干员密录／悖论模拟／干员模型／注释与链接）即停。
+3. 读「召唤物信息」小节，跟进其中的 `/w/` 链接（去重），用同样方式抓每个召唤物页（遇到「召唤物模型」停）。
+4. 用一次批量 Semantic MediaWiki `action=ask` 查询取全部干员的稀有度／职业。
+5. 清 wiki 噪声、转 markdown、剥离非作战内容、写文件，**每处理完一名干员**就更新 `_manifest.json`（崩溃可续）。
 
-### Access
-- **Browser headers are mandatory.** The CDN (Vary: User-Agent) returns 403 to non-browser User-Agents — plain `curl`/`requests` with a custom UA fails. Send User-Agent + Accept + Accept-Language + Referer; `api.php` accepts the same headers.
-- **Throttle requests** (default 1.2–2.8s random delay) to avoid the wiki's rate limiting; never crawl in tight loops.
-- 403/429/5xx and network errors are retried with exponential backoff; 404 and other codes are not.
+## 注意事项与坑
 
-### Page structure
-- Section headings are wrapped in `<div class="mw-heading">` — iterate `content.children` and unwrap, don't look for bare `h2`/`h3`.
-- The `干员信息` section is **JS-only** (empty `charinfo-container` divs). Rarity and class cannot be scraped from static HTML; they come from the SMW API: `action=ask&query=[[分类:干员]]|?稀有度|?职业|limit=600`. Only these two properties exist in SMW — branch/faction/release date must come from page tables (特性/属性/获得方式 sections).
-- Summon pages vary in section sets: at minimum `召唤物信息`, optionally `召唤物天赋`/`召唤物技能`, always ending with `召唤物模型` (stop marker). Summon names can contain parentheses (`Mon3tr(凯尔希的召唤物)`), curly quotes (`“清平”`), and dots (`龙腾.F`).
-- Info boxes are emitted twice (desktop + `.nodesktop` mobile copies) — removing `.nodesktop` dedupes them.
+### 访问
+- **浏览器请求头是必须的。** CDN（`Vary: User-Agent`）对非浏览器 UA 返回 403——用自定义 UA 的裸 `curl`／`requests` 会失败。要发 `User-Agent` ＋ `Accept` ＋ `Accept-Language` ＋ `Referer`；`api.php` 接受同一套头。
+- **限制请求频率**（默认 1.2–2.8 秒随机延迟）以免被 wiki 限流；绝不紧循环爬取。
+- 403/429/5xx 与网络错误按指数退避重试；404 及其它状态码不重试。
 
-### Hidden-span cleanup (the main noise source)
-The wiki renders number variants as hidden `style="display:none"` spans:
-- `*_算法_2` spans — algorithm-annotation view of the numbers (e.g. "直接乘算…+60%") → **drop**.
-- `*_潜能_2` spans in data cells (`td`) — potential-upgraded numbers → **keep** as `〔潜能提升后：…〕`. The same class inside `th` cells is a checkbox toggle label → drop.
-- Tooltip definition bodies (inside `.mc-tooltips`) → drop, keeping only the visible term text.
-- Order matters: drop non-potential hidden spans **first**, then convert potential spans — otherwise `get_text()` leaks tooltip text into the kept variant.
-- Nested hidden spans: after `decompose()`ing a parent, later entries from the same `select()` list are stale (`el.attrs` is None) — check `el.decomposed` before touching each.
-- Also removed: `.charinfo-container`, `.charimg-m`, `table#calc` (stat calculator), checkbox toggles `span[style*="float:right"]` (remove **before** the `input` selector pass eats their inputs, or the label text survives), `#toc`, `.navbox`, scripts/styles.
+### 页面结构
+- 小节标题被包在 `<div class="mw-heading">` 里——遍历 `content.children` 并解包，别去找裸 `h2`／`h3`。
+- `干员信息` 小节是**纯 JS 渲染**（`charinfo-container` 是空 div）。稀有度与职业无法从静态 HTML 抓到，来自 SMW 接口：`action=ask&query=[[分类:干员]]|?稀有度|?职业|limit=600`。SMW 里只有这两条属性——分支／势力／上线时间必须取自页面表格（特性／属性／获得方式 小节）。
+- 召唤物页的小节集不固定：至少有 `召唤物信息`，可能有 `召唤物天赋`／`召唤物技能`，末尾总是 `召唤物模型`（停止标记）。召唤物名可能含括号（`Mon3tr(凯尔希的召唤物)`）、中文引号（`“清平”`）与点号（`龙腾.F`）。
+- 信息框会输出两份（桌面版 ＋ `.nodesktop` 移动版）——删掉 `.nodesktop` 即去重。
 
-### Markdown conversion
-- markdownify **drops images inside table cells entirely**. Image-only links (e.g. the summon 持有者 cell, which is just the owner's avatar) lose the owner name — inject the link's `title` attribute as text before converting.
+### 隐藏 span 清理（主要噪声源）
+wiki 把数值的多种变体渲染成 `style="display:none"` 的隐藏 span：
+- `*_算法_2` span —— 数值的算法注解视图（如「直接乘算…+60%」）→ **删**。
+- 数据单元格（`td`）里的 `*_潜能_2` span —— 潜能升级后的数值 → **保留**为 `〔潜能提升后：…〕`。`th` 单元格里同名 class 是复选框开关标签 → 删。
+- tooltip 定义正文（在 `.mc-tooltips` 内）→ 删，只留可见的术语文字。
+- **顺序很重要**：先删非潜能隐藏 span，再转潜能 span——反过来会把 tooltip 文本泄漏进保留的变体。
+- 嵌套隐藏 span：`decompose()` 掉父节点后，同一 `select()` 列表里后续元素已失效（`el.attrs` 为 None）——遍历时先判 `el.decomposed`。
+- 同样删除：`.charinfo-container`、`.charimg-m`、`table#calc`（属性计算器）、复选框开关 `span[style*="float:right"]`（要在 `input` 选择器吃掉其 input **之前**删，否则标签文字会残留）、`#toc`、`.navbox`、script/style。
 
-### Windows / persistence
-- `os.replace` on `_manifest.json` can hit transient `PermissionError` (antivirus/indexer lock) — retry with backoff; this once crashed a long run at operator 254.
-- `_manifest.json` is the resume record: per-operator status (ok/partial/error), files, and summon links. Re-running skips ok operators whose files still exist.
+### Markdown 转换
+- markdownify **会完全丢弃表格单元格里的图片**。纯图片链接（如召唤物的「持有者」格，内容只是持有者头像）会丢掉持有者名——转换前把链接的 `title` 属性注入为文本节点。
 
-### Filenames
-- Windows-invalid characters in names (`/ : * ? " < > | \`) are mapped to fullwidth equivalents by `sanitize_filename`; folder/file names come from the sanitized page name.
+### Windows 与持久化
+- 对 `_manifest.json` 的 `os.replace` 会偶发 `PermissionError`（杀毒／索引服务锁文件）——带退避重试；这曾在一次长跑的第 254 名干员处崩掉。
+- `_manifest.json` 是续爬记录：逐干员状态（ok／partial／error）、文件、召唤物链接。重跑会跳过文件仍在的 ok 干员。
+
+### 文件名
+- 名字里的 Windows 非法字符（`/ : * ? " < > | \`）由 `sanitize_filename` 映射成全角；目录名与文件名取自净化后的页面名。

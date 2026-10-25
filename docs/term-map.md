@@ -1,7 +1,7 @@
 # 代称映射表（term-map）
 
 > 用途：登记本仓库 AI 输出与文档中使用的一切**自创代称、缩写、自编号**（规则号、冲突号、TAG 代号、分组号、公式符号、文件简称等），逐条写明**含义、用法与查阅位置**。开发者可凭本表读懂任何一条交付文本或产物，无需先读其它文件。
-> 维护纪律（AGENTS.md「AI 协作铁律」第 1 条）：**创建任何新的代称／自创词时必须同步登记本表**；未登记的代称不得在交付文本中使用。
+> 维护纪律（`AGENTS.md` §二 铁律 1）：**创建任何新的代称／自创词时必须同步登记本表**；未登记的代称不得在交付文本中使用。
 > 注意：本表登记的是**代称**而非游戏机制术语；游戏机制术语（过载、元素损伤、屏障、灼燃损伤等）以 `docs/glossary.md` 为准，命中「用词像机制」的判断先查术语表。
 
 ## 一、任务与编号系统
@@ -63,7 +63,7 @@
 | **块 / 条** | 备注的两级结构：**块**由 `｜` 分隔（成绩／能力／计算／说明）、**条**由 `；` 分隔；两层共用 `标签：正文` 句法。结果 JSON 写作 `remark: [{label?, items:[{label?, text}]}]` | 「一个能力一块、一个维度一条」 | `docs/concept.md`「备注分块」；`docs/output-standard.md` §4.2 |
 | **块类** | 由块标签判定的四类渲染样式：**成绩**（标签以 `成绩` 开头，可带情形名）、**能力**（其余标签）、**计算**（标签为 `计算`，前端默认折叠）、**说明**（标签为 `说明`） | 「计算块默认折叠」 | `docs/ui-render-rules.md` §6 |
 | **条标签 / 维度词** | 条首的分类标签，渲染为左列键：成绩块与计算块内是技能名（`2技能`），能力块内是维度词（`持续`／`范围`／`伤害`／`打数`／`其它`）——取代旧写法里的 `★持续`／`★范围` 类标记 | 「范围：攻击范围扩大（15 格）」 | `docs/concept.md`「备注分块」 |
-| **裁定台账 / `docs/rulings.md`** | 开发者对**判断类问题**的裁定逐条留痕：裁定／理由／适用范围／折入位置。折入正本后**不删**——「这个问题已经回答过」以它为准；与正本冲突时以正本为准并回改台账 | 「先查台账，别问第二遍」 | `docs/rulings.md`；流程见 `AGENTS.md` 铁律 2 |
+| **裁定台账 / `docs/rulings.md`** | 开发者对**判断类问题**的裁定逐条留痕：裁定／理由／适用范围／折入位置。折入正本后**不删**——「这个问题已经回答过」以它为准；与正本冲突时以正本为准并回改台账 | 「先查台账，别问第二遍」 | `docs/rulings.md`；流程见 `AGENTS.md` §二 铁律 2 |
 | **作业记忆包 / `docs/agent-primer.md`** | 新会话与新派发子代理开工前必读：游戏常识（解锁关系——专精需精英2＋技能 7 级、模组解锁需精英2，这两条语料里查不到）、仓库作业常识、**反面清单**、子代理派发清单与产出格式 | 「派子代理前先读 primer」 | `docs/agent-primer.md`；代理定义 `.claude/agents/tag-rewrite.md` |
 | **`handoff` 技能（转交）** | 会话转交：上下文将满或新窗口接手时的开箱文件——开工必读顺序、三条硬纪律、现场约定（踩过的坑）、校验套件、**状态快照**（有时效，以仓库文件为准）、未完成目标 | 「按 handoff 接手」 | `.claude/skills/handoff/SKILL.md` |
 | **`tag-rewrite` 代理** | 项目级子代理类型：把「记忆包＋裁定台账＋写法规范＋自查口径」固化进 system prompt，派 TAG 改写/复算类子代理时用它（替代每次手写 brief） | 「用 tag-rewrite 派活」 | `.claude/agents/tag-rewrite.md` |
@@ -80,8 +80,8 @@
 | **片段 / 替换对（对 1、对 2…）** | 复算产物中的最小替换单元：`old_fragment→new_fragment`（对 1）与 `extra_edits`（对 2、3、4）；合计 ≤4 对 | 「第 2 对旧片段未命中」 | `agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.3 |
 | **notes / potential_note** | 条目工作注记：不确定点与需人工确认处／潜能其它属性加成的计入说明 | 「notes 清互引」 | 同上 §3.3 字段语义 |
 | **回填 / apply** | 把复核文件的替换对写回分文件（`.claude/skills/reverify-numbers/scripts/reverify.py apply`，先 `--dry-run`） | 「回填仍待整体复核」 | `.claude/skills/reverify-numbers/scripts/reverify.py` `apply_backfill()` |
-| **折入 / 清痕** | 把开发者裁定并入源文件后，从文本中移除一切修改史痕迹（日期、轮次、「已修正」等） | 「裁定折入、清痕后交付」 | AGENTS.md「评定标准 writing rules」 |
-| **落库** | 开发者用词：把其给出的裁定写入相应的文档——即铁律 2 的四步（折入正本 → 登记台账 → 放行表 → 重建《待裁定》） | 「上述均需要落库」 | `AGENTS.md` 铁律 2；本表 |
+| **折入 / 清痕** | 把开发者裁定并入源文件后，从文本中移除一切修改史痕迹（日期、轮次、「已修正」等） | 「裁定折入、清痕后交付」 | `docs/classification-conventions.md` §二 |
+| **落库** | 开发者用词：把其给出的裁定写入相应的文档——即铁律 2 的四步（折入正本 → 登记台账 → 放行表 → 重建《待裁定》） | 「上述均需要落库」 | `AGENTS.md` §二 铁律 2；本表 |
 | **《待验证复算.md》** | `agent_workspace/workdocs/待验证复算.md` **复核文件**（由 parts 渲染）：115 条的复算值／结论／回填行，供开发者整体复核 | 「复核文件显示 0 错误」 | `.claude/skills/reverify-numbers/scripts/reverify.py report` 生成 |
 | **《待裁定.md》** | `agent_workspace/workdocs/待裁定.md` **裁定文件**：所有待开发者裁定的内容集中于此、每条自包含；裁定完成后整体移除（AGENTS.md 铁律 2） | 「名单影响清单见《待裁定.md》」 | `agent_workspace/workdocs/`（临时文件） |
 | **agent_workspace/tag_pipeline/player_tags/_reverify/** | 复算工作区目录（`agent_workspace/tag_pipeline/player_tags/_reverify/`） | 「parts 产物」 | 其下各文件 |
@@ -91,7 +91,7 @@
 | **审计 / `--audit`** | 取每条 `文件:行号` 引用在 HEAD 侧的行号，按行映射算出它应当变成什么，再要求工作区确实带着这个值。报三类：失效（漏改，须 0）／未解析（解析不到但文件名属 PRTS 语料，须 0）／指向已删行（需人工过一遍原文）。判据必须是这个——「新旧行号处文本一致」对正确与漏改的引用同时成立，只能用来越界检查 | 「审计 0 失效 0 未解析」 | `crawlers/strip_prts_noncombat.py --audit`；`--fix-stale` 补正 |
 | **`**模组等级N**`** | 剥离后语料里标记模组档位的行（N＝1／2／3），取代原 `模组等级_N.png` 图标行；模组数值与效果行的档位归属据此判读 | 「`**模组等级3**` 生命 +200」 | 各干员 PRTS 页 `## 模组` |
 | **隐藏机制汇编 / `module-hidden-mechanics.md`** | `docs/module-hidden-mechanics.md`：从 `docs/temp.txt`（PRTS《模组》页表格快照）解析出的各模组效果格「※」条文（含按干员、按类别两套索引；跨模组重复的通用注释单列一节） | 「查 提丰 的模组隐藏机制」 | 由 `tools/module_notes.py --emit` 生成（勿手改） |
-| **分文件 / 合并文档 / 结果 JSON** | 分文件＝各 `player_tags/NN-*.json`（官方侧＝`official_tags/[A-I]-*.json`；格式名 **tag-part/1**）；合并文档＝`docs/player-tags-members.md`；结果 JSON＝`results/operator-tags.json`（最终产物） | 「改分文件→重跑合并与生成」 | 链路见 AGENTS.md「数据流」 |
+| **分文件 / 合并文档 / 结果 JSON** | 分文件＝各 `player_tags/NN-*.json`（官方侧＝`official_tags/[A-I]-*.json`；格式名 **tag-part/1**）；合并文档＝`docs/player-tags-members.md`；结果 JSON＝`results/operator-tags.json`（最终产物） | 「改分文件→重跑合并与生成」 | 链路见 `docs/architecture.md` §二 |
 | **`tag-part/1`** | 分文件（中间产物）的 JSON 格式名：一文件一 JSON，`body` 按文档序排 `heading`／`p`（原文行）／`table`（`columns`＋`rows` 单元格数组）三类元素；官方文件为 `entries`（条目头派生、不落盘）。规范写出＝UTF-8 无 BOM、CRLF、缩进 2、原子替换 | 「分文件是 tag-part/1」 | `agent_workspace/tag_pipeline/partdoc.py`；格式说明 `player_tags/_brief.md` §4 |
 | **`partdoc`** | 分文件 JSON 的**唯一读写实现**（`agent_workspace/tag_pipeline/partdoc.py`，仅标准库）：`load/save`（原子写、CRLF）／`render`（还原 md 文本，供合并与审计）／`validate`（列白名单、行宽、条目结构）／`iter_member_tables`／`order_official_rows`（官方成员排序，合并与生成共用的防漂移助手）／`sig_of`（块签名） | 「经 partdoc.save 写回」 | `agent_workspace/tag_pipeline/partdoc.py` |
 | **定位码（`b<块序>r<行序>`）** | 复算/比对工具的结构定位码：`b3r5`＝文档序第 4 张表的第 6 行（块序按文档序计全部表）；`items.jsonl` 的 `loc` 字段、附录清单与 `refresh_lines.py` 重定位都用它。表外散文行另用 `t<序>` | 「items 定位 b3r5」 | `.claude/skills/reverify-numbers/scripts/reverify.py` `iter_part_rows()` |

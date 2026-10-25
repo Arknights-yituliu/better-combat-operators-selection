@@ -1,6 +1,6 @@
 # .claude —— agent 资源索引
 
-本目录是仓库的 agent 资源：作业技能（skills）与子代理定义（agents）。入口文档是仓库根的 `AGENTS.md`。
+本目录是仓库的 agent 资源：作业技能（skills）与子代理定义（agents）。开工分派入口是仓库根的 `AGENTS.md` §一；仓库结构与文件权属见 `docs/architecture.md`，命令见 `docs/commands.md`。
 
 ## 技能（skills/）
 
@@ -24,12 +24,12 @@
 ## 典型工作流
 
 1. 开发者提出任务（新干员 / 版本更新 / 新增 TAG / 标准修订 / 条目复算）；
-2. 按 `AGENTS.md` 与对应技能执行；大批量改写派 `tag-rewrite` 子代理，产出写 `agent_workspace/_out/`；
+2. 按 `AGENTS.md` §一 的分派表挑开工件、按对应技能执行；大批量改写派 `tag-rewrite` 子代理，产出写 `agent_workspace/_out/`；
 3. 用 `tag-batch-rewrite` 回填并做守恒审计；
 4. 重跑合并与生成脚本，最后跑 `tools/run_all_checks.py`。
 
 ## 兼容性
 
-- `AGENTS.md` 是通用入口（Claude Code、OpenCode、Codex 等均可读取）。
+- `AGENTS.md` 是通用入口（Claude Code、OpenCode、Codex 等均可读取），它只讲开工分派与铁律；架构、命令、分类约定分别在 `docs/architecture.md`、`docs/commands.md`、`docs/classification-conventions.md`。
 - `.claude/skills/` 下的技能可被 Claude Code 与 OpenCode 等读取；`.claude/agents/` 是 Claude Code 的子代理定义。
 - 技能中示例命令以 Windows 写法（`.venv/Scripts/python.exe`）为主，POSIX 环境替换为 `.venv/bin/python`。

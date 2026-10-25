@@ -25,6 +25,7 @@ CHECKS: list[tuple[str, list[str]]] = [
     ("迁移守恒", [PY, "-X", "utf8", ".claude/skills/tag-batch-rewrite/scripts/audit_text_migration.py"]),
     ("证据层审计", [PY, "-X", "utf8", "crawlers/strip_prts_noncombat.py", "--audit"]),
     ("GUI 自检", [PY, "-X", "utf8", "recommend_gui.py", "--check"]),
+    ("文档一致性", [PY, "-X", "utf8", "tools/doc_consistency.py"]),
 ]
 
 

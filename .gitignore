@@ -27,7 +27,6 @@ local.json
 
 # Local snapshots / background notes kept out of the public repo
 docs/temp.txt
-information_records/
 
 # OS files
 .DS_Store

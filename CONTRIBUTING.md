@@ -6,8 +6,8 @@
 2. **一切判定以证据为准**：引用 `material_datas/PRTS/` 下语料的「文件:行号」，不要凭印象或记忆判断。
 3. 选择路径：
    - 少量改动：用维护面板（`start_gui.bat` / `./start_gui.sh`），或直接编辑 `agent_workspace/tag_pipeline/` 下的分文件；
-   - 批量／复杂改动：按 `.claude/skills/` 中对应技能的流程由 agent 执行（作业指南见 `AGENTS.md`）。
-4. 改完分文件后按需重跑合并与生成脚本（命令见 `AGENTS.md` 的「Commands」）。
+   - 批量／复杂改动：按 `.claude/skills/` 中对应技能的流程由 agent 执行（开工分派见 `AGENTS.md` §一）。
+4. 改完分文件后按需重跑合并与生成脚本（命令见 `docs/commands.md`）。
 
 ## 提交前
 

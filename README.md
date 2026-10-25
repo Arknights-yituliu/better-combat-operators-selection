@@ -52,7 +52,7 @@ python -m venv .venv
 .venv/Scripts/python.exe -X utf8 tools/run_all_checks.py                  # 一键全量校验
 ```
 
-完整命令与工具清单见 `AGENTS.md` 的「Commands」。
+完整命令与工具清单见 `docs/commands.md`；项目结构与文件权属见 `docs/architecture.md`。
 
 ## 本地私有配置
 
@@ -67,13 +67,14 @@ python -m venv .venv
 - **一切判定以证据为准**：引用 `material_datas/PRTS/` 下的「文件:行号」；条目写法与产物结构见 `docs/concept.md`、`docs/output-standard.md`。
 - 改动 TAG 数据有两条路径：
   1. **直接改**：用维护面板，或手工编辑 `agent_workspace/tag_pipeline/` 下的分文件，然后重跑合并／生成／校验；
-  2. **由 agent 作业**：以 `AGENTS.md` 为作业指南，使用 `.claude/skills/` 中的技能（新干员评定、版本增量更新、新增 TAG、评定标准固化、批量回填、复算等）。
+  2. **由 agent 作业**：按 `AGENTS.md` §一 的分派表挑开工件，使用 `.claude/skills/` 中的技能（新干员评定、版本增量更新、新增 TAG、评定标准固化、批量回填、复算等）。
 - 提交前运行 `tools/run_all_checks.py`，通过后再提交；`agent_workspace/_out/`、`workdocs/`、`local.json` 等本地文件不要提交。
 
 ## 文档索引
 
 - 文档总览：`docs/README.md`
-- agent 作业指南：`AGENTS.md`；agent 资源：`.claude/README.md`
+- agent 开工分派：`AGENTS.md`；仓库架构与文件权属：`docs/architecture.md`；命令手册：`docs/commands.md`
+- agent 资源：`.claude/README.md`
 - 贡献流程：`CONTRIBUTING.md`
 
 ## 数据来源与许可

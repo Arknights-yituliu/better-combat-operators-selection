@@ -1,45 +1,45 @@
 ---
 name: update-version
-description: Incrementally fold a game-version update into the TAG system — the developer provides a new operator's info and/or modules newly added to existing operators; refresh only the changed operators, fold new modules into the affected rows (模组档位), then run the cross-operator impact checklist (new faction members, new enablers, new ally-facing hooks). Use when the developer announces a version/patch update, new modules on existing operators, or asks to update affected entries without re-scanning the whole corpus. Never a full-table rescan.
+description: 把一次游戏版本更新增量折进 TAG 体系——开发者给出新干员信息，和／或既有干员新增的模组；只刷新变更的干员、把新模组折进受影响的行（模组档位）、再跑跨干员影响清单（新阵营成员、新使能者、新的对外挂点）。当开发者宣布版本更新、既有干员出了新模组、或要求在不整表重扫的前提下更新受影响条目时使用（触发词：版本更新、新版本、新模组、版本增量、update version）。绝不整表重扫。
 ---
 
-# Apply a version update（版本增量更新）
+# 版本增量更新
 
-> **常规版本更新走「快线」**：新会话唯一开工必读＝`docs/version-update-quickstart.md`（七步流程、预核验清单、验证最低集、审核规则）。本文件是快线的**管线细则**——折模组规则（§3）与跨干员影响清单全文（§4）在此。
+> **常规版本更新走「快线」**：唯一开工必读＝`docs/version-update-quickstart.md`（阅读预算、七步流程、预核验清单、验证最低集、审核规则）。本文件是快线的**管线细则**——折模组规则（§3）与跨干员影响清单全文（§4）在此。
 > **结构性更改**（改评定标准／全库重扫／增删 TAG／改计算规则正本）不走快线，按各自流程（扫描类先读 `docs/scan-protocol.md`）。
 
-Fixed pipeline: **refresh what changed → judge the new operator → fold new modules into affected rows → run the cross-operator impact checklist → 裁定门 → merge & generate → checks.**
+固定管线：**刷新变更项 → 判定新干员 → 把新模组折进受影响的行 → 跑跨干员影响清单 → 裁定门 → 合并与生成 → 校验。**
 
-## 0. Inputs and efficiency rules
+## 0. 输入与效率规则
 
-- The developer provides one or both of: **new operator(s)** (PRTS link(s) or a manual description, judged as in `add-new-operator`), and **new modules on existing operators** (a list such as `干员名 — X模组2/3级，效果…`, or a link to the module).
-- 效率铁律：只碰更新涉及的干员与本清单命中的既有条目；**不开前置调研／方案代理**（快线文档就是路线图）；**不通读长文档**（rulings 走节级目录、评标只读目标 TAG、glossary 按词查）；**不手写一次性回填脚本**（插行/改依据/正文行/新子表走 `.claude/skills/tag-batch-rewrite/scripts/apply_ops.py`）。
-- Batch **all** developer questions into **one** AskUserQuestion round at the end（审核规则：**有你认为的待裁定项 → 先裁定、裁定折入前不生成结果文件；没有 → 产物后审核**）。
+- 开发者会给出下面之一或两者：**新干员**（PRTS 链接或手写描述，按 `add-new-operator` 判定），以及**既有干员的新模组**（如 `干员名 — X模组2/3级，效果…` 的清单，或模组链接）。
+- **阅读预算、禁读清单、止损线见快线 §1**——本节不复述。一句话：只碰更新涉及的干员与清单命中的既有条目，读完快线的 4 处必读即开工。
+- 所有要问开发者的问题**合并成一轮** AskUserQuestion（审核规则：**有你认为的待裁定项 → 先裁定、裁定折入前不生成结果文件；没有 → 产物后审核**）。
 
-## 1. Refresh only what changed
+## 1. 只刷新变更的部分
 
-1. New operator → follow `add-new-operator` §1（含 `docs/operators.txt` 顶部插入、`crawl_prts.py --only`、`crawl_ranges.py --only`、`_launch_dates.json` 与 `char_ids.json` 登记——charId 取法见快线第 1 步、`tools/prts_stats.py` 重建）。
-2. New module on an existing operator → the PRTS page changed, so **re-crawl that operator with `--force`**: `.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名" --force`; re-run `crawlers/crawl_ranges.py --only "干员名"` if the module touches ranges/grids (`攻击范围.md`).
-3. 两者都按 `crawl-prts-operator/SKILL.md` → "Verify after crawling" 验收；**重爬既有干员另做 `git diff` 白名单核验与行号平移预案**（PRTS 会在天赋表插入模组档位行、令其后行号平移；人工重锚＋`strip_prts_noncombat.ACCEPTED` 登记，**不跑 `--fix-stale`**——详见快线第 1 步）。
+1. 新干员 → 按 `add-new-operator` §1 走。
+2. 既有干员的新模组 → PRTS 页面变了，**用 `--force` 重爬该干员**：`.venv/Scripts/python.exe -X utf8 crawlers/crawl_prts.py --only "干员名" --force`；若模组涉及范围／网格（`攻击范围.md`），再跑一次 `crawlers/crawl_ranges.py --only "干员名"`。
+3. 验收、**重爬既有干员的 `git diff` 白名单核验与行号平移预案**（含「不跑 `--fix-stale`」）见快线第 1 步——此处不复述。
 
-## 2. Judge the new operator
+## 2. 判定新干员
 
-Follow `add-new-operator` §2–§3（机制词表粗筛 → 官方设定 TAG → 玩家体感 TAG → 就问无 TAG 覆盖的机制）。Apply `docs/player-tags-members.md` §0：**多项特性只要各自符合评定标准都要写**；**模组档位**（条件写模组名+等级、备注取该档位数值）；推算值按既定规则直接给出。判前先过快线的**预核验清单**（每单随发到子代理）。
+按 `add-new-operator` §2–§3 走（机制词表粗筛 → 官方设定 TAG → 玩家体感 TAG → 就问无 TAG 覆盖的机制）。套用 `docs/player-tags-members.md` §0：**多项特性只要各自符合评定标准都要写**；**模组档位**（条件写模组名＋等级、备注取该档位数值）；推算值按既定规则直接给出。判定前先过快线的**预核验清单**（每单随发到子代理）。
 
-## 3. Fold new modules into the affected rows
+## 3. 把新模组折进受影响的行
 
-For each new module on an existing operator:
+对既有干员的每个新模组：
 
-1. Locate **every** row of that operator across `player_tags/NN-*.json` (11 files) and `official_tags/[A-I]-*.json`.
-2. Judge per row whether the module **enhances the capability that row judges**:
-   - Yes → 条件 adds the module name + level, 备注 switches to that tier's values (recompute derived numbers), 依据 gains the module's `文件:行号`（依据列**只可整段追加**、不可改同一引用串——守恒审计按完整引用串比对）. The module's `※` hidden-mechanic lines are collected in `docs/module-hidden-mechanics.md` — **涉模组档位时按需查**（thresholds like 距离增伤的门槛格数 live only there）。
-   - Several modules → each TAG row picks the module serving **its own** capability (worked precedent: 温蒂 — 10-大力推拉 uses PUS-Y 推力档, 07-充电 uses PUS-X 技力档; 空弦 — 02 uses MAR-X, 05 uses MAR-Y, 07 uses X2/X3 + ISW-α, 08 uses ISW-α). Two modules enhancing the same capability → list both routes (precedent: 迷迭香「X模组1级 或 ISW-α模组1级」).
-   - Irrelevant modules stay unmentioned; vague phrasing like「X模组更佳／可选」must be replaced by explicit tiers + values (or dropped if irrelevant).
-3. Official rows follow the official rules (只记原文；**模式限定模组不计**；条件写模组名+等级、备注引原文档位).
+1. 找出该干员在 `player_tags/NN-*.json`（11 个文件）与 `official_tags/[A-I]-*.json` 里的**每一行**。
+2. 逐行判断该模组是否**增强这一行所判的能力**：
+   - 是 → 条件加上模组名＋等级，备注换成该档位的数值（重算派生数字），依据补上该模组的 `文件:行号`（依据列**只可整段追加**、不可改同一引用串——守恒审计按完整引用串比对）。模组的 `※` 隐藏机制条文收在 `docs/module-hidden-mechanics.md`——**涉模组档位时按需查**（如距离增伤的门槛格数只在那里）。
+   - 多个模组 → 每个 TAG 行取服务**它自己**那项能力的模组（已有先例：温蒂——10-大力推拉 取 PUS-Y 推力档、07-充电 取 PUS-X 技力档；空弦——02 取 MAR-X、05 取 MAR-Y、07 取 X2/X3 ＋ ISW-α、08 取 ISW-α）。两个模组增强同一项能力 → 两条路线都写（先例：迷迭香「X模组1级 或 ISW-α模组1级」）。
+   - 无关模组不必提及；「X模组更佳／可选」这类含糊措辞必须换成明确的档位＋数值（无关的则整句删掉）。
+3. 官方行按官方规则（只记原文；**模式限定模组不计**；条件写模组名＋等级、备注引原文档位）。
 
-## 4. Cross-operator impact checklist
+## 4. 跨干员影响清单
 
-A new operator / module can change **existing** entries of **other** operators. Screen the update's capabilities against these dimensions and act on the ones it actually carries. ✅ = precedent verified in this repo; 🔶 = possible, judge from evidence:
+新干员／新模组可能改变**其它**干员的**既有**条目。拿本次更新的能力逐维筛，只处理它确实具备的维度。✅＝本仓库已验证的先例；🔶＝有可能，按证据判：
 
 1. ✅ **为他人提供初始技力/部署时技力** → `05-插拔容错` 路径④ (风笛 precedent: 夜半/嵯峨 rows carry「需编入风笛」; 风笛「军事传统」+6), `06-初动增加`.
 2. ✅ **部署支援**（待部署区费用/排序/投送/回场/零冷却重部署）→ 05 路径⑥, 04 (凛御银灰【协同攻击】/风雪之眼, 凯尔希·思衡托 返回待部署区, 新约能天使 投送).
@@ -58,21 +58,22 @@ A new operator / module can change **existing** entries of **other** operators. 
 15. ✅ **攻速下限覆写/抗削弱/抵抗净化** → 官方「抗削弱」（I 类「全场光环」按条目内评定标准例外执行）.
 16. ⚠️ **召唤物/装置（假性耦合）**：计入持有者本身（`_brief` 铁律 3），**不算跨干员依赖**；但如果新效果作用于**其他干员的装置/被引用状态**（如「持有装置屏障的干员」），则复核引用该状态的行（凯瑟琳行等）.
 
-When a dimension hits: re-verify each affected row against the PRTS text (`文件:行号`), update 条件/备注/依据; check 边界与排除记录 whose rationale no longer holds (a near-miss may now qualify, or an exclusion may need re-wording). 评定标准 are developer-owned — if the update makes a rule ambiguous, route to the AskUserQuestion round instead of rewriting criteria.
+某一维命中时：回 PRTS 原文（`文件:行号`）逐行重核受影响的行，更新条件／备注／依据；检查「边界与排除记录」里理由已不成立的条目（近失项可能由此达标，或排除理由需要改写）。评定标准归开发者所有——若本次更新让某条规则变得含糊，走 AskUserQuestion 一轮，不要自己改评定标准。
 
-## 5. Finish
+## 5. 收尾
 
-1. 回填：既有行条件/备注 → `.claude/skills/tag-batch-rewrite/scripts/_apply_batch.py`；插行/改依据/正文行替换与插入/新建子表 → `scripts/apply_ops.py`（先 `--dry-run`）；**计算内容（演算式、面板组成式、取档说明）→ 直改 `agent_workspace/tag_pipeline/calc_process/<干员>.json`**（备注里已无 `计算` 块，规范见 `docs/calc-process-spec.md`）。
-2. 合并：`player_tags/_merge_to_docs.py` 与 `official_tags/_merge_official_to_docs.py`；`git diff --stat` 只应含被改分文件＋两份合并文档＋登记簿（`_launch_dates.json`/`char_ids.json` 等）。
-3. **审核规则与结果文件**：存在待裁定项 → 先一轮 AskUserQuestion、**裁定折入前不生成结果文件**；无 → 直接产物链、**产物后审核**。生成时成员变化须递增 `tools/generate_results.py` 的 `VERSION`（同步 `docs/untagged-operators.md`）。
-4. 校验最低集：`tools/run_all_checks.py`（含 `tools/calc_process.py --check`）；按改动触发——改依据/行号 → `crawlers/strip_prts_noncombat.py --audit`；改条件/备注 → `audit_text_migration.py`（预期数字/依据变化先登记 `ACCEPTED`）；档位取舍 → `REVIEWED_TIERS`。`tools/recommend.py check` 报告悬空荐（荐由开发者维护，只报告）。
-5. Known drift: the dictionary layer (`agent_workspace/tag_pipeline/{merged.json,final_lists.tsv}`) is **not** maintained entry-by-entry, yet some part files cite its counts as cross-anchors (08/09/12) — if the update invalidates an anchor, report it instead of silently editing the anchor text.
-6. 不提交（除开发者另行要求）。
+**回填、合并、产物链、校验最低集、同步消费端 → 全部见快线第 7 步**（含 `calc_process/<干员>.json` 是计算内容的唯一撰写源）。本节只补快线没有的几条：
 
-## Do not
+1. **`git diff --stat` 期望清单**：只应含被改的分文件 ＋ 两份合并文档 ＋ 登记簿（`_launch_dates.json`／`char_ids.json` 等）＋ `calc_process/` 下行 ＋ `results/`。出现别的文件＝有地方被顺手改了。
+2. **已知漂移**：字典层（`agent_workspace/tag_pipeline/` 下的 `merged.json`、`final_lists.tsv`）**不逐条维护**，但部分分文件（08/09/12）把它的计数当交叉锚点引用——若本次更新让某个锚点失效，**报告**，不要静默改锚点文本。
+3. 不提交（除开发者另行要求）。
 
-- Do not rescan or re-judge operators the update doesn't touch.
-- Do not classify from model memory — every judgment cites `文件:行号`; unknown items are `[待考]` → that file's `## 待开发者确认`.
-- Do not open exploration/plan agents for a routine update, do not read long docs whole (rulings 走目录、评标只读目标 TAG), do not hand-write one-off apply scripts (用 `apply_ops.py`).
-- Do not create TAGs unilaterally; do not edit `docs/player-tags-specify.md` (developer-owned).
-- Do not write dates, round labels or edit traces; do not commit unless asked.
+## 禁止
+
+除快线 §1「同轮禁止」与「明确不做」外，本管线另有四条：
+
+- 不得重扫或重判本次更新未触及的干员。
+- 不得凭模型记忆判定——每个判定都引 `文件:行号`；不确定的标 `[待考]` → 该文件的 `## 待开发者确认`。
+- 不得擅自新建 TAG；不得编辑 `docs/player-tags-specify.md`（开发者所有）。
+- 不得写日期、轮次标记或编辑痕迹；除开发者要求外不提交。
+

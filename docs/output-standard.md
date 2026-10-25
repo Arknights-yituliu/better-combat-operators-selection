@@ -277,7 +277,7 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 4. 排序：生成时在内存里就套用 `tag_order.json`（`build()` 内、校验之前），故**重生成不会打乱顺序**；只改顺序而不重生成时跑 `tools/apply_tag_order.py`（它**只重排、不重生成**——改了分文件后仍须重跑生成器）。
 5. 评定标准严谨版：`tools/criteria_to_json.py` 生成 `results/player-tags-criteria.json`，其 `tags[]` 与各 TAG `subs[]` 同样按 `tag_order.json` 排序（文档 `docs/player-tags-criteria.md` 的章节序是**编辑序**，允许与产物序不同）。
 
-发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 需要时跑 `tools/apply_tag_order.py`／`tools/criteria_to_json.py` → `tools/run_all_checks.py` 九项全绿（含「计算过程详情校验」） → 复制到 UI 项目。
+发布流程：`.venv/Scripts/python.exe -X utf8 tools/generate_results.py`（先 `--check` 确认零问题）→ 核对 `version`／`updated` 与抽查若干干员卡片 → 需要时跑 `tools/apply_tag_order.py`／`tools/criteria_to_json.py` → `tools/run_all_checks.py` 十项全绿（含「计算过程详情校验」「文档一致性」） → 复制到 UI 项目。
 
 **手工编辑**：`recommend_gui.py` 的「结果 JSON」页可把 `results/` 下的 json 载入内存编辑（结构化卡片 + 源码视图共用一份数据，编辑期间不写盘），再由「保存…」选择覆盖已有文件或新建自定义文件名；保存前按本规范列出问题（可定位，但不阻断保存，仅内容不是合法 JSON 时拒绝写盘），写盘时先按 `tag_order.json` 重排顺序、再重算荐。内容有变化时按 §1 更新 `version`／`updated`；**纯顺序变化只更新 `updated`**。「TAG 排序」页专门维护顺序（拖拽 → 保存即重排两处产物）。
 
