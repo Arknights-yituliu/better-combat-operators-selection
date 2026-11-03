@@ -39,7 +39,7 @@
 
 - **玩家 TAG 作业用并行代理**：一 TAG 一代理，写出带证据的分文件于 `player_tags/`，遵循 `_brief.md`；合并脚本汇总成 `docs/player-tags-members.md`（剥离「依据」列）。证据留在分文件里。
 
-- **新增 TAG**：按 `.claude/skills/add-player-tag/SKILL.md` —— 在动任何成员前，先与开发者把评定标准说清；除非开发者明确选择「先创建此 TAG、评定标准后续更新」的 stub 方案。
+- **新增 TAG**：玩家体感 TAG 按 `.claude/skills/add-player-tag/SKILL.md`、官方设定 TAG 按 `.claude/skills/add-official-tag/SKILL.md` —— 在动任何成员前，先与开发者把评定标准说清；除非开发者明确选择「先创建此 TAG、评定标准后续更新」的 stub 方案。
 
 - **评定标准只给了几个例子／模糊表述**（「相当高」「较强」）时：按 `.claude/skills/solidify-criteria/SKILL.md` —— 回源枚举同类与边界样例 → 逐条请开发者裁定 → 提炼可量化标准 → 样例回归验证；对外释义（tooltip 等）同步更新。
 

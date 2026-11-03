@@ -11,7 +11,7 @@
 | 新干员实装（单独，无既有干员模组变动） | `.claude/skills/add-new-operator/SKILL.md` | 只更新成员文档，**绝不生成** `results/operator-tags.json`。**先查 `docs/operators.txt` 与 `_manifest.json`**：已在册即跳过爬取、直接验收 |
 | TAG 改写／复算／数据修复（改既有条目） | `docs/agent-primer.md` | 派子代理一律用 `.claude/agents/tag-rewrite`，别手写 brief |
 | 全表扫描／评定标准修订 | `docs/scan-protocol.md` ＋ `.claude/skills/solidify-criteria/SKILL.md` | 扫描类先出名单、逐人决断，再另起复核。**单干员单 TAG 复核不算扫描**：不出名单、直接在「检索记录」留痕 |
-| 新增 TAG | `.claude/skills/add-player-tag/SKILL.md` | 先把评定标准说清，除非明确选 stub 方案 |
+| 新增 TAG | `.claude/skills/add-player-tag/SKILL.md`（玩家体感）／`.claude/skills/add-official-tag/SKILL.md`（官方设定） | 先把评定标准说清，除非明确选 stub 方案 |
 | 数值复算／「（待验证）」条目 | `.claude/skills/reverify-numbers/SKILL.md` | |
 | 批次回填／守恒审计 | `.claude/skills/tag-batch-rewrite/SKILL.md` | 先 `--dry-run` |
 | 会话转交 | `.claude/skills/handoff/SKILL.md` | 状态快照在 `agent_workspace/handoff/state.md`（本地） |

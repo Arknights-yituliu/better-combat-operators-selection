@@ -85,6 +85,10 @@
           {
             "id": "A_teleport",
             "name": "传送敌人"
+          },
+          {
+            "id": "A_trigger",
+            "name": "施加触发型效果"
           }
         ]
       },

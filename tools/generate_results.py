@@ -48,7 +48,7 @@ PRTS_DIR = ROOT / "material_datas" / "PRTS"
 OUT_FILE = ROOT / "results" / "operator-tags.json"
 
 # docs/output-standard.md §1：TAG 增删／改名／排序变化、成员变化、字段形状变化等须递增版本
-VERSION = "v39"
+VERSION = "v41"
 
 # 文档里残留的 文件:行号 证据（结果 JSON 不得携带）
 EV_RE = re.compile(r"[；，、]?\s*[^（）()；。\s]*\.md:\d[\d,\-–\s]*")
@@ -551,6 +551,8 @@ OFFICIAL_SUB_GROUPS: dict[str, list[tuple[str, tuple[str, ...]]]] = {
     "抵抗": [("作用范围", ("仅自身", "可给予他人"))],
     "嘲讽/吸引攻击": [("作用范围", ("仅自身", "可给予他人"))],
     "降低被攻击优先级": [("作用范围", ("仅自身", "可给予他人"))],
+    "施加触发型效果": [("方向", ("对友方", "对敌方")),
+                       ("触发方式", ("受击时", "技能开启时", "生命值门槛时", "施放技能后"))],
 }
 
 # 组合写法的取值（全场光环「伤害+削弱光环」）先展开再查表

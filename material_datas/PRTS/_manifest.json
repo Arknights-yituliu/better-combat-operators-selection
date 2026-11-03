@@ -636,7 +636,7 @@
  },
  "凛御银灰": {
   "url": "https://prts.wiki/w/凛御银灰",
-  "crawled_at": "2026-09-08T21:18:24+08:00",
+  "crawled_at": "2026-11-03T04:16:12+08:00",
   "status": "ok",
   "files": [
    "凛御银灰.md",
@@ -676,7 +676,7 @@
  },
  "溯光星源": {
   "url": "https://prts.wiki/w/溯光星源",
-  "crawled_at": "2026-09-08T21:18:32+08:00",
+  "crawled_at": "2026-11-03T04:16:16+08:00",
   "status": "ok",
   "files": [
    "溯光星源.md"
@@ -856,7 +856,7 @@
  },
  "松桐": {
   "url": "https://prts.wiki/w/松桐",
-  "crawled_at": "2026-09-08T21:19:14+08:00",
+  "crawled_at": "2026-11-03T04:16:18+08:00",
   "status": "ok",
   "files": [
    "松桐.md"
@@ -2158,7 +2158,7 @@
  },
  "缪尔赛思": {
   "url": "https://prts.wiki/w/缪尔赛思",
-  "crawled_at": "2026-09-08T21:24:21+08:00",
+  "crawled_at": "2026-11-03T04:16:21+08:00",
   "status": "ok",
   "files": [
    "缪尔赛思.md",
@@ -2805,7 +2805,7 @@
  },
  "号角": {
   "url": "https://prts.wiki/w/号角",
-  "crawled_at": "2026-09-08T21:27:01+08:00",
+  "crawled_at": "2026-11-03T04:16:25+08:00",
   "status": "ok",
   "files": [
    "号角.md"
@@ -2853,7 +2853,7 @@
  },
  "菲亚梅塔": {
   "url": "https://prts.wiki/w/菲亚梅塔",
-  "crawled_at": "2026-09-08T21:27:12+08:00",
+  "crawled_at": "2026-11-04T02:08:12+08:00",
   "status": "ok",
   "files": [
    "菲亚梅塔.md"
@@ -5764,5 +5764,77 @@
   "rarity": "4",
   "class": "辅助",
   "title": "德·托莱多"
+ },
+ "行铃": {
+  "url": "https://prts.wiki/w/行铃",
+  "crawled_at": "2026-11-03T04:15:56+08:00",
+  "status": "ok",
+  "files": [
+   "行铃.md"
+  ],
+  "summons": [],
+  "rarity": "3",
+  "class": "特种",
+  "title": "行铃"
+ },
+ "奥尔佳": {
+  "url": "https://prts.wiki/w/奥尔佳",
+  "crawled_at": "2026-11-03T04:15:58+08:00",
+  "status": "ok",
+  "files": [
+   "奥尔佳.md"
+  ],
+  "summons": [],
+  "rarity": "4",
+  "class": "近卫",
+  "title": "奥尔佳"
+ },
+ "镜匠": {
+  "url": "https://prts.wiki/w/镜匠",
+  "crawled_at": "2026-11-03T04:16:00+08:00",
+  "status": "ok",
+  "files": [
+   "镜匠.md"
+  ],
+  "summons": [],
+  "rarity": "4",
+  "class": "重装",
+  "title": "镜匠"
+ },
+ "塔露拉": {
+  "url": "https://prts.wiki/w/塔露拉",
+  "crawled_at": "2026-11-04T02:05:44+08:00",
+  "status": "ok",
+  "files": [
+   "塔露拉.md"
+  ],
+  "summons": [],
+  "rarity": "5",
+  "class": "近卫",
+  "title": "塔露拉"
+ },
+ "冻河": {
+  "url": "https://prts.wiki/w/冻河",
+  "crawled_at": "2026-11-03T04:16:06+08:00",
+  "status": "ok",
+  "files": [
+   "冻河.md"
+  ],
+  "summons": [],
+  "rarity": "5",
+  "class": "辅助",
+  "title": "冻河"
+ },
+ "国度": {
+  "url": "https://prts.wiki/w/国度",
+  "crawled_at": "2026-11-03T04:16:09+08:00",
+  "status": "ok",
+  "files": [
+   "国度.md"
+  ],
+  "summons": [],
+  "rarity": "5",
+  "class": "特种",
+  "title": "国度"
  }
 }

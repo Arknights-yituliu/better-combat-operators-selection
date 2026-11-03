@@ -84,7 +84,7 @@ ACCEPTED = {
     ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "94"),
     ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "113"),
     ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "61"),
-    # 根《待裁定.md》第九批整体重写：旧版号角行引用的 号角/号角.md:155 随重写消失。
+    # 根《待裁定.md》第九批整体重写：旧版号角行引用的 号角/号角.md:157 随重写消失。
     ("待裁定.md", "155"),
     # 11-阻挡数5.md 三行（珊比／酒神／余）的备注原内联了证据，按「证据只写进依据列」
     # 移到依据列后改用全路径写法（`珊比/珊比.md:…`），原短路径写法（`珊比.md:121`）随之消失——
@@ -264,7 +264,7 @@ ACCEPTED = {
     ("待裁定.md", "197"),
     # 01-决战歼灭.md 号角「不可对空」排除行、02-次数对策.md 复奏/提丰「多段伤害」边界行：
     # 本轮在这三行的引用**紧前方**改写了文字（号角按「过载只覆盖后半程」订正窗口计法、
-    # 复奏/提丰按「该动作的攻击间隔÷单动作段数≤0.667」补注）——引用本身（`号角/号角.md:17,96,…`、
+    # 复奏/提丰按「该动作的攻击间隔÷单动作段数≤0.667」补注）——引用本身（`号角/号角.md:17,98,…`、
     # `复奏/复奏.md:94,105`、`提丰/提丰.md:132,134`）未动、仍指向同一处原文。审计的键分词会把引用前的
     # 散文并入键名，键随文字改动而变、致误报「失效」——与下方「模组代号进产物」条目同类（引用未失效的显式放行）。
     ("agent_workspace/tag_pipeline/player_tags/01-决战歼灭.json", "17"),
@@ -435,6 +435,48 @@ ACCEPTED = {
     ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "34"),
     ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "162"),
     ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "105"),
+    # 版本更新重爬：号角/凛御银灰/松桐/溯光星源/缪尔赛思 五页的新模组在天赋表内插入
+    # 模组档位行，插入点之后的引用整体下移 2 行。审计从 HEAD 侧用「剥离规则」重算行映射，
+    # 看不到这次插入，故把这些 HEAD 侧原子列在此处放行；现行工作区引用已按插入点重锚。
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "155"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "92"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "147"),
+    ("agent_workspace/tag_pipeline/player_tags/03-吃拐一轮秒.json", "169"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "100"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "121"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "122"),
+    ("agent_workspace/tag_pipeline/player_tags/04-远程消耗.json", "61"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "102"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "103"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "121"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "122"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "61"),
+    ("agent_workspace/tag_pipeline/player_tags/05-插拔容错.json", "67"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "59"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "63"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "81"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "82"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "66"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "67"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "75"),
+    ("agent_workspace/tag_pipeline/player_tags/06-初动增加.json", "76"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "115"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "127"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "130"),
+    ("agent_workspace/tag_pipeline/player_tags/08-拐杖.json", "116"),
+    ("agent_workspace/tag_pipeline/player_tags/09-保人.json", "92"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "63"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "66"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "193"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "200"),
+    ("agent_workspace/tag_pipeline/player_tags/12-阵容组合.json", "103"),
+    ("agent_workspace/tag_pipeline/player_tags/13-高档控制.json", "96"),
+    ("docs/calc-rules.md", "113"),
+    ("docs/calc-rules.md", "155"),
+    ("docs/scan-protocol.md", "130"),
+    ("agent_workspace/tag_pipeline/player_tags/_merge_to_docs.py", "63"),
+    ("crawlers/strip_prts_noncombat.py", "155"),
+    ("crawlers/strip_prts_noncombat.py", "96"),
 }
 
 # 文件:行号 — the number part is digits joined by , 、 or a -/– range.

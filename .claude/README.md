@@ -9,6 +9,7 @@
 | `add-new-operator` | 新干员实装：爬取 → 逐 TAG 判定 → 询问未覆盖机制 → 更新名单文档 |
 | `update-version` | 版本增量更新：新增干员与／或已有干员新模组，只刷新受影响条目并跑跨干员影响清单 |
 | `add-player-tag` | 新增玩家体感 TAG（先与开发者把评定标准说清楚，或显式选择先建 stub） |
+| `add-official-tag` | 新增官方设定 TAG（A–I 类）：分模块条目 + `catalog.json`／`tag_order.json`／子 TAG 闭集三处登记，再重跑合并与生成 |
 | `solidify-criteria` | 评定标准只有例子／模糊表述时：回源枚举样例 → 逐条请开发者裁定 → 提炼可量化标准 → 回归验证 |
 | `crawl-prts-operator` | 爬取／重爬干员语料与攻击范围，含爬虫内部与坑位说明 |
 | `tag-batch-rewrite` | 批量回填（`_apply_batch.py`）与条件／备注重排的守恒审计 |

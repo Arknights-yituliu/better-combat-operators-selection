@@ -28,6 +28,25 @@ description: 从 PRTS wiki 爬取一名或多名明日方舟干员（含其召�
 4. 召唤物文件含属性表（`## 召唤物信息`），且持有者名能解析（「持有者」格显示干员名而非空）。
 5. 数据行里没有泄漏的 tooltip 文本：正文不应内联出现 `术语:` 或 `异常效果:` 的定义。
 6. 没有残留的非作战内容：`## 精英化材料`、`## 技能升级材料`、`## 后勤技能` 必须**不存在**；`## 模组` 里不得有剧情散文、不得有 `**模组解锁任务**`／`**解锁需求与材料消耗**`、不得有图片行。模组档位以 `**模组等级1/2/3**` 文本行出现，类型码以 `**ART-X**` 形式的文本行出现。
+7. **备注完整性（2026-11-03 新增，曾真实发生）**：新实装干员的 PRTS 页面在**实装当天仍在补机制备注**，实装当晚抓取会漏掉当时尚未写入的 `※` 条文（实例：国度 3 技能「扩散并同步扩大攻击范围、变为复合范围」整段缺失，直接导致 04-远程消耗 的判定反转）。**判定这类新干员前，必须比对一次线上 `|备注=` 条数与本地语料**：
+
+   ```bash
+   # 列出线上每条 |备注= 的 ※ 条目 vs 本地文件，报告「线上有、本地无」者
+   .venv/Scripts/python.exe -X utf8 -c "
+   import sys;sys.path.insert(0,'crawlers')
+   import crawl_prts as C,crawl_ranges as cr,requests,re
+   s=requests.Session();s.headers.update(C.HEADERS)
+   for n in ('干员A','干员B'):
+       wt=cr.fetch_wikitext(s,n) or ''
+       local=open(rf'material_datas/PRTS/{n}/{n}.md',encoding='utf-8').read()
+       miss=[x.strip()[:40] for b in re.findall(r'\|备注=([^\n]*)',wt)
+             for x in re.split(r'<br\s*/?>|※',b)
+             if len(re.sub(r'[^一-鿿]','',x))>=12 and re.sub(r'[^一-鿿0-9%]','',x)[:16] not in re.sub(r'[^一-鿿0-9%]','',local)]
+       print(n,'线上备注缺失',len(miss),miss)
+   "
+   ```
+
+   有缺失即 `--force` 重爬该干员，并**重跑 `tools/prts_stats.py` 与 `crawlers/strip_prts_noncombat.py --audit`**（新备注会插入行、平移其下全部行号；新干员文件未被 git 跟踪时 `--audit` 不覆盖，须手工核对引用）。
 
 ## 非作战内容剥离
 

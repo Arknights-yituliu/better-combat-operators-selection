@@ -262,7 +262,7 @@ python recommend_gui.py                 # 网页面板：「荐」页按 TAG 与
 | JSON 部分 | 来源 |
 |---|---|
 | `operators` | `material_datas/PRTS/<干员>/<干员>.md`（含 `_launch_dates.json` 的实装时间）＋ `agent_workspace/tag_pipeline/char_ids.json`（charId 映射） |
-| 官方类 `tags` | `docs/official-tags-members.md`（79 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `agent_workspace/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`agent_workspace/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
+| 官方类 `tags` | `docs/official-tags-members.md`（80 个 TAG 成员表：干员／编号／条件／备注）＋ TAG 字典 `agent_workspace/tag_pipeline/{catalog.json, merged.json, final_lists.tsv}`（文档维护层：`agent_workspace/tag_pipeline/official_tags/*.md`，经 `_merge_official_to_docs.py` 合入文档 §3/§4/§5） |
 | 玩家类 `tags` | `docs/player-tags-members.md`（由其分文件 `agent_workspace/tag_pipeline/player_tags/NN-*.json` 合并生成） |
 | `recommended` | `agent_workspace/tag_pipeline/player_tags/_recommend.json`（`tools/recommend.py` 维护） |
 | `subTags` | 玩家类＝各分文件成员表的分组（「子 TAG」列／子表标题／「救急路径：」等行内标记）；官方类＝备注开头的「子 TAG：…。」（可连续多个前缀＝多个组），组名按 `tools/generate_results.py` 的取值闭集表判定：闪避（闪避类型／作用范围）、全场光环、抗削弱、帧级结算，以及 护盾（按层抵挡）／屏障（吸收值）／免死·复活·替身／伤害减免·减伤／庇护（物法减伤）／迷彩／抵抗／嘲讽·吸引攻击／降低被攻击优先级 的「作用范围」组 |
