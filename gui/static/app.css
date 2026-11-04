@@ -245,6 +245,8 @@ main > * { min-height: 0; overflow: auto; background: var(--panel); }
 .grouphdr { font-family: var(--ak-font-mono); font-size: 11px; font-weight: 800; letter-spacing: var(--ak-type-wide); color: var(--dim); margin-top: var(--ak-space-2); text-transform: uppercase; }
 .catrow { font-family: var(--ak-font-mono); font-size: 11px; letter-spacing: .06em; color: var(--dim); padding-left: var(--ak-space-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .blk { padding-left: 1.4rem; }
+.blk.sub { padding-left: 2.6rem; font-size: 12px; color: var(--dim); }
+.blk.sub.on { color: var(--txt); font-weight: 600; }
 .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag, .blk, .card, .tagline { min-width: 0; }
 

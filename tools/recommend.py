@@ -76,7 +76,7 @@ def load_tags() -> list[tuple[str, str, pathlib.Path]]:
     order = _tag_order()
     rank = tag_order.player_rank(order)
     # 顺序文件的玩家 TAG 序（未登记的回退到编号序，置于末尾）
-    out.sort(key=lambda t: (rank.get(f"P{t[0]}", len(rank)), t[0]))
+    out.sort(key=lambda t: (rank.get(f"P{t[0]:02d}", len(rank)), t[0]))
     return [(name, path) for _, name, path in out]
 
 

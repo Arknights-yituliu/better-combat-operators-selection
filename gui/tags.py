@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import pathlib
+import re
 
 import partdoc
 from .config import KNOWN_COLS, OFFICIAL_DIR, OFFICIAL_FILES
@@ -23,14 +24,49 @@ def _clean_op(cell: str) -> str:
     return cell.replace("**", "").strip()
 
 
-def _rows_of(columns: list[str], rows: list[list[str]]) -> list[dict]:
+def leaf_values(subs: list[dict]) -> list[str]:
+    """subTags → 末端取值（值不是任何其它条的 group）。与 output-standard §4.3「末端子 TAG 即可筛选项」同义。"""
+    parents = {s.get("group") for s in subs}
+    out: list[str] = []
+    for s in subs:
+        v = s.get("value")
+        if v and v not in parents and v not in out:
+            out.append(v)
+    return out
+
+
+def display_label(label: str) -> str:
+    """成员表标题 → 树节点文案：去 md 强调、去序号前缀与人数括注，但保留后半句的短定义。
+
+    `表 1 · 超远距离打击（本体 / 光束 / …）` → `超远距离打击（本体 / 光束 / …）`
+    `一、治疗·减免·防御·法抗·庇护（41 人）`   → `治疗·减免·防御·法抗·庇护`
+    `2B 陷阱（占用部署数 0、…）`               → `陷阱（占用部署数 0、…）`
+    """
+    s = label.replace("**", "").strip()
+    s = re.sub(r"^表\s*\d+\s*·\s*", "", s)                 # 「表 1 · 」
+    s = re.sub(r"^\d[A-Z]\s+", "", s)                      # 「2A 」「2B 」
+    s = re.sub(r"^[一二三四五六七八九十]+、", "", s)        # 「一、」
+    s = re.sub(r"（\s*\d+\s*人\s*）\s*$", "", s)            # 「（41 人）」
+    return s.strip() or label
+
+
+def _rows_of(columns: list[str], rows: list[list[str]], num: str = "",
+             h3: str = "", h4: str = "") -> list[dict]:
     ci, ni = columns.index("条件"), columns.index("备注")
     sub_col = columns.index("子 TAG") if "子 TAG" in columns else (
         columns.index("范围") if "范围" in columns else None)
     cid_col = columns.index("编号") if "编号" in columns else None
     src_col = columns.index("依据") if "依据" in columns else None
+    gen = _gen()
     out = []
     for k, cells in enumerate(rows):
+        cons: list[dict] = []
+        if num and gen is not None:
+            clean = [gen.clean_cell(c) for c in cells]
+            try:
+                cons = gen.player_subtags(num, h3, h4, columns, clean, clean[ci], clean[ni])[1]
+            except Exception:  # noqa: BLE001  （解析失败只影响筛选，不该让整页挂掉）
+                cons = []
         out.append({
             "i": k,
             "op": _clean_op(cells[0]),
@@ -39,18 +75,37 @@ def _rows_of(columns: list[str], rows: list[list[str]]) -> list[dict]:
             "note": cells[ni],
             "src": cells[src_col] if src_col is not None else "",
             "sub": cells[sub_col] if sub_col is not None else "",
+            "subtags": cons,                      # 原始（组/值/detail），供树与子 TAG 计数
+            "subs": leaf_values(cons),            # 末端取值，供干员列表按子 TAG 过滤
         })
     return out
+
+
+def _gen():
+    """生成器的 player_subtags（与产物、荐页作用域同源）。只在需要时导入，避免顶层循环。"""
+    import generate_results as gen  # noqa: PLC0415
+    return gen
+
+
+def block_display(h3: str, h4: str, label: str) -> str:
+    """树的区块文案：`####` 子表带上所属 `###` 父级（`远距控制 · 独立达成`），
+    否则只显示自身；两者都经 display_label 规范化。"""
+    own = display_label(label)
+    if not h4:
+        return own
+    parent = display_label(h3)
+    return own if parent == own else f"{parent} · {own}"
 
 
 def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
     """玩家分文件 → 区块（一张成员表 = 一个区块）。
 
     只认 `## 成员表…` 节内、表头首列为「干员」且列名在白名单内的表；
-    label = 最近的 ###/#### 标题（与写回签名同源）。
+    label = 最近的 ###/#### 标题（与写回签名同源），display = 树节点文案。
     """
     doc = partdoc.load(path)
     fd = _fd(path)
+    num = path.name[:2]
     sort = "none" if path.name.startswith("12-") else "date"
     blocks: list[dict] = []
     for t in partdoc.iter_member_tables(doc):
@@ -62,10 +117,11 @@ def parse_player_blocks(path: pathlib.Path, tag_name: str) -> list[dict]:
             "file": path.name,
             "tag": tag_name,
             "label": t["label"],
+            "display": block_display(t["h3"], t["h4"], t["label"]),
             "header": t["columns"],
             "sort": sort,
             "fd": fd,
-            "rows": _rows_of(t["columns"], t["rows"]),
+            "rows": _rows_of(t["columns"], t["rows"], num, t["h3"], t["h4"]),
         })
     return blocks
 
@@ -120,6 +176,7 @@ def parse_official_entries(path: pathlib.Path, category: str) -> list[dict]:
                 "tag": e["name"],
                 "cat": category,
                 "label": e["name"],
+                "display": e["name"],
                 "header": columns,
                 "sort": "date",
                 "fd": fd,

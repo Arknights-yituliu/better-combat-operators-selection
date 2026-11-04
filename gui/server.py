@@ -98,7 +98,7 @@ class Handler(BaseHTTPRequestHandler):
                                         payload["orig"], payload["cond"], payload["note"],
                                         payload.get("sub"), payload.get("subcol", "子 TAG")))
                 elif path == "/api/apply":
-                    self._json(apply_ops(payload))
+                    self._json(apply_ops(payload, dry_run=bool(payload.get("dry_run"))))
                 elif path == "/api/results/list":
                     self._json(list_results())
                 elif path == "/api/results/load":

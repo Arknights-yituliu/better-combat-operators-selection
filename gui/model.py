@@ -18,6 +18,32 @@ def fill_cid(blocks: list[dict]) -> None:
                 r["cid"] = CHAR_IDS.get(r["op"], "")
 
 
+def sub_values_of(t: dict) -> list[dict]:
+    """该玩家 TAG 成员行实际用到的末端子 TAG 取值 → [{group, value, count}]。
+
+    顺序取自 tag_order.json（未登记的回退到首次出现序）；与产物 subOrder、荐页作用域同源。
+    """
+    import tag_order  # noqa: PLC0415
+    seen: dict[str, dict] = {}
+    for b in t["blocks"]:
+        for r in b["rows"]:
+            for v in r.get("subs") or []:
+                item = seen.setdefault(v, {"group": "", "value": v, "count": 0})
+                item["count"] += 1
+    if not seen:
+        return []
+    # 组名：从成员的 subTags 反查（同一取值只属一个组）
+    for b in t["blocks"]:
+        for r in b["rows"]:
+            for s in r.get("subtags") or []:
+                g, v = s.get("group") or "", s.get("value") or ""
+                if v in seen and not seen[v]["group"]:
+                    seen[v]["group"] = g
+    rank = tag_order.sub_rank(tag_order.load(), f"P{t['num']}")
+    out = sorted(seen.values(), key=lambda x: rank.get((x["group"], x["value"]), len(rank)))
+    return out
+
+
 def build_model(fresh: bool = False) -> dict:
     recommend = rec.load_recommend()
     player_tags = []
@@ -37,7 +63,7 @@ def build_model(fresh: bool = False) -> dict:
                     union.append(op)
         sm = scope_members(path)  # 各子作用域的成员（荐页过滤 + 荐的归属校验）
         scope_members_of[name] = sm
-        player_tags.append({
+        entry = {
             "num": path.name[:2],
             "name": name,
             "file": path.name,
@@ -45,7 +71,9 @@ def build_model(fresh: bool = False) -> dict:
             "rec_scopes": [{"scope": v, "ops": scope_ops[v]} for v in scope_ops],  # 荐页编辑用
             "scope_members": sm,  # 子作用域 → 该作用域内的干员（荐页据此只列本作用域的干员）
             "blocks": blocks,
-        })
+        }
+        entry["sub_values"] = sub_values_of(entry)  # 树里的子 TAG 行（列式/备注前缀式的 TAG 才有）
+        player_tags.append(entry)
     official_entries = load_official_entries()
     for n, e in enumerate(official_entries):
         e["id"] = f"o:{e['file']}#e{n}"

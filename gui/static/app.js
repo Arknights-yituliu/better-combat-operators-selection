@@ -22,8 +22,8 @@ const IDX = {byId:new Map(), tagBlocks:new Map(), tree:[]};
 const ST = {
   tab: "zhen",
   zhen: {tag: "__all__", q: "", openOp: null, scope: null},
-  ind: {targets: [], browse: null, browseOpen: {}, openOp: null, q: "", pq: "", tq: "",
-        collapsed: {}, stage: [], busy: false},
+  ind: {targets: [], sub: "", browse: null, browseOpen: {}, subOpen: {}, openOp: null,
+        q: "", pq: "", tq: "", collapsed: {}, stage: [], busy: false},
 };
 
 function esc(s) {
@@ -70,7 +70,8 @@ function hydrate() {
     const blocks = t.blocks.map(b => b.id);
     IDX.tagBlocks.set("p:" + t.name, blocks);
     for (const b of t.blocks) IDX.byId.set(b.id, {...b, source: "player", tagKey: "p:" + t.name, tagName: t.name, multi: t.blocks.length > 1, tagNum: t.num});
-    tagTree.push({key: "p:" + t.name, name: t.name, num: t.num, blocks, ops: new Set(t.blocks.flatMap(b => b.rows.map(r => r.op))).size});
+    tagTree.push({key: "p:" + t.name, name: t.name, num: t.num, blocks, subs: t.sub_values || [],
+                  ops: new Set(t.blocks.flatMap(b => b.rows.map(r => r.op))).size});
   }
   IDX.tree.push({title: "玩家体感 TAG", tags: tagTree});
   const byCat = new Map();
@@ -85,21 +86,36 @@ function hydrate() {
 }
 function tagOf(name) { return DATA.player_tags.find(t => t.name === name); }
 function blockById(bid) { return IDX.byId.get(bid); }
+function targetBlock(id) { return blockById(id); }
 function scopeBlocks() {
-  if (ST.ind.targets.length) return ST.ind.targets.map(t => blockById(t.id)).filter(Boolean);
+  if (ST.ind.targets.length) return ST.ind.targets.map(t => targetBlock(t.id)).filter(Boolean);
   if (ST.ind.browse) return (IDX.tagBlocks.get(ST.ind.browse) || []).map(blockById).filter(Boolean);
   return [];
 }
+function blockMatchesSub(b, sub) {
+  if (!sub) return true;
+  return b.rows.some(r => (r.subs || []).includes(sub));
+}
 function scopeRows() {
   const out = [];
-  for (const b of scopeBlocks()) for (const r of b.rows) out.push({b, r});
+  for (const b of scopeBlocks()) {
+    for (const r of b.rows) {
+      if (ST.ind.sub && !(r.subs || []).includes(ST.ind.sub)) continue;
+      out.push({b, r});
+    }
+  }
   return out;
+}
+function scopeAll() {   // 当前范围（所选子表／浏览范围）的干员名，不含子 TAG 过滤——计数分母用
+  const s = new Set();
+  for (const b of scopeBlocks()) for (const r of b.rows) s.add(r.op);
+  return [...s];
 }
 function inTargets(bid) { return ST.ind.targets.some(t => t.id === bid); }
 function blkLabel(b) {  // 单子表 TAG 的区块标题就是「成员表…」，不再显示
   return (IDX.tagBlocks.get(b.tagKey) || []).length > 1 ? b.label : "";
 }
-function blkFull(b) { const l = blkLabel(b); return b.tagName + (l ? " · " + l : ""); }
+function blkFull(b) { const l = blkLabel(b); return b.tagName + (l ? " · " + (b.display || l) : ""); }
 
 // ---------------------------------------------------------------- 荐 页
 
@@ -388,9 +404,10 @@ function renderTree() {
         if (ccol) continue;
       }
       for (const tag of cat.tags) {
-        if (q && !tag.name.toLowerCase().includes(q) && !tag.blocks.some(b => ((blockById(b) || {}).label || "").toLowerCase().includes(q))) continue;
+        if (q && !tag.name.toLowerCase().includes(q) && !tag.blocks.some(b => (((blockById(b) || {}).label || "") + ((blockById(b) || {}).display || "")).toLowerCase().includes(q))) continue;
         const multi = tag.blocks.length > 1;
-        if (multi) {
+        const hasSubs = !multi && (tag.subs || []).length > 0;
+        if (multi || hasSubs) {
           const open = !!ST.ind.browseOpen[tag.key] || !!q;
           const el = document.createElement("div");
           el.className = "tag" + (ST.ind.browse === tag.key ? " on" : "");
@@ -399,10 +416,14 @@ function renderTree() {
             ST.ind.browseOpen[tag.key] = !open;
             ST.ind.browse = tag.key;
             ST.ind.targets = [];
+            ST.ind.sub = "";
             renderInd();
           };
           col.appendChild(el);
-          if (open) for (const bid of tag.blocks) col.appendChild(blockRow(blockById(bid), true));
+          if (open) {
+            if (multi) for (const bid of tag.blocks) col.appendChild(blockRow(blockById(bid), true));
+            else col.appendChild(blockRow(blockById(tag.blocks[0]), true, null, tag));
+          }
         } else {
           col.appendChild(blockRow(blockById(tag.blocks[0]), false, tag.name));
         }
@@ -410,25 +431,54 @@ function renderTree() {
     }
   }
 }
-function blockRow(b, indented, nameOverride) {
+function subRow(tag, s) {
+  // 列式／备注前缀式子 TAG（08 拐杖、05 插拔容错）的取值行：选中即把整张表 + 该取值设为目标
   const el = document.createElement("div");
-  el.className = "blk" + (inTargets(b.id) ? " on" : "");
-  const label = nameOverride || b.label;
+  const on = ST.ind.targets.length === 1 && ST.ind.targets[0].id === tag.blocks[0]
+    && (ST.ind.sub || "") === s.value;
+  el.className = "blk sub" + (on ? " on" : "");
+  el.innerHTML = '<span class="caret"></span><span class="lbl">' + esc(s.value) + '</span><span class="n">' + s.count + "</span>";
+  el.title = (s.group ? s.group + " / " : "") + s.value + "（" + s.count + " 行）";
+  el.onclick = e => {
+    if (e.ctrlKey || e.metaKey) {
+      if (on) { ST.ind.targets = []; ST.ind.sub = ""; }
+      else { ST.ind.targets = [{id: tag.blocks[0], sig: (blockById(tag.blocks[0]) || {}).sig}]; ST.ind.sub = s.value; }
+    } else {
+      ST.ind.targets = [{id: tag.blocks[0], sig: (blockById(tag.blocks[0]) || {}).sig}];
+      ST.ind.sub = s.value;
+    }
+    ST.ind.browse = null;
+    renderInd();
+  };
+  return el;
+}
+function blockRow(b, indented, nameOverride, tag) {
+  const el = document.createElement("div");
+  el.className = "blk" + (inTargets(b.id) && !(tag && (tag.subs || []).length) ? " on" : "");
+  const label = nameOverride || b.display || b.label;
   el.innerHTML = (indented ? '<span class="caret"></span>' : "") + '<span class="lbl">' + esc(label) + '</span><span class="n">' + b.rows.length + "</span>";
   el.title = (b.source === "official" ? "[官方] " : "[玩家] ") + blkFull(b);
   el.onclick = e => {
     if (e.ctrlKey || e.metaKey) {
-      const k = ST.ind.targets.findIndex(t => t.id === b.id);
+      const k = ST.ind.targets.findIndex(t => t.id === b.id && !(t.sub));
       if (k >= 0) ST.ind.targets.splice(k, 1);
       else ST.ind.targets.push({id: b.id, sig: b.sig});
+      ST.ind.sub = "";
       ST.ind.browse = null;
     } else {
       ST.ind.targets = [{id: b.id, sig: b.sig}];
+      ST.ind.sub = "";
       ST.ind.browse = null;
     }
     renderInd();
   };
-  return el;
+  const frag = document.createDocumentFragment();
+  frag.appendChild(el);
+  if (tag && (tag.subs || []).length) {
+    const openKey = "s:" + tag.key;
+    if (ST.ind.subOpen[openKey] !== false) for (const s of tag.subs) frag.appendChild(subRow(tag, s));   // 默认展开
+  }
+  return frag;
 }
 
 // ---------------------------------------------------------------- 人工归纳：干员列表
@@ -438,8 +488,9 @@ function renderInd() {
   const tip = document.getElementById("stagetip");
   const sel = ST.ind.targets.map(t => blockById(t.id)).filter(Boolean);
   tip.textContent = sel.length
-    ? "目标：" + sel.map(blkFull).join("；") + (sel.length > 1 ? "（" + sel.length + " 个，移动只能落到一个）" : "")
-    : (ST.ind.browse ? "浏览中（只读范围，点具体子表才能并入）" : "先在左侧选中目标子表");
+    ? "目标：" + sel.map(blkFull).join("；") + (ST.ind.sub ? " · " + ST.ind.sub : "")
+      + (sel.length > 1 ? "（" + sel.length + " 个，移动只能落到一个）" : "")
+    : (ST.ind.browse ? "浏览中（只读范围，点具体子表／子 TAG 才能并入）" : "先在左侧选中目标子表或子 TAG");
 }
 function renderIndList() {
   const list = document.getElementById("ioplist");
@@ -452,18 +503,20 @@ function renderIndList() {
   }
   const names = [...byOp.keys()];
   const items = names.filter(n => matches(n, ST.ind.q));
-  document.getElementById("icnt").textContent = items.length + " / " + names.length + " 人";
+  const total = scopeAll().length;   // 分母＝当前范围的干员总数（非子 TAG 过滤后的）
+  document.getElementById("icnt").textContent = items.length + " / " + total + " 人"
+    + (ST.ind.q ? "" : (ST.ind.sub ? "（子 TAG：" + ST.ind.sub + "）" : ""));
   if (!scopeBlocks().length) {
     list.innerHTML = "<div class='split'>" + (ST.ind.openOp
       ? "「" + esc(ST.ind.openOp) + "」不在当前范围：请在左侧选中它所属的 TAG（含官方设定 TAG）后查看。"
-      : "点左侧 TAG 查看其下干员；多子表 TAG 展开后点具体子表即可并入。") + "</div>";
+      : "点左侧 TAG 查看其下干员；多子表 TAG 展开后点具体子表、列式 TAG 点具体子 TAG 即可并入。") + "</div>";
     return;
   }
   const multi = scopeBlocks().length > 1;
   for (const op of items) {
     const recs = byOp.get(op);
     const open = ST.ind.openOp === op;
-    const chips = recs.map(x => (x.r.sub || (multi ? x.b.label : ""))).filter(Boolean);
+    const chips = recs.map(x => (x.r.sub || (multi ? (x.b.display || x.b.label) : ""))).filter(Boolean);
     const el = opRow({op}, {
       cls: open ? "open" : "",
       chips,
@@ -601,11 +654,14 @@ function rowMenu(e, op, recs) {
   openMenu(e.clientX, e.clientY, items);
 }
 async function removeRow(x) {
-  if (!confirm("从「" + blkFull(x.b) + "」删除「" + x.r.op + "」的整行记录？\n（含条件/备注/依据，源文件 " + x.b.file + "，可用 git 恢复）")) return;
+  const where = blkFull(x.b) + ((x.b.header || []).indexOf("子 TAG") >= 0 && x.r.sub ? " · " + x.r.sub : "");
+  if (!confirm("从「" + where + "」删除「" + x.r.op + "」的整行记录？\n（含条件/备注/依据，源文件 " + x.b.file + "，可用 git 恢复）")) return;
   try {
-    const j = await api("/api/apply", {automerge: automergeOn(), ops: [{kind: "delete", op: x.r.op,
+    const ops = [{kind: "delete", op: x.r.op,
       from: {block: {id: x.b.id, sig: x.b.sig}, i: x.r.i, op: x.r.op,
-             orig: {cond: x.r.cond, note: x.r.note, sub: x.r.sub}}}]});
+             orig: {cond: x.r.cond, note: x.r.note, sub: x.r.sub}}}];
+    await api("/api/apply", {automerge: false, dry_run: true, ops});   // 干跑：源行若已变化先在这里报 drift
+    const j = await api("/api/apply", {automerge: automergeOn(), ops});
     afterApply(j, "已移除：" + x.r.op);
   } catch (e) { toast(e.message, true); if (e.code === "drift") load(true); }
 }
@@ -615,7 +671,7 @@ function afterApply(j, prefix) {
     if (r.targets) {
       const bad = r.targets.filter(t => t.skipped);
       msgs.push((prefix ? prefix + "：" : "") + r.op + " → 已并入 " + (r.targets.length - bad.length) + " 个子表" +
-        (bad.length ? "，跳过 " + bad.map(t => t.label + "（已在表内）").join("、") : ""));
+        (bad.length ? "，跳过 " + bad.map(t => (t.tag ? t.tag + (t.display && t.display !== t.tag ? " · " + t.display : "") : t.label) + "（" + reasonText(t.reason, t.subs) + "）").join("、") : ""));
     } else if (r.skipped) msgs.push(r.op + "：" + r.reason);
     else if (r.kind === "move") msgs.push("已移动：" + r.op + " → " + (r.to ? r.to.file : "") +
       (r.dropped && Object.keys(r.dropped).length ? "（" + Object.keys(r.dropped).join("、") + " 列目标表没有，未随行）" : ""));
@@ -635,7 +691,7 @@ function afterApply(j, prefix) {
 
 function stageSave() {
   try {
-    localStorage.setItem("induct.v1", JSON.stringify({targets: ST.ind.targets, stage: ST.ind.stage}));
+    localStorage.setItem("induct.v1", JSON.stringify({targets: ST.ind.targets, sub: ST.ind.sub || "", stage: ST.ind.stage}));
   } catch (e) {}
 }
 function stageOp(op, mode, rec) {
@@ -668,7 +724,7 @@ function renderStage() {
   const list = document.getElementById("stagelist");
   list.innerHTML = "";
   if (!ST.ind.stage.length) {
-    list.innerHTML = "<span class='empty'>空。右侧摘选区左键、或干员行右键「扩展 / 移动」把干员放进来；选中目标子表后点这里的干员即可并入。</span>";
+    list.innerHTML = "<span class='empty'>空。右侧摘选区左键、或干员行右键「扩展 / 移动」把干员放进来；选中目标子表／子 TAG 后点这里的干员即可并入（会先预览再确认）。</span>";
     return;
   }
   for (const it of ST.ind.stage) {
@@ -693,15 +749,15 @@ function renderStage() {
 async function dropStage(it) {
   if (ST.ind.busy) return;
   const targets = ST.ind.targets;
-  if (!targets.length) { toast("请先在左侧选中目标子表", true); return; }
+  if (!targets.length) { toast("请先在左侧选中目标子表或子 TAG", true); return; }
   if (it.stale) { toast("该条目所记的源行已变化，请重新摘取", true); return; }
   if (it.mode === "move" && targets.length !== 1) { toast("移动只能指定一个目标子表", true); return; }
   ST.ind.busy = true;
   try {
-    const ops = it.mode === "move"
-      ? [{kind: "move", op_id: it.sid, from: {block: {id: it.src.blockId, sig: it.src.blockSig},
-           i: it.src.i, op: it.src.op, orig: it.src.orig}, targets: targets.map(t => ({id: t.id, sig: t.sig}))}]
-      : [{kind: "insert", op_id: it.sid, op: it.op, cond: "", note: "", sub: "", targets: targets.map(t => ({id: t.id, sig: t.sig}))}];
+    const ops = buildStageOps(it, targets);
+    // 先干跑：服务端执行全部校验与去重，但不落盘，把「会写什么」原样回报
+    const pv = await api("/api/apply", {automerge: false, dry_run: true, ops});
+    if (!confirm(previewText(it, pv, ST.ind.sub || ""))) { toast("已取消，未写盘"); return; }
     const j = await api("/api/apply", {automerge: automergeOn(), ops});
     if (it.mode === "move") ST.ind.stage = ST.ind.stage.filter(s => s.sid !== it.sid);
     stageSave();
@@ -710,6 +766,50 @@ async function dropStage(it) {
     toast(e.message, true);
     if (e.code === "drift") { await load(true); markStageStale(); }
   } finally { ST.ind.busy = false; }
+}
+function buildStageOps(it, targets) {
+  const tg = targets.map(t => ({id: t.id, sig: t.sig, sub: ST.ind.sub || ""}));
+  return it.mode === "move"
+    ? [{kind: "move", op_id: it.sid, from: {block: {id: it.src.blockId, sig: it.src.blockSig},
+         i: it.src.i, op: it.src.op, orig: it.src.orig}, targets: tg}]
+    : [{kind: "insert", op_id: it.sid, op: it.op, cond: "", note: "", sub: ST.ind.sub || "", targets: tg}];
+}
+function subLabelOf(tg) {
+  const b = blockById(tg.id);
+  if (!b) return tg.id;
+  const base = blkFull(b);
+  return tg.sub ? base + " · " + tg.sub : base;
+}
+function previewText(it, pv, sub) {
+  const lines = [it.mode === "move" ? "移动（带走条件/备注，删除源行）" : "扩展（新行条件/备注为空）", "「" + it.op + "」", ""];
+  for (const r of pv.results || []) {
+    for (const t of r.targets || []) {
+      const where = whereText(t) + (sub ? " · " + sub : "");
+      if (t.skipped) lines.push("✗ 跳过 " + where + "（" + reasonText(t.reason, t.subs) + "）");
+      else lines.push("→ 写入 " + where);
+    }
+    if (r.skipped) lines.push("✗ 跳过（" + reasonText(r.reason, []) + "）");
+  }
+  if (it.mode === "move" && pv.results && pv.results[0] && pv.results[0].dropped) {
+    const d = Object.keys(pv.results[0].dropped);
+    if (d.length) lines.push("（目标表没有这些列，未随行：" + d.join("、") + "）");
+  }
+  for (const w of pv.warnings || []) lines.push("⚠ " + w);
+  lines.push("", "确认执行？");
+  return lines.join("\n");
+}
+function whereText(t) {
+  // 单表 TAG 的 label 只是「成员表（按实装时间倒序）」，不显示；子 TAG 由 subs 另行列出
+  const b = blockById(t.block);
+  const multi = b ? (IDX.tagBlocks.get(b.tagKey) || []).length > 1 : false;
+  const name = t.display || t.label || "";
+  return (t.tag || "") + (multi && name ? " · " + name : "");
+}
+function reasonText(reason, subs) {
+  if (reason === "already-present") {
+    return "该干员在此子表内已有「" + (subs && subs.length ? subs.join("、") : "同一条目") + "」记录";
+  }
+  return reason || "已存在";
 }
 function markStageStale() {
   for (const it of ST.ind.stage) {
@@ -2415,6 +2515,7 @@ window.addEventListener("scroll", closeMenu, true);
     const saved = JSON.parse(localStorage.getItem("induct.v1") || "null");
     if (saved) {
       ST.ind.targets = (saved.targets || []).filter(t => { const b = blockById(t.id); return b && b.sig === t.sig; });
+      ST.ind.sub = saved.sub || "";
       ST.ind.stage = (saved.stage || []).filter(s => s.op);
       markStageStale();
       renderInd(); renderIndList(); renderPicker();

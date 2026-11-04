@@ -98,6 +98,25 @@ def run_check() -> int:
     if want != got:
         problems.append(f"官方文件集与合并脚本不一致：缺 {want - got}，多 {got - want}")
 
+    # ---- 树节点文案：display_label 必须剥掉 md 强调、序号前缀与硬编码人数 ----
+    from .tags import display_label  # noqa: PLC0415
+    cases = [
+        ("表 1 · 超远距离打击（本体 / 光束）", "超远距离打击（本体 / 光束）"),
+        ("一、治疗·减免·防御·法抗·庇护（41 人）", "治疗·减免·防御·法抗·庇护"),
+        ("2B 陷阱（占用部署数 0；**仅收陷阱能够造成伤害者**）", "陷阱（占用部署数 0；仅收陷阱能够造成伤害者）"),
+        ("成员表（按实装时间倒序）", "成员表（按实装时间倒序）"),
+    ]
+    for raw, want in cases:
+        got = display_label(raw)
+        if got != want:
+            problems.append(f"display_label({raw!r}) = {got!r}，应为 {want!r}")
+        if "**" in got:
+            problems.append(f"display_label({raw!r}) 仍残留 md 强调标记")
+    for t in model["player_tags"]:
+        for b in t["blocks"]:
+            if not b.get("display"):
+                problems.append(f"{t['name']}／{b['label']} 缺少树节点文案（display）")
+
     # ---- partdoc 结构往返：全部 25 个分文件 load → dump → load 稳定、render 可出 ----
     files = [p for _n, _name, p in partdoc.player_files()]
     files += [OFFICIAL_DIR / fn for _cat, fn in OFFICIAL_FILES]
@@ -142,6 +161,52 @@ def run_check() -> int:
             problems.append("干跑改动了文件（不应写盘）")
     else:
         print("  [跳过] 未找到可用于干跑的干员")
+
+    # 去重键＝干员＋末端子 TAG 三元组：子 TAG 不全相同可并存，完全相同仍判重（08 拐杖的冻河是现成样本）
+    t08 = next((t for t in model["player_tags"] if t["num"] == "08"), None)
+    if t08:
+        b08 = t08["blocks"][0]
+        same_op = {}
+        for r in b08["rows"]:
+            same_op.setdefault(r["op"], []).append(r)
+        dup = next((op for op, rs in same_op.items() if len(rs) > 1), None)
+        if dup:
+            subs = [tuple(sorted(r["subs"])) for r in same_op[dup]]
+            if len(set(subs)) > 1:
+                print(f"  去重键样本：「{dup}」在该表有 {len(subs)} 行、子 TAG 各不相同 —— 应全部可插入")
+            else:
+                problems.append(f"08 拐杖的「{dup}」有多行但末端子 TAG 完全相同（违反唯一性）")
+        p08 = PARTS / b08["file"]
+        b8 = p08.read_bytes()
+        r_any = b08["rows"][0]
+        # ① 子 TAG 完全相同 → 必须判重
+        dup8 = apply_ops({"ops": [{"kind": "insert", "op": r_any["op"], "cond": "", "note": "",
+                                   "sub": r_any["sub"], "targets": [{"id": b08["id"], "sig": b08["sig"]}]}],
+                          "automerge": False}, dry_run=True)["results"][0]["targets"][0]
+        if not dup8["skipped"]:
+            problems.append("干跑：同干员 + 完全相同的末端子 TAG 应判重，却允许插入")
+        # ② 追加一个该行没有的末端值 → 必须放行
+        cand = next((v for v in ("增益类型/攻击力(倍率)", "生效方式/部署时", "生效方式/编入·携带")
+                     if v.split("/")[1] not in r_any["subs"]), None)
+        if cand:
+            new8 = apply_ops({"ops": [{"kind": "insert", "op": r_any["op"], "cond": "", "note": "",
+                                       "sub": (r_any["sub"] + "、" if r_any["sub"] else "") + cand,
+                                       "targets": [{"id": b08["id"], "sig": b08["sig"]}]}],
+                              "automerge": False}, dry_run=True)["results"][0]["targets"][0]
+            if new8["skipped"]:
+                problems.append(f"干跑：同干员 + 不同末端子 TAG（追加 {cand}）应可插入，却被判为重复")
+        if p08.read_bytes() != b8:
+            problems.append("08 干跑改动了文件（不应写盘）")
+
+    # 换行值必须被拒为 UserError（而非落到 partdoc.validate 抛 ValueError → 500）
+    try:
+        apply_ops({"ops": [{"kind": "insert", "op": "冒烟测试", "cond": "条件带\n换行", "note": "",
+                            "targets": [{"id": b0["id"], "sig": b0["sig"]}]}],
+                   "automerge": False}, dry_run=True)
+        problems.append("干跑：条件含换行应被拒绝，却通过了")
+    except UserError as exc:
+        if getattr(exc, "code", "") == "drift" or "换行" not in str(exc):
+            problems.append(f"干跑：换行拒绝给出的是 {exc!r}，应明确说「不能包含换行」")
 
     # 官方干跑（不落盘）：新行须按列头构行、「编号」自动填充
     ob0 = model["official_entries"][0]["blocks"][0]

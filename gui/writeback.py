@@ -18,6 +18,7 @@ from .md import parse_block_id
 from .merges import run_merge_script
 from .recommends import prune_recommend
 from .roster import launch_date
+from .tags import display_label
 
 
 def doc_registry() -> dict[str, dict]:
@@ -42,10 +43,12 @@ class _Doc:
         self.info = info
         self.kind = info["kind"]
         self.path: pathlib.Path = info["path"]
+        self.num = info.get("num", "")
         self.doc = partdoc.load(self.path)
         if self.kind == "player":
             self.tables = [{"label": t["label"], "columns": t["columns"], "rows": t["rows"],
-                            "idx": t["idx"]} for t in partdoc.iter_member_tables(self.doc)]
+                            "idx": t["idx"], "h3": t["h3"], "h4": t["h4"]}
+                           for t in partdoc.iter_member_tables(self.doc)]
         else:
             self.tables = []
             for idx, e in enumerate(self.doc["entries"]):
@@ -124,24 +127,118 @@ def _insert_index(dh: _Doc, t: dict, op: str) -> int:
     return len(t["rows"])
 
 
+def _leaf_subs(dh: _Doc, t: dict, cells: list[str]) -> set[str]:
+    """该行末端子 TAG 取值（组, 值, 明细）三元组集合——与产物、荐作用域同源。
+
+    去重键用它而不是只用干员名：同一干员在同一张表里可以有多行，只要末端子 TAG 不全相同
+    （如 08 拐杖的冻河：攻速行与攻击力行；余：两种减益行），库内不变量就是这么定的。
+    """
+    if dh.kind != "player" or not dh.num:
+        return set()
+    gen = _gen()
+    cols = t["columns"]
+    ci, ni = cols.index("条件"), cols.index("备注")
+    clean = [gen.clean_cell(c) for c in cells]
+    try:
+        _, cons = gen.player_subtags(dh.num, t.get("h3", ""), t.get("h4", ""),
+                                     cols, clean, clean[ci], clean[ni])
+    except Exception:  # noqa: BLE001
+        return set()
+    parents = {s.get("group") for s in cons}
+    return {f"{s.get('group')}/{s.get('value')}/{s.get('detail') or ''}"
+            for s in cons if s.get("value") and s.get("value") not in parents}
+
+
+def _sub_view(leaves: set[str]) -> list[str]:
+    """去重报告用的可读值（`组/值`，明细只在其能区分时附上）。"""
+    return sorted({"/".join(x.split("/")[:2]) for x in leaves})
+
+
+def _gen():
+    import generate_results as gen  # noqa: PLC0415
+    return gen
+
+
 def _insert(dh: _Doc, t: dict, op: str, cells: dict[str, str]) -> dict:
-    """插入一行；「编号」列由干员名自动填充（查无该干员则留空），其余列取 cells。"""
-    existing = {_clean_op(r[0]) for r in t["rows"]}
-    if op in existing:
-        return {"skipped": True, "reason": "already-present"}
+    """插入一行；「编号」列由干员名自动填充（查无该干员则留空），其余列取 cells。
+
+    去重按「干员 ＋ 末端子 TAG（组/值/明细）集合」：同干员、同一组末端子 TAG 视为重复；
+    子 TAG 不全相同则允许并存（08 拐杖的冻河、余都是这种形态）。
+    """
     values = {c: (cells.get(c, "") or "") for c in t["columns"]}
     values["干员"] = op
     if "编号" in t["columns"] and not values.get("编号"):
         values["编号"] = CHAR_IDS.get(op, "")
     row = [values[c] for c in t["columns"]]
+    want = _leaf_subs(dh, t, row)
+    for r in t["rows"]:
+        if _clean_op(r[0]) != op:
+            continue
+        have = _leaf_subs(dh, t, r)
+        same = (want == have) if (want or have) else True   # 没有子 TAG 的表：同干员即重复
+        if same:
+            return {"skipped": True, "reason": "already-present", "subs": _sub_view(have)}
     t["rows"].insert(_insert_index(dh, t, op), row)
-    return {"skipped": False, "row": row}
+    return {"skipped": False, "row": row, "subs": _sub_view(want)}
 
 
 def _check_value(label: str, value: str) -> str:
     if "|" in value:
         raise UserError(f"{label}不能包含竖线 |（会破坏表格结构）")
+    if "\n" in value or "\r" in value:
+        raise UserError(f"{label}不能包含换行（表格单元格必须单行）")
     return value.strip()
+
+
+def _fill_sub(cells: dict[str, str], sub: str, prefix: str, t: dict) -> None:
+    """把「选中子 TAG」落进要插入的行。
+
+    - 表有 `子 TAG` 列（08 拐杖）→ 直接写该列。
+    - 表没有该列但该 TAG 的子 TAG 存在备注前缀里（05 插拔容错的「救急路径：…；」）→ 补前缀。
+    - 其余情况（子 TAG 写在子表标题里，如 01/04/13）→ 无需写，子表本身就是子 TAG。
+    """
+    sub = sub.strip()
+    if not sub:
+        return
+    if "子 TAG" in t["columns"]:
+        if not cells.get("子 TAG"):
+            cells["子 TAG"] = sub
+        return
+    if prefix and prefix not in (cells.get("备注") or ""):
+        note = cells.get("备注") or ""
+        cells["备注"] = f"{prefix}：{sub}；" + note if note else f"{prefix}：{sub}；"
+
+
+def _registered_subs(dh: _Doc, t: dict) -> set[str]:
+    """该 TAG 已登记的末端子 TAG 取值（tag_order.json）。未登记的回空，调用方视为「无法判定、不告警」。"""
+    if dh.kind != "player" or not dh.num:
+        return set()
+    import tag_order  # noqa: PLC0415
+    try:
+        subs = tag_order.sub_list(tag_order.load(), f"P{dh.num}")
+    except Exception:  # noqa: BLE001
+        return set()
+    return {v for _g, v in subs}
+
+
+def _warn_unregistered(dh: _Doc, t: dict, cells: dict[str, str], warnings: list[str]) -> None:
+    """插入行带出的子 TAG 不在登记闭集里 → 只告警、不阻断（作者可能正想新增取值）。"""
+    raw = (cells.get("子 TAG") or "").strip()
+    if not raw:
+        return
+    known = _registered_subs(dh, t)
+    if not known:
+        return
+    for item in raw.split("、"):
+        item = item.strip()
+        if not item:
+            continue
+        _g, _, v = item.partition("/")
+        v = v.strip()
+        if v.startswith("触发时(") and v.endswith(")"):
+            v = "触发时"
+        if v and v not in known:
+            warnings.append(f"子 TAG 取值「{v}」未在 tag_order.json 登记，请到「TAG 排序」页纳入")
 
 
 def apply_ops(payload: dict, dry_run: bool = False) -> dict:
@@ -179,13 +276,20 @@ def apply_ops(payload: dict, dry_run: bool = False) -> dict:
             targets = []
             for tg in op.get("targets") or []:
                 dh, t = _resolve(reg, handle, tg.get("id", ""), tg.get("sig", ""))
-                got = _insert(dh, t, op["op"], {
+                cells = {
                     "条件": _check_value("条件", op.get("cond", "")),
                     "备注": _check_value("备注", op.get("note", "")),
                     "子 TAG": _check_value("子 TAG", op.get("sub", "") or ""),
-                })
+                }
+                _fill_sub(cells, op.get("sub", "") or "", op.get("prefix", "") or "", t)
+                _warn_unregistered(dh, t, cells, warnings)
+                if not CHAR_IDS.get(op["op"]):
+                    warnings.append(f"「{op['op']}」不在 char_ids.json 中，编号列留空")
+                got = _insert(dh, t, op["op"], cells)
                 targets.append({"block": tg.get("id"), "tag": dh.tag_name_of(t), "label": t["label"],
-                                "skipped": got.get("skipped", False), "reason": got.get("reason", "")})
+                                "display": display_label(t["label"]),
+                                "skipped": got.get("skipped", False), "reason": got.get("reason", ""),
+                                "subs": got.get("subs", [])})
             results.append({"op_id": rid, "kind": "insert", "op": op["op"], "targets": targets})
         elif kind == "move":
             targets = op.get("targets") or []
@@ -202,6 +306,7 @@ def apply_ops(payload: dict, dry_run: bool = False) -> dict:
             for col in KNOWN_COLS:
                 if col in st["columns"] and col != "干员":
                     values[col] = scells[st["columns"].index(col)]
+            _fill_sub(values, targets[0].get("sub") or "", targets[0].get("prefix") or "", tt)
             opname = cur["op"]
             if sdh.kind == "player":
                 removed.setdefault(sdh.info["tag"], set()).add(opname)
@@ -234,6 +339,9 @@ def apply_ops(payload: dict, dry_run: bool = False) -> dict:
 
     merge = {}
     if not dry_run:
+        # 全部先校验、再落盘：避免「第二个文件校验失败、第一个已写」的半成品状态
+        for dh in handles.values():
+            partdoc.validate(dh.doc, dh.path.name)
         for dh in handles.values():
             partdoc.save(dh.doc, dh.path)
         if payload.get("automerge", True):

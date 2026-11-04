@@ -99,6 +99,8 @@
 | **_recalc_brief.md** | 本轮整数帧重算的**小组代理作业说明**（临时件） | 「按 brief 改写 steps」 | `agent_workspace/tag_pipeline/player_tags/_reverify/parts/_recalc_brief.md` |
 | **「（待验证）」/「[待考]」** | 标注词：前者曾标 AI 推算值供逐条复核——规则定稿后**推算值不再标注**（见 `docs/concept.md`）；后者标证据不足、待考据项，并路由到「待开发者确认」节 | 「去标记后的新片段」 | `docs/concept.md`；各分文件 |
 | **待开发者确认 / 待裁定** | 分文件内的待裁小节（现集中到《待裁定.md》随交付）／条目 `conclusion=待裁定` | 「`pending_rule`＝C10」 | 各 `NN-*.json`；`agent_workspace/tag_pipeline/player_tags/_reverify/rules.md` §3.1 红线 5 |
+| **子 TAG 视图** | 维护面板「人工归纳」页 TAG 树中，把**写在列里／备注前缀里**的子 TAG（拐杖的 `子 TAG` 列、插拔容错的 `救急路径：…；`）展开成可点的取值行（`拐杖 · 攻击速度  24`）；点子 TAG 行＝同时选中「该表 ＋ 该取值」。取值集合与计数由生成器 `player_subtags()` 逐行解析得出，与产物、荐页作用域同源 | 「在子 TAG 视图里点『攻击速度』」 | `gui/tags.py` `_rows_of()`／`leaf_values()`；`gui/model.py` `sub_values_of()`；`gui/static/app.js` `subRow()`；`gui/README.md` §5.2 |
+| **预览确认（干跑两段式）** | 维护面板「人工归纳」页并入／移动／移除的两段式提交：先以 `dry_run` 跑完整个 `apply_ops`（校验、去重、构造行，**不落盘**）并弹出「会写什么／跳过什么／告警」清单，确认后才执行真实写入 | 「先预览再确认」 | `gui/server.py` `/api/apply`；`gui/writeback.py` `apply_ops(dry_run=…)`；`gui/static/app.js` `dropStage()`／`previewText()`；`gui/README.md` §5.4 |
 
 ## 四、TAG 内部用语
 
