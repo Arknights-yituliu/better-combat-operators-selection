@@ -301,19 +301,23 @@
         "tags": [
           {
             "id": "F_ignorehealban",
-            "name": "无视禁疗的治疗"
-          },
-          {
-            "id": "F_overflow",
-            "name": "溢出治疗转化"
+            "name": "无视禁疗的自我治疗"
           },
           {
             "id": "F_healzone",
-            "name": "范围持续治疗（光环/领域）"
+            "name": "持续治疗（不受禁疗制约）"
+          },
+          {
+            "id": "F_sustainheal",
+            "name": "持续治疗（受禁疗制约）"
           },
           {
             "id": "F_elmheal",
             "name": "元素损伤治疗/恢复"
+          },
+          {
+            "id": "F_overflow",
+            "name": "溢出治疗转化"
           }
         ]
       },
